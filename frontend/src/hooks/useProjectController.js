@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   createProject,
   getApiConfigSummary,
@@ -19,6 +19,7 @@ const DEFAULT_MODEL_SELECTIONS = {
   textToImage: 'prunaai/z-image-turbo',
   imageTextToVideo: 'wan-video/wan-2.2-i2v-fast'
 };
+const EMPTY_ASSETS = [];
 
 function resolveMediaDimensions(config, artifacts) {
   const sizeKey = artifacts?.keyframeSizeKey;
@@ -91,7 +92,7 @@ export function useProjectController() {
 
   const apiConfig = getApiConfigSummary();
 
-  const assets = projectDetails?.assets || [];
+  const assets = useMemo(() => projectDetails?.assets || EMPTY_ASSETS, [projectDetails]);
   const voiceAsset = useMemo(
     () => assets.find((asset) => asset.path === 'assets/audio/voiceover.mp3')
       || assets.find((asset) => asset.path.startsWith('assets/audio/'))
@@ -139,7 +140,7 @@ export function useProjectController() {
     { id: 'analytics', label: 'Analytics', align: 'right' }
   ];
 
-  function flash(msg, isError = false) {
+  const flash = useCallback((msg, isError = false) => {
     if (isError) {
       setErrorMessage(msg);
       setMessage('');
@@ -148,14 +149,14 @@ export function useProjectController() {
 
     setMessage(msg);
     setErrorMessage('');
-  }
+  }, []);
 
-  function clearToast() {
+  const clearToast = useCallback(() => {
     setMessage('');
     setErrorMessage('');
-  }
+  }, []);
 
-  async function loadProjects() {
+  const loadProjects = useCallback(async () => {
     setLoadingProjects(true);
     try {
       const response = await listProjects();
@@ -168,9 +169,9 @@ export function useProjectController() {
     } finally {
       setLoadingProjects(false);
     }
-  }
+  }, [flash, selectedProject]);
 
-  async function loadProjectDetails(projectName) {
+  const loadProjectDetails = useCallback(async (projectName) => {
     if (!projectName) {
       setProjectDetails(null);
       return;
@@ -193,9 +194,9 @@ export function useProjectController() {
     } finally {
       setLoadingDetails(false);
     }
-  }
+  }, [flash]);
 
-  async function refreshProjectAssets(projectName) {
+  const refreshProjectAssets = useCallback(async (projectName) => {
     if (!projectName) return;
 
     try {
@@ -215,18 +216,18 @@ export function useProjectController() {
     } catch {
       // silent polling errors
     }
-  }
+  }, [scriptDirty, storyDirty]);
 
   useEffect(() => {
     loadProjects();
-  }, []);
+  }, [loadProjects]);
 
   useEffect(() => {
     loadProjectDetails(selectedProject);
     setCurrentJob(null);
     setActiveJobId('');
     clearToast();
-  }, [selectedProject]);
+  }, [clearToast, loadProjectDetails, selectedProject]);
 
   useEffect(() => {
     if (!message && !errorMessage) return undefined;
@@ -273,7 +274,7 @@ export function useProjectController() {
       cancelled = true;
       clearInterval(timer);
     };
-  }, [activeJobId, selectedProject]);
+  }, [activeJobId, flash, loadProjectDetails, refreshProjectAssets, selectedProject]);
 
   useEffect(() => {
     const shouldPollProject = Boolean(selectedProject) && !activeJobId && (runStatus === 'running' || runStatus === 'pending');
@@ -291,7 +292,7 @@ export function useProjectController() {
       cancelled = true;
       clearInterval(timer);
     };
-  }, [selectedProject, activeJobId, runStatus]);
+  }, [selectedProject, activeJobId, refreshProjectAssets, runStatus]);
 
   async function handleCreateProject(event, onSuccess) {
     event.preventDefault();

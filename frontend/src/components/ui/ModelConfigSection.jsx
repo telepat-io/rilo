@@ -50,6 +50,7 @@ export function ModelConfigSection({ modelId, title, configDirty, savingConfig, 
         aria-expanded={open}
       >
         <div className="model-config-summary">
+          <span className="model-config-title muted size-sm">{title}</span>
           <span className="model-config-name">{displayName}</span>
           {url && (
             <a

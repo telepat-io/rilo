@@ -11,6 +11,7 @@
     "api": "node src/api/server.js",
     "frontend:install": "npm --prefix frontend install",
     "frontend:dev": "npm --prefix frontend run dev",
+    "frontend:lint": "npm --prefix frontend run lint",
     "frontend:build": "npm --prefix frontend run build",
     "frontend:preview": "npm --prefix frontend run preview",
     "dev:all": "concurrently -k -n API,WORKER,FRONTEND -c cyan,magenta,green \"npm run api\" \"npm run worker\" \"npm run frontend:dev\"",

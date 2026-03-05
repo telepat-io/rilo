@@ -7,6 +7,7 @@ export function KeyframeTab({
   shots,
   selectedProject,
   isRunning,
+  activeStep,
   regeneratingMap,
   mediaCss,
   mediaColMin,
@@ -22,6 +23,8 @@ export function KeyframeTab({
   savingConfig,
   onSaveConfig
 }) {
+    const totalCards = Math.max(assets.length, shots.length);
+
   const models = configDraft?.models || {};
   const t2iOptions = configDraft?.modelOptions?.textToImage || {};
   const [editingIndex, setEditingIndex] = useState(null);
@@ -60,7 +63,7 @@ export function KeyframeTab({
     }
   }
 
-  if (assets.length === 0) {
+  if (totalCards === 0) {
     return (
       <div className="tab-pane">
         <ModelConfigSection
@@ -148,19 +151,37 @@ export function KeyframeTab({
         </div>
       </ModelConfigSection>
       <div className="asset-grid" style={{ '--grid-col-min': mediaColMin }}>
-        {assets.map((asset, index) => {
+        {Array.from({ length: totalCards }, (_, index) => {
+          const asset = assets[index] || null;
           const mapKey = `keyframe-${index}`;
           const busy = Boolean(regeneratingMap[mapKey]);
+          const isGenerating = !asset && isRunning && activeStep === 'keyframes' && index === assets.length;
+          const isPending = !asset && !isGenerating;
           const isEditing = editingIndex === index;
           const isSaving = savingIndex === index;
           const prompt = shots[index] ?? '';
 
           return (
-            <article key={asset.path} className="asset-card">
-              <div className="asset-index">#{index + 1}</div>
+            <article key={asset?.path || `keyframe-slot-${index}`} className="asset-card">
+              <div className="asset-status-row">
+                <div className="asset-index">#{index + 1}</div>
+                {isGenerating && <span className="badge badge-running">Generating</span>}
+                {isPending && <span className="badge badge-pending">Pending</span>}
+              </div>
               <MediaWrap ar={mediaCss}>
-                {busy ? (
-                  <div className="media-placeholder"><span className="spinner" /></div>
+                {busy || isGenerating ? (
+                  <div className="media-placeholder">
+                    <div className="media-placeholder-content">
+                      <span className="spinner" />
+                      <span className="media-placeholder-title">Generating keyframe</span>
+                    </div>
+                  </div>
+                ) : isPending ? (
+                  <div className="media-placeholder">
+                    <div className="media-placeholder-content">
+                      <span className="media-placeholder-title">Pending keyframe</span>
+                    </div>
+                  </div>
                 ) : (
                   <img
                     src={toDisplayAssetUrl(selectedProject, asset, `${assetCacheKey}-${asset.path}`)}
@@ -205,7 +226,7 @@ export function KeyframeTab({
                       type="button"
                       className="btn btn-ghost btn-sm card-prompt-edit-btn"
                       onClick={() => startEdit(index)}
-                      disabled={isRunning || busy}
+                      disabled={isRunning || busy || isGenerating}
                       title="Edit prompt"
                     >
                       ✎
@@ -217,9 +238,9 @@ export function KeyframeTab({
                 type="button"
                 className="btn btn-ghost btn-sm full-width"
                 onClick={() => onTargetedRegenerate('keyframe', index)}
-                disabled={busy || isRunning}
+                disabled={!asset || busy || isRunning || isGenerating}
               >
-                {busy ? 'Regenerating…' : '↺ Regenerate'}
+                {busy || isGenerating ? 'Regenerating…' : asset ? '↺ Regenerate' : 'Waiting for generation'}
               </button>
             </article>
           );

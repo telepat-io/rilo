@@ -946,6 +946,13 @@ a.model-config-url:hover {
   padding: 0 0.15rem;
 }
 
+.asset-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem;
+}
+
 /* ── keyframe card prompt ────────────────────────────────────────────────── */
 .card-prompt {
   display: flex;
@@ -1020,6 +1027,22 @@ a.model-config-url:hover {
   align-items: center;
   justify-content: center;
   background: var(--bg-elevated);
+}
+
+.media-placeholder-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  text-align: center;
+  padding: 0.65rem;
+}
+
+.media-placeholder-title {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  font-weight: 500;
 }
 
 /* ── final video ─────────────────────────────────────────────────────────── */

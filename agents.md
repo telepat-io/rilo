@@ -20,9 +20,8 @@
 - Avoid introducing live network/inference in tests; mock/stub dependencies.
 
 ## Required checks before finishing
-- Run `npm run lint`
-- Run `npm test`
-- Run `npm run test:coverage`
+- Run `npm run lint` in both root and `frontend/` to ensure no lint errors.
+- Run `npm test` and `npm run test:coverage`.
 - Verify frontend builds: `npm run build` in `frontend/`.
 - Update the API specs and docs if any API changes were made.
 - Keep coverage high; do not regress branch/line coverage for touched core files.

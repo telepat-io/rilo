@@ -6,7 +6,6 @@ import { StoryTab } from './components/tabs/StoryTab.jsx';
 import { ConfigTab } from './components/tabs/ConfigTab.jsx';
 import { VoiceTab } from './components/tabs/VoiceTab.jsx';
 import { KeyframeTab } from './components/tabs/KeyframeTab.jsx';
-import { AssetGridTab } from './components/tabs/AssetGridTab.jsx';
 import { SegmentsTab } from './components/tabs/SegmentsTab.jsx';
 import { OutputTab } from './components/tabs/OutputTab.jsx';
 import { AnalyticsTab } from './components/tabs/AnalyticsTab.jsx';
@@ -46,7 +45,6 @@ export function App() {
     scriptDirty,
     setStoryText,
     setScriptText,
-    setShotsText,
     setStoryDirty,
     setScriptDirty,
 
@@ -83,6 +81,9 @@ export function App() {
     handleRunRegenerate,
     handleTargetedRegenerate
   } = useProjectController();
+
+  const parsedShots = parseShotsText(shotsText);
+  const expectedSegmentCount = Math.max(0, parsedShots.length - 1);
 
   useEffect(() => {
     setActiveTab('story');
@@ -187,9 +188,10 @@ export function App() {
               {activeTab === 'keyframes' && (
                 <KeyframeTab
                   assets={keyframes}
-                  shots={parseShotsText(shotsText)}
+                  shots={parsedShots}
                   selectedProject={selectedProject}
                   isRunning={isRunning}
+                  activeStep={activeStep}
                   regeneratingMap={regeneratingMap}
                   mediaCss={mediaCss}
                   mediaColMin={mediaColMin}
@@ -210,8 +212,10 @@ export function App() {
               {activeTab === 'segments' && (
                 <SegmentsTab
                   assets={segments}
+                  expectedCount={expectedSegmentCount}
                   selectedProject={selectedProject}
                   isRunning={isRunning}
+                  activeStep={activeStep}
                   regeneratingMap={regeneratingMap}
                   mediaCss={mediaCss}
                   mediaColMin={mediaColMin}

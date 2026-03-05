@@ -56,6 +56,12 @@ Recommended local check before pushing:
 npm test && npm run lint && npm run test:coverage
 ```
 
+Frontend React lint (separate ruleset):
+
+```bash
+npm run frontend:lint
+```
+
 Additional runtime hardening env knobs:
 
 ```bash
