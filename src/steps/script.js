@@ -49,6 +49,13 @@ function buildShotsPrompt(script, shotCount, tone, attempt) {
   return `You are writing visual keyframe prompts for a short video narration. Return ONLY JSON with key: shots.\nRequirements:\n- shots: array of exactly ${shotCount} short visual descriptions\n- each shot: exactly one sentence, concrete and visually descriptive\n- each shot must be fully self-contained because prompts are generated independently (do not rely on context from other shots)\n- in every shot, restate essential visual context like characters, setting, era/time-of-day, and key scene details when relevant\n- keep continuity of characters/setting across shots while still repeating critical details per shot\n- align with narration pacing and tone: ${toneHint}${retryInstruction}\nNarration:\n${script}`;
 }
 
+function asModelOptions(candidate) {
+  if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) {
+    return {};
+  }
+  return candidate;
+}
+
 export async function generateScript(story, options = {}, trace = null) {
   const deps = options.deps || {};
   const runModelFn = deps.runModel || runModel;
@@ -59,6 +66,7 @@ export async function generateScript(story, options = {}, trace = null) {
     : DEFAULT_VIDEO_CONFIG.durationSec;
   const wordBudget = buildWordBudget(targetDurationSec);
   const modelId = options.modelId || resolveModelForCategory(MODEL_CATEGORIES.textToText);
+  const modelOptions = asModelOptions(options.modelOptions);
 
   let bestCandidate = null;
   let bestDistance = Number.POSITIVE_INFINITY;
@@ -68,9 +76,10 @@ export async function generateScript(story, options = {}, trace = null) {
     const prediction = await runModelFn({
       model: modelId,
       input: {
-        prompt,
         max_tokens: 1800,
-        temperature: 0.6
+        temperature: 0.6,
+        ...modelOptions,
+        prompt
       },
       trace: trace ? { ...trace, step: 'script', attempt } : null
     });
@@ -117,15 +126,17 @@ export async function generateShots(script, options = {}, trace = null) {
     : DEFAULT_VIDEO_CONFIG.shots;
   const tone = typeof options.tone === 'string' ? options.tone : 'neutral';
   const modelId = options.modelId || resolveModelForCategory(MODEL_CATEGORIES.textToText);
+  const modelOptions = asModelOptions(options.modelOptions);
 
   for (let attempt = 1; attempt <= SHOTS_RETRY_LIMIT; attempt += 1) {
     const prompt = buildShotsPrompt(script, shotCount, tone, attempt);
     const prediction = await runModelFn({
       model: modelId,
       input: {
-        prompt,
         max_tokens: 1800,
-        temperature: 0.5
+        temperature: 0.5,
+        ...modelOptions,
+        prompt
       },
       trace: trace ? { ...trace, step: 'shots', attempt } : null
     });

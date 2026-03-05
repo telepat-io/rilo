@@ -12,6 +12,13 @@ function secondsToFrames(seconds, fps) {
   return Math.max(81, Math.round(seconds * fps));
 }
 
+function asModelOptions(candidate) {
+  if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) {
+    return {};
+  }
+  return candidate;
+}
+
 export async function generateVideoSegmentAtIndex(
   segmentIndex,
   keyframeUrls,
@@ -29,6 +36,7 @@ export async function generateVideoSegmentAtIndex(
   const totalKeyframes = keyframeUrls.length;
   const durationSec = timeline[segmentIndex]?.durationSec || 5;
   const modelId = options.modelId || resolveModelForCategory(MODEL_CATEGORIES.imageTextToVideo);
+  const modelOptions = asModelOptions(options.modelOptions);
 
   if (segmentIndex < 0 || segmentIndex >= totalKeyframes - 1) {
     throw new Error(`segment index ${segmentIndex} out of range for ${Math.max(0, totalKeyframes - 1)} segments`);
@@ -38,6 +46,7 @@ export async function generateVideoSegmentAtIndex(
   const prediction = await runModelFn({
     model: modelId,
     input: {
+      ...modelOptions,
       prompt,
       image: keyframeUrls[segmentIndex],
       last_image: keyframeUrls[segmentIndex + 1],

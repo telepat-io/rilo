@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { MediaWrap } from '../ui/MediaWrap.jsx';
+import { ModelConfigSection } from '../ui/ModelConfigSection.jsx';
 
 export function KeyframeTab({
   assets,
@@ -13,8 +14,16 @@ export function KeyframeTab({
   toDisplayAssetUrl,
   onSaveShotPrompts,
   onRegenerateProject,
-  onTargetedRegenerate
+  onTargetedRegenerate,
+  configDraft,
+  onPatchModel,
+  onPatchModelOption,
+  configDirty,
+  savingConfig,
+  onSaveConfig
 }) {
+  const models = configDraft?.models || {};
+  const t2iOptions = configDraft?.modelOptions?.textToImage || {};
   const [editingIndex, setEditingIndex] = useState(null);
   const [editValue, setEditValue] = useState('');
   const [savingIndex, setSavingIndex] = useState(null);
@@ -54,6 +63,42 @@ export function KeyframeTab({
   if (assets.length === 0) {
     return (
       <div className="tab-pane">
+        <ModelConfigSection
+          modelId={models.textToImage}
+          configDirty={configDirty}
+          savingConfig={savingConfig}
+          isRunning={isRunning}
+          onSaveConfig={onSaveConfig}
+        >
+          <div className="config-form-field">
+            <label className="config-form-label" htmlFor="kf-model">Model ID</label>
+            <input id="kf-model" type="text" className="config-input" value={models.textToImage || ''} onChange={(event) => onPatchModel('textToImage', event.target.value)} />
+          </div>
+          <div className="config-form-field">
+            <label className="config-form-label" htmlFor="kf-steps">Inference Steps</label>
+            <input id="kf-steps" type="number" className="config-input" min={1} max={50} step={1} placeholder="8" value={t2iOptions.num_inference_steps ?? ''} onChange={(event) => { const v = event.target.value === '' ? undefined : parseInt(event.target.value, 10); onPatchModelOption('textToImage', 'num_inference_steps', Number.isNaN(v) ? undefined : v); }} />
+          </div>
+          <div className="config-form-field">
+            <label className="config-form-label" htmlFor="kf-guidance">Guidance Scale</label>
+            <input id="kf-guidance" type="number" className="config-input" min={0} max={20} step={0.1} placeholder="0" value={t2iOptions.guidance_scale ?? ''} onChange={(event) => { const v = event.target.value === '' ? undefined : parseFloat(event.target.value); onPatchModelOption('textToImage', 'guidance_scale', Number.isNaN(v) ? undefined : v); }} />
+          </div>
+          <div className="config-form-field">
+            <label className="config-form-label" htmlFor="kf-seed">Seed <span className="config-form-optional">(optional)</span></label>
+            <input id="kf-seed" type="number" className="config-input" step={1} placeholder="random" value={t2iOptions.seed ?? ''} onChange={(event) => { const v = event.target.value === '' ? null : parseInt(event.target.value, 10); onPatchModelOption('textToImage', 'seed', Number.isNaN(v) ? null : v); }} />
+          </div>
+          <div className="config-form-field">
+            <label className="config-form-label" htmlFor="kf-output-format">Output Format</label>
+            <select id="kf-output-format" className="config-select" value={t2iOptions.output_format ?? 'jpg'} onChange={(event) => onPatchModelOption('textToImage', 'output_format', event.target.value)}><option value="jpg">jpg</option><option value="jpeg">jpeg</option><option value="png">png</option><option value="webp">webp</option></select>
+          </div>
+          <div className="config-form-field">
+            <label className="config-form-label" htmlFor="kf-quality">Output Quality</label>
+            <input id="kf-quality" type="number" className="config-input" min={0} max={100} step={1} placeholder="80" value={t2iOptions.output_quality ?? ''} onChange={(event) => { const v = event.target.value === '' ? undefined : parseInt(event.target.value, 10); onPatchModelOption('textToImage', 'output_quality', Number.isNaN(v) ? undefined : v); }} />
+          </div>
+          <div className="config-form-field">
+            <label className="config-form-label" htmlFor="kf-go-fast">Go Fast</label>
+            <input id="kf-go-fast" type="checkbox" checked={t2iOptions.go_fast ?? false} onChange={(event) => onPatchModelOption('textToImage', 'go_fast', event.target.checked)} />
+          </div>
+        </ModelConfigSection>
         <div className="empty-state">
           <p className="muted">No keyframes generated yet.</p>
           <button type="button" className="btn btn-secondary" onClick={onRegenerateProject} disabled={isRunning}>
@@ -66,6 +111,42 @@ export function KeyframeTab({
 
   return (
     <div className="tab-pane">
+      <ModelConfigSection
+        modelId={models.textToImage}
+        configDirty={configDirty}
+        savingConfig={savingConfig}
+        isRunning={isRunning}
+        onSaveConfig={onSaveConfig}
+      >
+        <div className="config-form-field">
+          <label className="config-form-label" htmlFor="kf-model">Model ID</label>
+          <input id="kf-model" type="text" className="config-input" value={models.textToImage || ''} onChange={(event) => onPatchModel('textToImage', event.target.value)} />
+        </div>
+        <div className="config-form-field">
+          <label className="config-form-label" htmlFor="kf-steps">Inference Steps</label>
+          <input id="kf-steps" type="number" className="config-input" min={1} max={50} step={1} placeholder="8" value={t2iOptions.num_inference_steps ?? ''} onChange={(event) => { const v = event.target.value === '' ? undefined : parseInt(event.target.value, 10); onPatchModelOption('textToImage', 'num_inference_steps', Number.isNaN(v) ? undefined : v); }} />
+        </div>
+        <div className="config-form-field">
+          <label className="config-form-label" htmlFor="kf-guidance">Guidance Scale</label>
+          <input id="kf-guidance" type="number" className="config-input" min={0} max={20} step={0.1} placeholder="0" value={t2iOptions.guidance_scale ?? ''} onChange={(event) => { const v = event.target.value === '' ? undefined : parseFloat(event.target.value); onPatchModelOption('textToImage', 'guidance_scale', Number.isNaN(v) ? undefined : v); }} />
+        </div>
+        <div className="config-form-field">
+          <label className="config-form-label" htmlFor="kf-seed">Seed <span className="config-form-optional">(optional)</span></label>
+          <input id="kf-seed" type="number" className="config-input" step={1} placeholder="random" value={t2iOptions.seed ?? ''} onChange={(event) => { const v = event.target.value === '' ? null : parseInt(event.target.value, 10); onPatchModelOption('textToImage', 'seed', Number.isNaN(v) ? null : v); }} />
+        </div>
+        <div className="config-form-field">
+          <label className="config-form-label" htmlFor="kf-output-format">Output Format</label>
+          <select id="kf-output-format" className="config-select" value={t2iOptions.output_format ?? 'jpg'} onChange={(event) => onPatchModelOption('textToImage', 'output_format', event.target.value)}><option value="jpg">jpg</option><option value="jpeg">jpeg</option><option value="png">png</option><option value="webp">webp</option></select>
+        </div>
+        <div className="config-form-field">
+          <label className="config-form-label" htmlFor="kf-quality">Output Quality</label>
+          <input id="kf-quality" type="number" className="config-input" min={0} max={100} step={1} placeholder="80" value={t2iOptions.output_quality ?? ''} onChange={(event) => { const v = event.target.value === '' ? undefined : parseInt(event.target.value, 10); onPatchModelOption('textToImage', 'output_quality', Number.isNaN(v) ? undefined : v); }} />
+        </div>
+        <div className="config-form-field">
+          <label className="config-form-label" htmlFor="kf-go-fast">Go Fast</label>
+          <input id="kf-go-fast" type="checkbox" checked={t2iOptions.go_fast ?? false} onChange={(event) => onPatchModelOption('textToImage', 'go_fast', event.target.checked)} />
+        </div>
+      </ModelConfigSection>
       <div className="asset-grid" style={{ '--grid-col-min': mediaColMin }}>
         {assets.map((asset, index) => {
           const mapKey = `keyframe-${index}`;

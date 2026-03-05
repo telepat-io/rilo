@@ -8,6 +8,7 @@ JavaScript system to generate short vertical videos from a story using Replicate
 - Final composition: `ffmpeg`
 
 Project config supports selecting the model per generation category, defaulting to the model IDs above.
+Project config also supports per-category model input overrides via `modelOptions`.
 
 ## Requirements
 
@@ -121,6 +122,24 @@ After first run, the project is stored in `./projects/housing-case/` with:
     "textToSpeech": "minimax/speech-02-turbo",
     "textToImage": "prunaai/z-image-turbo",
     "imageTextToVideo": "wan-video/wan-2.2-i2v-fast"
+  },
+  "modelOptions": {
+    "textToText": {
+      "temperature": 0.6,
+      "top_p": 1
+    },
+    "textToSpeech": {
+      "voice_id": "Wise_Woman",
+      "speed": 1
+    },
+    "textToImage": {
+      "num_inference_steps": 8,
+      "output_format": "jpg"
+    },
+    "imageTextToVideo": {
+      "interpolate_output": false,
+      "go_fast": true
+    }
   }
 }
 ```
@@ -150,9 +169,18 @@ Narration duration matching behavior:
 
 Missing model keys are filled with defaults.
 
+`modelOptions` is optional and validated strictly against metadata for the selected model in each category.
+Unknown option keys, invalid types, and out-of-range values are rejected.
+
 When `aspectRatio` changes, visual assets (keyframes, segments, final video) are regenerated on the next run.
 
 When `targetDurationSec` changes, script/shots and all downstream assets are regenerated on the next run.
+
+When `modelOptions` changes, regeneration cascades by category:
+- `textToText`: script + downstream
+- `textToSpeech`: voiceover + downstream
+- `textToImage`: keyframes + downstream
+- `imageTextToVideo`: segments + compose
 
 When `finalDurationMode` changes, only final composition is regenerated on the next run.
 
@@ -191,6 +219,12 @@ All supported `config.json` fields:
     - `imageTextToVideo`: `wan-video/wan-2.2-i2v-fast`
   - Effect: controls which model implementation each generation stage uses.
 
+- `modelOptions` (optional object)
+  - Type: object keyed by category: `textToText`, `textToSpeech`, `textToImage`, `imageTextToVideo`
+  - Effect: passes validated model-specific input options to each stage.
+  - Validation: strict allowlist per selected model id, including type/range/enum checks.
+  - Runtime precedence: pipeline-managed fields (for example prompt, text, image, width/height, frames/resolution) override conflicting user values.
+
 Default normalized config:
 
 ```json
@@ -203,6 +237,44 @@ Default normalized config:
     "textToSpeech": "minimax/speech-02-turbo",
     "textToImage": "prunaai/z-image-turbo",
     "imageTextToVideo": "wan-video/wan-2.2-i2v-fast"
+  },
+  "modelOptions": {
+    "textToText": {
+      "max_tokens": 2048,
+      "temperature": 0.1,
+      "presence_penalty": 0,
+      "frequency_penalty": 0,
+      "top_p": 1
+    },
+    "textToSpeech": {
+      "emotion": "auto",
+      "pitch": 0,
+      "speed": 1,
+      "volume": 1,
+      "voice_id": "Wise_Woman",
+      "audio_format": "mp3",
+      "sample_rate": 32000,
+      "bitrate": 128000,
+      "channel": "mono",
+      "language_boost": "None",
+      "subtitle_enable": false,
+      "english_normalization": false
+    },
+    "textToImage": {
+      "num_inference_steps": 8,
+      "guidance_scale": 0,
+      "go_fast": false,
+      "output_format": "jpg",
+      "output_quality": 80
+    },
+    "imageTextToVideo": {
+      "interpolate_output": false,
+      "go_fast": true,
+      "sample_shift": 12,
+      "disable_safety_checker": false,
+      "lora_scale_transformer": 1,
+      "lora_scale_transformer_2": 1
+    }
   }
 }
 ```

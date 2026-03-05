@@ -202,6 +202,32 @@
                   }
                 },
                 "additionalProperties": false
+              },
+              "modelOptions": {
+                "type": "object",
+                "properties": {
+                  "textToText": {
+                    "type": "object",
+                    "description": "Model-specific options validated against model metadata for selected model id.",
+                    "additionalProperties": true
+                  },
+                  "textToSpeech": {
+                    "type": "object",
+                    "description": "Model-specific options validated against model metadata for selected model id.",
+                    "additionalProperties": true
+                  },
+                  "textToImage": {
+                    "type": "object",
+                    "description": "Model-specific options validated against model metadata for selected model id.",
+                    "additionalProperties": true
+                  },
+                  "imageTextToVideo": {
+                    "type": "object",
+                    "description": "Model-specific options validated against model metadata for selected model id.",
+                    "additionalProperties": true
+                  }
+                },
+                "additionalProperties": false
               }
             },
             "required": [

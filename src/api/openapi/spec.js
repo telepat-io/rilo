@@ -1,3 +1,5 @@
+import { DEFAULT_MODEL_SELECTIONS, MODEL_SELECTION_KEYS } from '../../config/models.js';
+
 function jsonContent(schema) {
   return {
     'application/json': {
@@ -5,6 +7,27 @@ function jsonContent(schema) {
     }
   };
 }
+
+const modelSelectionProperties = Object.fromEntries(
+  MODEL_SELECTION_KEYS.map((category) => [
+    category,
+    {
+      type: 'string',
+      enum: [DEFAULT_MODEL_SELECTIONS[category]]
+    }
+  ])
+);
+
+const modelOptionsProperties = Object.fromEntries(
+  MODEL_SELECTION_KEYS.map((category) => [
+    category,
+    {
+      type: 'object',
+      description: 'Model-specific options validated against model metadata for selected model id.',
+      additionalProperties: true
+    }
+  ])
+);
 
 const schemas = {
   ErrorResponse: {
@@ -86,12 +109,12 @@ const schemas = {
           keyframeHeight: { type: 'integer', minimum: 64, maximum: 2048 },
           models: {
             type: 'object',
-            properties: {
-              textToText: { type: 'string', enum: ['deepseek-ai/deepseek-v3'] },
-              textToSpeech: { type: 'string', enum: ['minimax/speech-02-turbo'] },
-              textToImage: { type: 'string', enum: ['prunaai/z-image-turbo'] },
-              imageTextToVideo: { type: 'string', enum: ['wan-video/wan-2.2-i2v-fast'] }
-            },
+            properties: modelSelectionProperties,
+            additionalProperties: false
+          },
+          modelOptions: {
+            type: 'object',
+            properties: modelOptionsProperties,
             additionalProperties: false
           }
         },

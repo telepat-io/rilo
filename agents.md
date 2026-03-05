@@ -23,6 +23,7 @@
 - Run `npm run lint`
 - Run `npm test`
 - Run `npm run test:coverage`
+- Verify frontend builds: `npm run build` in `frontend/`.
 - Update the API specs and docs if any API changes were made.
 - Keep coverage high; do not regress branch/line coverage for touched core files.
 - Update README.md with any relevant changes to architecture, configuration, or usage.

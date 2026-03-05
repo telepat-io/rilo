@@ -1,3 +1,5 @@
+import { ModelConfigSection } from '../ui/ModelConfigSection.jsx';
+
 export function ConfigTab({
   configDraft,
   projectConfig,
@@ -8,10 +10,12 @@ export function ConfigTab({
   isRunning,
   onPatchConfig,
   onPatchModel,
+  onPatchModelOption,
   onPatchOptionalInt,
   onSaveConfig
 }) {
   const models = configDraft?.models || {};
+  const tttOptions = configDraft?.modelOptions?.textToText || {};
 
   return (
     <div className="tab-pane">
@@ -94,47 +98,6 @@ export function ConfigTab({
                 <span className="config-form-label">Resolved Size</span>
                 <span className="config-value">{`${mediaW} × ${mediaH}`}</span>
               </div>
-
-              <div className="config-form-field">
-                <label className="config-form-label" htmlFor="cfg-model-text">Text to Text Model</label>
-                <input
-                  id="cfg-model-text"
-                  type="text"
-                  className="config-input"
-                  value={models.textToText || ''}
-                  onChange={(event) => onPatchModel('textToText', event.target.value)}
-                />
-              </div>
-              <div className="config-form-field">
-                <label className="config-form-label" htmlFor="cfg-model-tts">Text to Speech Model</label>
-                <input
-                  id="cfg-model-tts"
-                  type="text"
-                  className="config-input"
-                  value={models.textToSpeech || ''}
-                  onChange={(event) => onPatchModel('textToSpeech', event.target.value)}
-                />
-              </div>
-              <div className="config-form-field">
-                <label className="config-form-label" htmlFor="cfg-model-image">Text to Image Model</label>
-                <input
-                  id="cfg-model-image"
-                  type="text"
-                  className="config-input"
-                  value={models.textToImage || ''}
-                  onChange={(event) => onPatchModel('textToImage', event.target.value)}
-                />
-              </div>
-              <div className="config-form-field">
-                <label className="config-form-label" htmlFor="cfg-model-video">Image + Text to Video Model</label>
-                <input
-                  id="cfg-model-video"
-                  type="text"
-                  className="config-input"
-                  value={models.imageTextToVideo || ''}
-                  onChange={(event) => onPatchModel('imageTextToVideo', event.target.value)}
-                />
-              </div>
             </div>
             <div className="config-form-actions">
               <button type="submit" className="btn btn-primary" disabled={!configDirty || savingConfig || isRunning}>
@@ -143,6 +106,111 @@ export function ConfigTab({
               {configDirty && <span className="muted size-sm">Unsaved changes</span>}
             </div>
           </form>
+
+          <ModelConfigSection
+            modelId={models.textToText}
+            title="Text to Text Model"
+            configDirty={configDirty}
+            savingConfig={savingConfig}
+            isRunning={isRunning}
+            onSaveConfig={onSaveConfig}
+          >
+            <div className="config-form-field">
+              <label className="config-form-label" htmlFor="cfg-model-text">Model ID</label>
+              <input
+                id="cfg-model-text"
+                type="text"
+                className="config-input"
+                value={models.textToText || ''}
+                onChange={(event) => onPatchModel('textToText', event.target.value)}
+              />
+            </div>
+            <div className="config-form-field">
+              <label className="config-form-label" htmlFor="cfg-ttt-max-tokens">Max Tokens</label>
+              <input
+                id="cfg-ttt-max-tokens"
+                type="number"
+                className="config-input"
+                min={1}
+                max={8192}
+                step={1}
+                placeholder="2048"
+                value={tttOptions.max_tokens ?? ''}
+                onChange={(event) => {
+                  const v = event.target.value === '' ? undefined : parseInt(event.target.value, 10);
+                  onPatchModelOption('textToText', 'max_tokens', Number.isNaN(v) ? undefined : v);
+                }}
+              />
+            </div>
+            <div className="config-form-field">
+              <label className="config-form-label" htmlFor="cfg-ttt-temperature">Temperature</label>
+              <input
+                id="cfg-ttt-temperature"
+                type="number"
+                className="config-input"
+                min={0}
+                max={2}
+                step={0.01}
+                placeholder="0.1"
+                value={tttOptions.temperature ?? ''}
+                onChange={(event) => {
+                  const v = event.target.value === '' ? undefined : parseFloat(event.target.value);
+                  onPatchModelOption('textToText', 'temperature', Number.isNaN(v) ? undefined : v);
+                }}
+              />
+            </div>
+            <div className="config-form-field">
+              <label className="config-form-label" htmlFor="cfg-ttt-presence">Presence Penalty</label>
+              <input
+                id="cfg-ttt-presence"
+                type="number"
+                className="config-input"
+                min={-2}
+                max={2}
+                step={0.01}
+                placeholder="0"
+                value={tttOptions.presence_penalty ?? ''}
+                onChange={(event) => {
+                  const v = event.target.value === '' ? undefined : parseFloat(event.target.value);
+                  onPatchModelOption('textToText', 'presence_penalty', Number.isNaN(v) ? undefined : v);
+                }}
+              />
+            </div>
+            <div className="config-form-field">
+              <label className="config-form-label" htmlFor="cfg-ttt-frequency">Frequency Penalty</label>
+              <input
+                id="cfg-ttt-frequency"
+                type="number"
+                className="config-input"
+                min={-2}
+                max={2}
+                step={0.01}
+                placeholder="0"
+                value={tttOptions.frequency_penalty ?? ''}
+                onChange={(event) => {
+                  const v = event.target.value === '' ? undefined : parseFloat(event.target.value);
+                  onPatchModelOption('textToText', 'frequency_penalty', Number.isNaN(v) ? undefined : v);
+                }}
+              />
+            </div>
+            <div className="config-form-field">
+              <label className="config-form-label" htmlFor="cfg-ttt-top-p">Top P</label>
+              <input
+                id="cfg-ttt-top-p"
+                type="number"
+                className="config-input"
+                min={0}
+                max={1}
+                step={0.01}
+                placeholder="1"
+                value={tttOptions.top_p ?? ''}
+                onChange={(event) => {
+                  const v = event.target.value === '' ? undefined : parseFloat(event.target.value);
+                  onPatchModelOption('textToText', 'top_p', Number.isNaN(v) ? undefined : v);
+                }}
+              />
+            </div>
+          </ModelConfigSection>
 
           <section>
             <h3 className="section-label">Raw config</h3>
@@ -157,3 +225,4 @@ export function ConfigTab({
     </div>
   );
 }
+

@@ -40,5 +40,100 @@
         "usdPerVideo": 0.145
       }
     ]
+  },
+  "inputOptions": {
+    "userConfigurable": [
+      "interpolate_output",
+      "go_fast",
+      "sample_shift",
+      "seed",
+      "disable_safety_checker",
+      "lora_weights_transformer",
+      "lora_scale_transformer",
+      "lora_weights_transformer_2",
+      "lora_scale_transformer_2"
+    ],
+    "pipelineManaged": [
+      "prompt",
+      "image",
+      "last_image",
+      "num_frames",
+      "frames_per_second",
+      "resolution"
+    ],
+    "fields": {
+      "interpolate_output": {
+        "type": "boolean",
+        "default": false
+      },
+      "go_fast": {
+        "type": "boolean",
+        "default": true
+      },
+      "sample_shift": {
+        "type": "number",
+        "default": 12,
+        "minimum": 1,
+        "maximum": 20
+      },
+      "seed": {
+        "type": "integer",
+        "nullable": true
+      },
+      "disable_safety_checker": {
+        "type": "boolean",
+        "default": false
+      },
+      "lora_weights_transformer": {
+        "type": "string",
+        "nullable": true,
+        "allowAnyString": true
+      },
+      "lora_scale_transformer": {
+        "type": "number",
+        "default": 1
+      },
+      "lora_weights_transformer_2": {
+        "type": "string",
+        "nullable": true,
+        "allowAnyString": true
+      },
+      "lora_scale_transformer_2": {
+        "type": "number",
+        "default": 1
+      },
+      "prompt": {
+        "type": "string",
+        "required": true
+      },
+      "image": {
+        "type": "string",
+        "required": true
+      },
+      "last_image": {
+        "type": "string",
+        "required": true
+      },
+      "num_frames": {
+        "type": "integer",
+        "required": true,
+        "minimum": 81,
+        "maximum": 121
+      },
+      "frames_per_second": {
+        "type": "integer",
+        "required": true,
+        "minimum": 5,
+        "maximum": 30
+      },
+      "resolution": {
+        "type": "string",
+        "required": true,
+        "enum": [
+          "480p",
+          "720p"
+        ]
+      }
+    }
   }
 }

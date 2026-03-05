@@ -9,5 +9,133 @@
     "usdPerSecond": null,
     "usdPer1kInputTokens": 0.06,
     "usdPer1kOutputTokens": null
+  },
+  "inputOptions": {
+    "userConfigurable": [
+      "emotion",
+      "pitch",
+      "speed",
+      "volume",
+      "voice_id",
+      "audio_format",
+      "sample_rate",
+      "bitrate",
+      "channel",
+      "language_boost",
+      "subtitle_enable",
+      "english_normalization"
+    ],
+    "pipelineManaged": [
+      "text"
+    ],
+    "fields": {
+      "emotion": {
+        "type": "string",
+        "default": "auto",
+        "enum": [
+          "auto",
+          "neutral",
+          "happy",
+          "sad",
+          "angry",
+          "fearful",
+          "disgusted",
+          "surprised",
+          "calm",
+          "fluent"
+        ]
+      },
+      "pitch": {
+        "type": "integer",
+        "default": 0,
+        "minimum": -12,
+        "maximum": 12
+      },
+      "speed": {
+        "type": "number",
+        "default": 1,
+        "minimum": 0.5,
+        "maximum": 2
+      },
+      "volume": {
+        "type": "number",
+        "default": 1,
+        "minimum": 0,
+        "maximum": 10
+      },
+      "voice_id": {
+        "type": "string",
+        "default": "Wise_Woman",
+        "allowAnyString": true,
+        "recommendedValues": [
+          "Wise_Woman",
+          "Deep_Voice_Man",
+          "Imposing_Manner",
+          "Friendly_Person",
+          "Lively_Girl",
+          "Young_Knight"
+        ]
+      },
+      "audio_format": {
+        "type": "string",
+        "default": "mp3",
+        "enum": [
+          "mp3",
+          "wav",
+          "flac",
+          "pcm"
+        ]
+      },
+      "sample_rate": {
+        "type": "integer",
+        "default": 32000,
+        "minimum": 8000,
+        "maximum": 44100
+      },
+      "bitrate": {
+        "type": "integer",
+        "default": 128000,
+        "minimum": 32000,
+        "maximum": 256000
+      },
+      "channel": {
+        "type": "string",
+        "default": "mono",
+        "enum": [
+          "mono",
+          "stereo"
+        ]
+      },
+      "language_boost": {
+        "type": "string",
+        "default": "None",
+        "allowAnyString": true,
+        "recommendedValues": [
+          "None",
+          "Automatic",
+          "en",
+          "zh",
+          "ja",
+          "ko",
+          "es",
+          "fr",
+          "de",
+          "pt"
+        ]
+      },
+      "subtitle_enable": {
+        "type": "boolean",
+        "default": false
+      },
+      "english_normalization": {
+        "type": "boolean",
+        "default": false
+      },
+      "text": {
+        "type": "string",
+        "required": true,
+        "maxLength": 10000
+      }
+    }
   }
 }

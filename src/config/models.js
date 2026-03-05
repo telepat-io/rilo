@@ -23,6 +23,7 @@ export const DEFAULT_MODEL_SELECTIONS = {
 };
 
 export const MODEL_SELECTION_KEYS = Object.keys(DEFAULT_MODEL_SELECTIONS);
+export const MODEL_OPTION_KEYS = [...MODEL_SELECTION_KEYS];
 
 const MODEL_METADATA_FILES = {
   [MODELS.deepseek]: 'deepseek-ai__deepseek-v3.json',
@@ -82,6 +83,71 @@ export const SUPPORTED_MODEL_IDS = Object.keys(MODEL_METADATA);
 export const MODEL_PRICING = Object.fromEntries(
   Object.entries(MODEL_METADATA).map(([modelId, metadata]) => [modelId, normalizePricing(metadata.pricing || {})])
 );
+
+function isPlainObject(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function getSafeInputOptions(metadata = {}) {
+  const inputOptions = isPlainObject(metadata.inputOptions) ? metadata.inputOptions : {};
+  const userConfigurable = Array.isArray(inputOptions.userConfigurable)
+    ? inputOptions.userConfigurable.filter((entry) => typeof entry === 'string' && entry.trim())
+    : [];
+  const pipelineManaged = Array.isArray(inputOptions.pipelineManaged)
+    ? inputOptions.pipelineManaged.filter((entry) => typeof entry === 'string' && entry.trim())
+    : [];
+  const fields = isPlainObject(inputOptions.fields) ? inputOptions.fields : {};
+
+  return {
+    userConfigurable,
+    pipelineManaged,
+    fields
+  };
+}
+
+export function getModelInputOptions(modelId) {
+  return getSafeInputOptions(MODEL_METADATA[modelId]);
+}
+
+export function resolveModelInputOptionsForCategory(category, modelSelections = {}) {
+  const modelId = resolveModelForCategory(category, modelSelections);
+  return getModelInputOptions(modelId);
+}
+
+export function resolveDefaultModelOptionsForCategory(category, modelSelections = {}) {
+  const inputOptions = resolveModelInputOptionsForCategory(category, modelSelections);
+  const defaults = {};
+
+  for (const optionKey of inputOptions.userConfigurable) {
+    const field = inputOptions.fields[optionKey];
+    if (field && Object.prototype.hasOwnProperty.call(field, 'default')) {
+      defaults[optionKey] = field.default;
+    }
+  }
+
+  return defaults;
+}
+
+export function getDefaultProjectModelOptions(modelSelections = {}) {
+  return Object.fromEntries(
+    MODEL_OPTION_KEYS.map((category) => [category, resolveDefaultModelOptionsForCategory(category, modelSelections)])
+  );
+}
+
+export function resolveProjectModelOptions(modelOptions = {}, modelSelections = {}) {
+  const defaults = getDefaultProjectModelOptions(modelSelections);
+  const normalizedInput = isPlainObject(modelOptions) ? modelOptions : {};
+
+  return Object.fromEntries(
+    MODEL_OPTION_KEYS.map((category) => {
+      const candidate = normalizedInput[category];
+      if (!isPlainObject(candidate)) {
+        return [category, defaults[category]];
+      }
+      return [category, { ...defaults[category], ...candidate }];
+    })
+  );
+}
 
 export function isKnownModelId(modelId) {
   return typeof modelId === 'string' && SUPPORTED_MODEL_IDS.includes(modelId);

@@ -673,6 +673,55 @@ test('PATCH /projects/:project/config updates and validates project config', asy
     const modelPatchBody = await modelPatchResponse.json();
     assert.equal(modelPatchBody.config.models.textToText, 'deepseek-ai/deepseek-v3');
 
+    // model option change on textToSpeech should invalidate voice + downstream only
+    await writeProjectRunState(project, reseededState);
+    await writeProjectArtifacts(project, reseededState.artifacts);
+    const modelOptionsPatchResponse = await fetch(`${baseUrl}/projects/${project}/config`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        config: {
+          aspectRatio: '16:9',
+          targetDurationSec: 30,
+          finalDurationMode: 'match_audio',
+          modelOptions: {
+            textToSpeech: {
+              speed: 1.2,
+              voice_id: 'Deep_Voice_Man'
+            }
+          }
+        }
+      })
+    });
+    assert.equal(modelOptionsPatchResponse.status, 200);
+    const modelOptionsPatchBody = await modelOptionsPatchResponse.json();
+    assert.equal(modelOptionsPatchBody.details.runState.steps.script, true);
+    assert.equal(modelOptionsPatchBody.details.runState.steps.voiceover, false);
+    assert.equal(modelOptionsPatchBody.details.runState.steps.keyframes, false);
+    assert.equal(modelOptionsPatchBody.details.runState.steps.segments, false);
+    assert.equal(modelOptionsPatchBody.details.runState.steps.compose, false);
+    assert.equal(modelOptionsPatchBody.details.runState.artifacts.script, 'seed script');
+    assert.equal(modelOptionsPatchBody.details.runState.artifacts.voiceoverPath, '');
+    assert.equal(modelOptionsPatchBody.details.runState.artifacts.modelOptions.textToSpeech.speed, 1.2);
+
+    const invalidModelOptionsResponse = await fetch(`${baseUrl}/projects/${project}/config`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        config: {
+          aspectRatio: '16:9',
+          targetDurationSec: 30,
+          finalDurationMode: 'match_audio',
+          modelOptions: {
+            textToSpeech: {
+              unknownKey: true
+            }
+          }
+        }
+      })
+    });
+    assert.equal(invalidModelOptionsResponse.status, 400);
+
     // model change should invalidate all stages and reset downstream artifacts
     await writeProjectRunState(project, reseededState);
     await writeProjectArtifacts(project, reseededState.artifacts);

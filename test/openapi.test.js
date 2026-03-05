@@ -31,6 +31,13 @@ test('buildOpenApiSpec includes auth, public endpoints, and core paths', () => {
   assert.ok(regenerateRequest.properties.targetType);
   assert.ok(regenerateRequest.properties.index);
   assert.ok(regenerateRequest.properties.targetType.enum.includes('script'));
+
+  const configPatchSchema = spec.components.schemas.ProjectConfigPatchRequest;
+  assert.ok(configPatchSchema.properties.config.properties.modelOptions);
+  assert.equal(
+    configPatchSchema.properties.config.properties.models.properties.textToText.enum[0],
+    'deepseek-ai/deepseek-v3'
+  );
 });
 
 test('generateOpenApiFile writes a valid JSON spec to target path', async () => {

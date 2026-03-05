@@ -585,6 +585,7 @@ textarea:focus, input:focus {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.65);
+  -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -749,6 +750,20 @@ textarea:focus, input:focus {
   gap: 0.35rem;
 }
 
+.config-form-field:has(input[type="checkbox"]) {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.config-form-field:has(input[type="checkbox"]) input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  cursor: pointer;
+  order: -1;
+}
+
 .config-form-field--readonly {
   justify-content: flex-end;
   padding: 0.4rem 0 0.1rem;
@@ -794,6 +809,113 @@ textarea:focus, input:focus {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+}
+
+/* ── combo-box ──────────────────────────────────────────────────────────── */
+.combo-box {
+  position: relative;
+}
+
+.combo-box-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.combo-box-option {
+  padding: 0.45rem 0.65rem;
+  font-size: 0.9rem;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.combo-box-option:hover,
+.combo-box-option--active {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ── model config collapsible section ───────────────────────────────────── */
+.model-config-section {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 1.25rem;
+  overflow: hidden;
+}
+
+.model-config-toggle {
+  all: unset;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  background: var(--bg-elevated);
+  box-sizing: border-box;
+  transition: background 0.15s;
+}
+
+.model-config-toggle:hover {
+  background: var(--bg-hover, color-mix(in srgb, var(--bg-elevated) 85%, var(--accent)));
+}
+
+.model-config-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.model-config-name {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.model-config-url {
+  font-size: 0.78rem;
+}
+
+a.model-config-url {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a.model-config-url:hover {
+  text-decoration: underline;
+}
+
+.model-config-pricing {
+  font-size: 0.78rem;
+}
+
+.model-config-chevron {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.model-config-body {
+  padding: 1rem;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.model-config-body .config-form {
+  margin-bottom: 0;
 }
 
 /* ── asset grid ──────────────────────────────────────────────────────────── */

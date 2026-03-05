@@ -34,5 +34,74 @@
         "usdPerImage": 0.02
       }
     ]
+  },
+  "inputOptions": {
+    "userConfigurable": [
+      "num_inference_steps",
+      "guidance_scale",
+      "seed",
+      "go_fast",
+      "output_format",
+      "output_quality"
+    ],
+    "pipelineManaged": [
+      "prompt",
+      "width",
+      "height"
+    ],
+    "fields": {
+      "num_inference_steps": {
+        "type": "integer",
+        "default": 8,
+        "minimum": 1,
+        "maximum": 50
+      },
+      "guidance_scale": {
+        "type": "number",
+        "default": 0,
+        "minimum": 0,
+        "maximum": 20
+      },
+      "seed": {
+        "type": "integer",
+        "nullable": true
+      },
+      "go_fast": {
+        "type": "boolean",
+        "default": false
+      },
+      "output_format": {
+        "type": "string",
+        "default": "jpg",
+        "enum": [
+          "jpg",
+          "jpeg",
+          "png",
+          "webp"
+        ]
+      },
+      "output_quality": {
+        "type": "integer",
+        "default": 80,
+        "minimum": 0,
+        "maximum": 100
+      },
+      "prompt": {
+        "type": "string",
+        "required": true
+      },
+      "width": {
+        "type": "integer",
+        "required": true,
+        "minimum": 64,
+        "maximum": 2048
+      },
+      "height": {
+        "type": "integer",
+        "required": true,
+        "minimum": 64,
+        "maximum": 2048
+      }
+    }
   }
 }

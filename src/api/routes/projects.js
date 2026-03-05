@@ -2,7 +2,12 @@ import express from 'express';
 import { getProjectMetadataBackend } from '../../backends/projectMetadataBackend.js';
 import { syncProjectSnapshot } from '../../backends/outputBackend.js';
 import { env } from '../../config/env.js';
-import { resolveKeyframeSize, resolveProjectModelSelections } from '../../config/models.js';
+import {
+  MODEL_CATEGORIES,
+  resolveKeyframeSize,
+  resolveProjectModelOptions,
+  resolveProjectModelSelections
+} from '../../config/models.js';
 import { regenerateProjectAsset, runPipeline } from '../../pipeline/orchestrator.js';
 import { createJob, findActiveJobByProject } from '../../store/jobStore.js';
 import { JobStep, emptyStepState } from '../../types/job.js';
@@ -122,9 +127,14 @@ function applyRunStateInvalidationForConfigChange({ runState, previousConfig, ne
   const sizeChanged = previousSizeKey !== nextSizeKey;
   const previousModels = resolveProjectModelSelections(previousConfig?.models);
   const nextModels = resolveProjectModelSelections(nextConfig?.models);
+  const previousModelOptions = resolveProjectModelOptions(previousConfig?.modelOptions, previousModels);
+  const nextModelOptions = resolveProjectModelOptions(nextConfig?.modelOptions, nextModels);
+  const changedModelOptionCategories = Object.values(MODEL_CATEGORIES).filter(
+    (category) => JSON.stringify(previousModelOptions[category]) !== JSON.stringify(nextModelOptions[category])
+  );
   const modelsChanged = JSON.stringify(previousModels) !== JSON.stringify(nextModels);
 
-  if (durationChanged || modelsChanged) {
+  const resetFromScript = () => {
     steps[JobStep.SCRIPT] = false;
     steps[JobStep.VOICE] = false;
     steps[JobStep.KEYFRAMES] = false;
@@ -144,7 +154,24 @@ function applyRunStateInvalidationForConfigChange({ runState, previousConfig, ne
     artifacts.scriptHash = '';
     artifacts.shotHashes = [];
     artifacts.scriptSourceStoryHash = '';
-  } else if (aspectChanged || sizeChanged) {
+  };
+
+  const resetFromVoice = () => {
+    steps[JobStep.VOICE] = false;
+    steps[JobStep.KEYFRAMES] = false;
+    steps[JobStep.SEGMENTS] = false;
+    steps[JobStep.COMPOSE] = false;
+    artifacts.timeline = [];
+    artifacts.voiceoverUrl = '';
+    artifacts.voiceoverPath = '';
+    artifacts.keyframeUrls = [];
+    artifacts.keyframePaths = [];
+    artifacts.segmentUrls = [];
+    artifacts.segmentPaths = [];
+    artifacts.finalVideoPath = '';
+  };
+
+  const resetFromKeyframes = () => {
     steps[JobStep.KEYFRAMES] = false;
     steps[JobStep.SEGMENTS] = false;
     steps[JobStep.COMPOSE] = false;
@@ -153,9 +180,34 @@ function applyRunStateInvalidationForConfigChange({ runState, previousConfig, ne
     artifacts.segmentUrls = [];
     artifacts.segmentPaths = [];
     artifacts.finalVideoPath = '';
+  };
+
+  const resetFromSegments = () => {
+    steps[JobStep.SEGMENTS] = false;
+    steps[JobStep.COMPOSE] = false;
+    artifacts.segmentUrls = [];
+    artifacts.segmentPaths = [];
+    artifacts.finalVideoPath = '';
+  };
+
+  if (durationChanged || modelsChanged) {
+    resetFromScript();
+  } else if (changedModelOptionCategories.length > 1) {
+    resetFromScript();
+  } else if (changedModelOptionCategories[0] === MODEL_CATEGORIES.textToText) {
+    resetFromScript();
+  } else if (changedModelOptionCategories[0] === MODEL_CATEGORIES.textToSpeech) {
+    resetFromVoice();
+  } else if (changedModelOptionCategories[0] === MODEL_CATEGORIES.textToImage) {
+    resetFromKeyframes();
+  } else if (changedModelOptionCategories[0] === MODEL_CATEGORIES.imageTextToVideo) {
+    resetFromSegments();
+  } else if (aspectChanged || sizeChanged) {
+    resetFromKeyframes();
   }
 
   artifacts.modelSelections = nextModels;
+  artifacts.modelOptions = nextModelOptions;
 
   return {
     status: runState.status,

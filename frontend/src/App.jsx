@@ -7,6 +7,7 @@ import { ConfigTab } from './components/tabs/ConfigTab.jsx';
 import { VoiceTab } from './components/tabs/VoiceTab.jsx';
 import { KeyframeTab } from './components/tabs/KeyframeTab.jsx';
 import { AssetGridTab } from './components/tabs/AssetGridTab.jsx';
+import { SegmentsTab } from './components/tabs/SegmentsTab.jsx';
 import { OutputTab } from './components/tabs/OutputTab.jsx';
 import { AnalyticsTab } from './components/tabs/AnalyticsTab.jsx';
 import { CreateProjectModal } from './components/CreateProjectModal.jsx';
@@ -54,6 +55,7 @@ export function App() {
     savingConfig,
     patchConfig,
     patchConfigModel,
+    patchConfigModelOption,
     patchOptionalIntConfig,
 
     keyframes,
@@ -148,6 +150,7 @@ export function App() {
                   isRunning={isRunning}
                   onPatchConfig={patchConfig}
                   onPatchModel={patchConfigModel}
+                  onPatchModelOption={patchConfigModelOption}
                   onPatchOptionalInt={patchOptionalIntConfig}
                   onSaveConfig={handleSaveConfig}
                 />
@@ -172,6 +175,12 @@ export function App() {
                   toDisplayAssetUrl={toDisplayAssetUrl}
                   onRegenerateVoice={() => handleTargetedRegenerate('voiceover')}
                   onRegenerateScript={() => handleTargetedRegenerate('script')}
+                  configDraft={configDraft}
+                  onPatchModel={patchConfigModel}
+                  onPatchModelOption={patchConfigModelOption}
+                  configDirty={configDirty}
+                  savingConfig={savingConfig}
+                  onSaveConfig={handleSaveConfig}
                 />
               )}
 
@@ -189,13 +198,18 @@ export function App() {
                   onSaveShotPrompts={handleSaveShotPrompts}
                   onRegenerateProject={() => handleRunRegenerate(false)}
                   onTargetedRegenerate={handleTargetedRegenerate}
+                  configDraft={configDraft}
+                  onPatchModel={patchConfigModel}
+                  onPatchModelOption={patchConfigModelOption}
+                  configDirty={configDirty}
+                  savingConfig={savingConfig}
+                  onSaveConfig={handleSaveConfig}
                 />
               )}
 
               {activeTab === 'segments' && (
-                <AssetGridTab
+                <SegmentsTab
                   assets={segments}
-                  type="segment"
                   selectedProject={selectedProject}
                   isRunning={isRunning}
                   regeneratingMap={regeneratingMap}
@@ -205,6 +219,12 @@ export function App() {
                   toDisplayAssetUrl={toDisplayAssetUrl}
                   onRegenerateProject={() => handleRunRegenerate(false)}
                   onTargetedRegenerate={handleTargetedRegenerate}
+                  configDraft={configDraft}
+                  onPatchModel={patchConfigModel}
+                  onPatchModelOption={patchConfigModelOption}
+                  configDirty={configDirty}
+                  savingConfig={savingConfig}
+                  onSaveConfig={handleSaveConfig}
                 />
               )}
 

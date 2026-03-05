@@ -53,6 +53,9 @@ function normalizeConfigDraft(config) {
     models: {
       ...DEFAULT_MODEL_SELECTIONS,
       ...(config.models || {})
+    },
+    modelOptions: {
+      ...(config.modelOptions || {})
     }
   };
 }
@@ -394,6 +397,21 @@ export function useProjectController() {
     setConfigDirty(true);
   }
 
+  function patchConfigModelOption(category, key, value) {
+    setConfigDraft((previous) => {
+      const base = normalizeConfigDraft(previous) || { models: { ...DEFAULT_MODEL_SELECTIONS }, modelOptions: {} };
+      const prevCat = (base.modelOptions?.[category]) || {};
+      return {
+        ...base,
+        modelOptions: {
+          ...(base.modelOptions || {}),
+          [category]: { ...prevCat, [key]: value }
+        }
+      };
+    });
+    setConfigDirty(true);
+  }
+
   async function handleSaveConfig() {
     if (!selectedProject || !configDraft) return;
 
@@ -501,6 +519,7 @@ export function useProjectController() {
     savingConfig,
     patchConfig,
     patchConfigModel,
+    patchConfigModelOption,
     patchOptionalIntConfig,
 
     keyframes,

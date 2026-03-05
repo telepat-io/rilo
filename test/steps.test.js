@@ -98,6 +98,82 @@ test('step generators forward explicit modelId overrides to runModel', async () 
   assert.equal(segmentModels[0], 'custom/video-model');
 });
 
+test('step generators merge modelOptions and preserve runtime-managed fields', async () => {
+  let scriptInput;
+  await generateScript('Long source story for option merge checks.', {
+    targetDurationSec: 10,
+    modelOptions: {
+      temperature: 0.3,
+      top_p: 0.95,
+      prompt: 'should be ignored'
+    },
+    deps: {
+      runModel: async ({ input }) => {
+        scriptInput = input;
+        return {
+          output: JSON.stringify({ script: 'w '.repeat(26).trim(), tone: 'neutral' })
+        };
+      }
+    }
+  });
+  assert.equal(scriptInput.temperature, 0.3);
+  assert.equal(scriptInput.top_p, 0.95);
+  assert.match(scriptInput.prompt, /Story source:/);
+
+  let voiceInput;
+  await generateVoiceover('hello world narration body', {
+    shotsCount: 2,
+    modelOptions: {
+      voice_id: 'Deep_Voice_Man',
+      speed: 1.4,
+      text: 'override should not apply'
+    },
+    deps: {
+      runModel: async ({ input }) => {
+        voiceInput = input;
+        return { output: 'https://replicate.delivery/audio.mp3' };
+      }
+    }
+  });
+  assert.equal(voiceInput.voice_id, 'Deep_Voice_Man');
+  assert.equal(voiceInput.speed, 1.4);
+  assert.equal(voiceInput.text, 'hello world narration body');
+
+  let keyframeInput;
+  await generateKeyframe('prompt body', 'neutral', '9:16', 0, null, { width: 700, height: 1200 }, {
+    modelOptions: {
+      width: 1,
+      height: 1,
+      num_inference_steps: 12
+    },
+    deps: {
+      runModel: async ({ input }) => {
+        keyframeInput = input;
+        return { output: 'https://replicate.delivery/kf.png' };
+      }
+    }
+  });
+  assert.equal(keyframeInput.num_inference_steps, 12);
+  assert.equal(keyframeInput.width, 700);
+  assert.equal(keyframeInput.height, 1200);
+
+  let segmentInput;
+  await generateVideoSegmentAtIndex(0, ['k1', 'k2'], [{ durationSec: 5 }, { durationSec: 5 }], ['shot 1', 'shot 2'], '9:16', null, {
+    modelOptions: {
+      resolution: '480p',
+      sample_shift: 14
+    },
+    deps: {
+      runModel: async ({ input }) => {
+        segmentInput = input;
+        return { output: 'https://replicate.delivery/seg.mp4' };
+      }
+    }
+  });
+  assert.equal(segmentInput.sample_shift, 14);
+  assert.equal(segmentInput.resolution, '720p');
+});
+
 test('generateScript returns best fallback candidate across retries', async () => {
   let attempt = 0;
   const outputs = [40, 31, 30];

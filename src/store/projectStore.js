@@ -5,8 +5,11 @@ import { ensureDir, writeJson } from '../media/files.js';
 import {
   DEFAULT_MODEL_SELECTIONS,
   DEFAULT_VIDEO_CONFIG,
+  MODEL_OPTION_KEYS,
   MODEL_SELECTION_KEYS,
-  SUPPORTED_MODEL_IDS
+  SUPPORTED_MODEL_IDS,
+  resolveModelInputOptionsForCategory,
+  resolveProjectModelOptions
 } from '../config/models.js';
 
 export const SUPPORTED_ASPECT_RATIOS = ['1:1', '16:9', '9:16'];
@@ -19,6 +22,206 @@ export const DEFAULT_PROJECT_CONFIG = {
   finalDurationMode: 'match_audio',
   models: {
     ...DEFAULT_MODEL_SELECTIONS
+  },
+  modelOptions: resolveProjectModelOptions({}, DEFAULT_MODEL_SELECTIONS)
+};
+
+function isPlainObject(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function normalizeOptionValue(value) {
+  if (typeof value === 'string') {
+    return value.trim();
+  }
+  return value;
+}
+
+function normalizeCategoryModelOptions(category, categoryOptions, modelSelections) {
+  if (!isPlainObject(categoryOptions)) {
+    return categoryOptions;
+  }
+
+  const normalized = {};
+  const inputOptions = resolveModelInputOptionsForCategory(category, modelSelections);
+  const allowedOptions = new Set(inputOptions.userConfigurable);
+
+  for (const [optionKey, optionValue] of Object.entries(categoryOptions)) {
+    if (!allowedOptions.has(optionKey)) {
+      normalized[optionKey] = normalizeOptionValue(optionValue);
+      continue;
+    }
+
+    normalized[optionKey] = normalizeOptionValue(optionValue);
+  }
+
+  return normalized;
+}
+
+function mergeProjectModelOptions(rawModelOptions, modelSelections) {
+  const defaults = resolveProjectModelOptions({}, modelSelections);
+
+  if (rawModelOptions === undefined) {
+    return defaults;
+  }
+
+  if (!isPlainObject(rawModelOptions)) {
+    return rawModelOptions;
+  }
+
+  const merged = {
+    ...defaults
+  };
+
+  for (const category of MODEL_OPTION_KEYS) {
+    if (!Object.prototype.hasOwnProperty.call(rawModelOptions, category)) {
+      continue;
+    }
+
+    const candidate = rawModelOptions[category];
+    if (!isPlainObject(candidate)) {
+      merged[category] = candidate;
+      continue;
+    }
+
+    merged[category] = normalizeCategoryModelOptions(
+      category,
+      {
+        ...defaults[category],
+        ...candidate
+      },
+      modelSelections
+    );
+  }
+
+  for (const key of Object.keys(rawModelOptions)) {
+    if (!MODEL_OPTION_KEYS.includes(key)) {
+      merged[key] = rawModelOptions[key];
+    }
+  }
+
+  return merged;
+}
+
+function validateFieldConstraints({ category, optionKey, optionValue, field }) {
+  if (optionValue === null) {
+    if (field.nullable) {
+      return;
+    }
+    throw new Error(`Invalid project config: modelOptions.${category}.${optionKey} cannot be null`);
+  }
+
+  if (field.type === 'boolean') {
+    if (typeof optionValue !== 'boolean') {
+      throw new Error(`Invalid project config: modelOptions.${category}.${optionKey} must be a boolean`);
+    }
+    return;
+  }
+
+  if (field.type === 'integer') {
+    if (!Number.isInteger(optionValue)) {
+      throw new Error(`Invalid project config: modelOptions.${category}.${optionKey} must be an integer`);
+    }
+    if (Number.isFinite(field.minimum) && optionValue < field.minimum) {
+      throw new Error(
+        `Invalid project config: modelOptions.${category}.${optionKey} must be >= ${field.minimum}`
+      );
+    }
+    if (Number.isFinite(field.maximum) && optionValue > field.maximum) {
+      throw new Error(
+        `Invalid project config: modelOptions.${category}.${optionKey} must be <= ${field.maximum}`
+      );
+    }
+    return;
+  }
+
+  if (field.type === 'number') {
+    if (typeof optionValue !== 'number' || !Number.isFinite(optionValue)) {
+      throw new Error(`Invalid project config: modelOptions.${category}.${optionKey} must be a number`);
+    }
+    if (Number.isFinite(field.minimum) && optionValue < field.minimum) {
+      throw new Error(
+        `Invalid project config: modelOptions.${category}.${optionKey} must be >= ${field.minimum}`
+      );
+    }
+    if (Number.isFinite(field.maximum) && optionValue > field.maximum) {
+      throw new Error(
+        `Invalid project config: modelOptions.${category}.${optionKey} must be <= ${field.maximum}`
+      );
+    }
+    return;
+  }
+
+  if (field.type === 'string') {
+    if (typeof optionValue !== 'string') {
+      throw new Error(`Invalid project config: modelOptions.${category}.${optionKey} must be a string`);
+    }
+
+    const trimmed = optionValue.trim();
+    if (!trimmed) {
+      throw new Error(`Invalid project config: modelOptions.${category}.${optionKey} must be a non-empty string`);
+    }
+
+    if (Number.isInteger(field.maxLength) && trimmed.length > field.maxLength) {
+      throw new Error(
+        `Invalid project config: modelOptions.${category}.${optionKey} length must be <= ${field.maxLength}`
+      );
+    }
+
+    if (Array.isArray(field.enum) && field.enum.length > 0 && !field.allowAnyString && !field.enum.includes(trimmed)) {
+      throw new Error(
+        `Invalid project config: modelOptions.${category}.${optionKey} must be one of ${field.enum.join(', ')}`
+      );
+    }
+
+    return;
+  }
+
+  throw new Error(`Invalid project config: modelOptions.${category}.${optionKey} has unsupported type`);
+}
+
+function validateProjectModelOptions(modelOptions, modelSelections) {
+  if (!isPlainObject(modelOptions)) {
+    throw new Error('Invalid project config: modelOptions must be an object');
+  }
+
+  for (const key of Object.keys(modelOptions)) {
+    if (!MODEL_OPTION_KEYS.includes(key)) {
+      throw new Error(`Invalid project config: modelOptions.${key} is not a supported model category`);
+    }
+  }
+
+  for (const category of MODEL_OPTION_KEYS) {
+    const categoryOptions = modelOptions[category];
+    if (!isPlainObject(categoryOptions)) {
+      throw new Error(`Invalid project config: modelOptions.${category} must be an object`);
+    }
+
+    const inputOptions = resolveModelInputOptionsForCategory(category, modelSelections);
+    const allowedOptions = new Set(inputOptions.userConfigurable);
+    const fields = inputOptions.fields || {};
+
+    for (const optionKey of Object.keys(categoryOptions)) {
+      if (!allowedOptions.has(optionKey)) {
+        throw new Error(
+          `Invalid project config: modelOptions.${category}.${optionKey} is not supported for selected model`
+        );
+      }
+
+      const field = fields[optionKey];
+      if (!field || typeof field !== 'object') {
+        throw new Error(
+          `Invalid project config: modelOptions.${category}.${optionKey} has no metadata definition`
+        );
+      }
+
+      validateFieldConstraints({
+        category,
+        optionKey,
+        optionValue: categoryOptions[optionKey],
+        field
+      });
+    }
   }
 };
 
@@ -30,11 +233,13 @@ export function normalizeProjectConfig(config) {
         ...DEFAULT_MODEL_SELECTIONS,
         ...(nextConfig.models || {})
       };
+  const mergedModelOptions = mergeProjectModelOptions(nextConfig.modelOptions, mergedModels);
 
   return {
     ...DEFAULT_PROJECT_CONFIG,
     ...nextConfig,
-    models: mergedModels
+    models: mergedModels,
+    modelOptions: mergedModelOptions
   };
 }
 
@@ -147,6 +352,7 @@ export function validateProjectConfig(config) {
   }
 
   validateProjectModels(config.models);
+  validateProjectModelOptions(config.modelOptions, config.models);
 }
 
 export function normalizeAndValidateProjectConfig(config) {

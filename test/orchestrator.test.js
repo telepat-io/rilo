@@ -685,7 +685,7 @@ test('regenerateProjectAsset regenerates targeted segment and invalidates compos
   assert.equal(result.artifacts.finalVideoPath, '');
 });
 
-test('regenerateProjectAsset regenerates voiceover and invalidates compose only', async () => {
+test('regenerateProjectAsset regenerates voiceover and rebakes output when duration is unchanged', async () => {
   const runState = {
     status: 'completed',
     error: null,
@@ -697,15 +697,15 @@ test('regenerateProjectAsset regenerates voiceover and invalidates compose only'
       tone: 'neutral',
       shots: ['Shot A', 'Shot B'],
       timeline: [
-        { index: 0, startSec: 0, endSec: 5 },
-        { index: 1, startSec: 5, endSec: 10 }
+        { index: 0, startSec: 0, endSec: 5 }
       ],
+      audioDurationSec: 5,
       voiceoverUrl: 'https://old/voice.mp3',
       voiceoverPath: '/tmp/old-voice.mp3',
       keyframeUrls: ['https://old/k0.png', 'https://old/k1.png'],
       keyframePaths: ['/tmp/k0.png', '/tmp/k1.png'],
-      segmentUrls: ['https://old/s0.mp4', 'https://old/s1.mp4'],
-      segmentPaths: ['/tmp/s0.mp4', '/tmp/s1.mp4'],
+      segmentUrls: ['https://old/s0.mp4'],
+      segmentPaths: ['/tmp/s0.mp4'],
       finalVideoPath: '/tmp/final.mp4'
     }
   };
@@ -733,6 +733,12 @@ test('regenerateProjectAsset regenerates voiceover and invalidates compose only'
       probeMediaDurationSeconds: async () => 5,
       resolveSegmentCountFromAudioDuration: () => 1,
       buildFixedTimeline: () => [{ index: 0, startSec: 0, endSec: 5 }],
+      composeFinalVideo: async () => ({
+        finalVideoPath: '/tmp/new-final.mp4',
+        voiceoverPath: '/tmp/new-voice.mp3',
+        keyframePaths: ['/tmp/k0.png', '/tmp/k1.png'],
+        segmentPaths: ['/tmp/s0.mp4']
+      }),
       persistArtifacts: async () => {},
       writeProjectRunState: async () => {},
       syncProjectSnapshot: async () => {}
@@ -746,8 +752,8 @@ test('regenerateProjectAsset regenerates voiceover and invalidates compose only'
   assert.equal(result.steps[JobStep.VOICE], true);
   assert.equal(result.steps[JobStep.KEYFRAMES], true);
   assert.equal(result.steps[JobStep.SEGMENTS], true);
-  assert.equal(result.steps[JobStep.COMPOSE], false);
-  assert.equal(result.artifacts.finalVideoPath, '');
+  assert.equal(result.steps[JobStep.COMPOSE], true);
+  assert.equal(result.artifacts.finalVideoPath, '/tmp/new-final.mp4');
 });
 
 test('regenerateProjectAsset regenerates script and invalidates downstream stages', async () => {
@@ -1003,6 +1009,9 @@ test('regenerateProjectAsset regenerates shots when voiceover changes required c
         { index: 1, startSec: 5, endSec: 10 },
         { index: 2, startSec: 10, endSec: 15 }
       ],
+      composeFinalVideo: async () => {
+        throw new Error('compose should not run when visual plan changes');
+      },
       generateShots: async (_script, { shotCount }) => ({
         shots: Array.from({ length: shotCount }, (_value, index) => `Regenerated shot ${index + 1}`)
       }),

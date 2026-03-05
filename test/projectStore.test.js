@@ -81,6 +81,55 @@ test('normalizeAndValidateProjectConfig supports partial model overrides', () =>
   assert.equal(normalized.models.imageTextToVideo, DEFAULT_MODEL_SELECTIONS.imageTextToVideo);
 });
 
+test('normalizeAndValidateProjectConfig validates modelOptions per selected model', () => {
+  const normalized = normalizeAndValidateProjectConfig({
+    modelOptions: {
+      textToText: {
+        temperature: 0.7,
+        top_p: 0.9
+      },
+      textToSpeech: {
+        voice_id: 'Deep_Voice_Man',
+        speed: 1.1
+      },
+      textToImage: {
+        num_inference_steps: 10,
+        output_format: 'png'
+      },
+      imageTextToVideo: {
+        interpolate_output: true,
+        sample_shift: 14
+      }
+    }
+  });
+
+  assert.equal(normalized.modelOptions.textToText.temperature, 0.7);
+  assert.equal(normalized.modelOptions.textToSpeech.voice_id, 'Deep_Voice_Man');
+  assert.equal(normalized.modelOptions.textToImage.output_format, 'png');
+  assert.equal(normalized.modelOptions.imageTextToVideo.interpolate_output, true);
+
+  assert.throws(
+    () => normalizeAndValidateProjectConfig({ modelOptions: { unknownCategory: {} } }),
+    /modelOptions\.unknownCategory is not a supported model category/
+  );
+  assert.throws(
+    () => normalizeAndValidateProjectConfig({ modelOptions: { textToText: { unknown_key: true } } }),
+    /is not supported for selected model/
+  );
+  assert.throws(
+    () => normalizeAndValidateProjectConfig({ modelOptions: { textToText: { temperature: 'hot' } } }),
+    /must be a number/
+  );
+  assert.throws(
+    () => normalizeAndValidateProjectConfig({ modelOptions: { textToImage: { num_inference_steps: 99 } } }),
+    /must be <= 50/
+  );
+  assert.throws(
+    () => normalizeAndValidateProjectConfig({ modelOptions: { textToImage: { output_format: 'gif' } } }),
+    /must be one of/
+  );
+});
+
 test('writeProjectConfig and readProjectConfig enforce canonical validated config', async () => {
   const project = uniqueProject('ut-project-config');
   await ensureProject(project);

@@ -7,6 +7,13 @@ function stylePrefix(index, tone) {
   return `Cinematic documentary style, coherent character continuity, shot ${index + 1}, tone ${tone}.`;
 }
 
+function asModelOptions(candidate) {
+  if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) {
+    return {};
+  }
+  return candidate;
+}
+
 export async function generateKeyframe(
   promptText,
   tone,
@@ -25,10 +32,12 @@ export async function generateKeyframe(
   const width = sizeOverride?.width || preset.keyframeWidth || ASPECT_RATIO_PRESETS['9:16'].keyframeWidth;
   const height = sizeOverride?.height || preset.keyframeHeight || ASPECT_RATIO_PRESETS['9:16'].keyframeHeight;
   const modelId = options.modelId || resolveModelForCategory(MODEL_CATEGORIES.textToImage);
+  const modelOptions = asModelOptions(options.modelOptions);
 
   const prediction = await runModelFn({
     model: modelId,
     input: {
+      ...modelOptions,
       prompt,
       width,
       height

@@ -18,6 +18,13 @@ function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
+function asModelOptions(candidate) {
+  if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) {
+    return {};
+  }
+  return candidate;
+}
+
 export function resolveTtsSpeed(script, targetDurationSec) {
   const words = countWords(script);
   const safeTarget = Number.isInteger(targetDurationSec) && targetDurationSec > 0
@@ -75,13 +82,15 @@ export async function generateVoiceover(script, options = {}, trace = null) {
     : shotsCount * segmentDurationSec;
   const ttsPlan = resolveTtsSpeed(script, targetDurationSec);
   const modelId = options.modelId || resolveModelForCategory(MODEL_CATEGORIES.textToSpeech);
+  const modelOptions = asModelOptions(options.modelOptions);
 
   const prediction = await runModelFn({
     model: modelId,
     input: {
-      text: script,
       speed: ttsPlan.speed,
-      subtitle_enable: false
+      subtitle_enable: false,
+      ...modelOptions,
+      text: script
     },
     trace: trace ? { ...trace, step: 'voiceover' } : null
   });
