@@ -1,0 +1,17 @@
+{
+  "functions": {
+    "source": ".",
+    "codebase": "videogen-api",
+    "ignore": [
+      "node_modules",
+      ".git",
+      ".github",
+      "firebase-debug.log",
+      "firebase-debug.*.log",
+      "projects",
+      "output",
+      "openapi/openapi.json",
+      "README.md"
+    ]
+  }
+}

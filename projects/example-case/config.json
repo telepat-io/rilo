@@ -1,0 +1,7 @@
+{
+  "aspectRatio": "9:16",
+  "targetDurationSec": 20,
+  "finalDurationMode": "match_audio",
+  "keyframeWidth": 768,
+  "keyframeHeight": 1024
+}

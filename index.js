@@ -1,0 +1,1 @@
+export { api } from './src/api/firebaseFunction.js';

@@ -1,0 +1,40 @@
+{
+  "name": "videogen",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "22"
+  },
+  "scripts": {
+    "start": "node src/cli/index.js",
+    "api": "node src/api/server.js",
+    "frontend:install": "npm --prefix frontend install",
+    "frontend:dev": "npm --prefix frontend run dev",
+    "frontend:build": "npm --prefix frontend run build",
+    "frontend:preview": "npm --prefix frontend run preview",
+    "dev:all": "concurrently -k -n API,WORKER,FRONTEND -c cyan,magenta,green \"npm run api\" \"npm run worker\" \"npm run frontend:dev\"",
+    "api:firebase:serve": "firebase emulators:start --only functions",
+    "api:firebase:deploy": "firebase deploy --only functions",
+    "openapi:generate": "node src/api/openapi/generateOpenApi.js",
+    "worker": "node src/worker/processor.js",
+    "lint": "eslint .",
+    "test": "node --test",
+    "test:coverage": "node --test --experimental-test-coverage",
+    "smoke": "node src/cli/index.js --help"
+  },
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "express": "^4.21.2",
+    "firebase-admin": "^13.4.0",
+    "firebase-functions": "^6.4.0",
+    "replicate": "^1.0.1",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "concurrently": "^9.2.1",
+    "eslint": "^10.0.2",
+    "globals": "^17.3.0"
+  }
+}

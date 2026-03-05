@@ -1,0 +1,44 @@
+{
+  "modelId": "wan-video/wan-2.2-i2v-fast",
+  "provider": "replicate",
+  "displayName": "Wan 2.2 I2V Fast",
+  "category": "video-generation",
+  "pricingSourceUrl": "https://replicate.com/wan-video/wan-2.2-i2v-fast",
+  "pricingNotes": "Replicate pricing is per output video and depends on resolution and interpolation variant.",
+  "pricing": {
+    "usdPerSecond": 0.009876543209876543,
+    "usdPer1kInputTokens": null,
+    "usdPer1kOutputTokens": null
+  },
+  "pricingRules": {
+    "basis": "output_video",
+    "assumptions": {
+      "defaultFramesPerSecond": 16,
+      "defaultNumFrames": 81,
+      "defaultSeconds": 5.0625,
+      "usdPerSecondDerivedFrom": "480p_base"
+    },
+    "tiers": [
+      {
+        "resolution": "480p",
+        "variant": "base",
+        "usdPerVideo": 0.05
+      },
+      {
+        "resolution": "480p",
+        "variant": "interpolate",
+        "usdPerVideo": 0.065
+      },
+      {
+        "resolution": "720p",
+        "variant": "base",
+        "usdPerVideo": 0.11
+      },
+      {
+        "resolution": "720p",
+        "variant": "interpolate",
+        "usdPerVideo": 0.145
+      }
+    ]
+  }
+}

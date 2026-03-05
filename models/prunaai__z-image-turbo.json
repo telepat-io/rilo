@@ -1,0 +1,38 @@
+{
+  "modelId": "prunaai/z-image-turbo",
+  "provider": "replicate",
+  "displayName": "Z Image Turbo",
+  "category": "image-generation",
+  "pricingSourceUrl": "https://replicate.com/prunaai/z-image-turbo",
+  "pricingNotes": "Replicate pricing is tiered by output image resolution (megapixels).",
+  "pricing": {
+    "usdPerSecond": null,
+    "usdPer1kInputTokens": null,
+    "usdPer1kOutputTokens": null
+  },
+  "pricingRules": {
+    "basis": "output_image_megapixels",
+    "tiers": [
+      {
+        "maxMegapixels": 0.5,
+        "usdPerImage": 0.0025
+      },
+      {
+        "maxMegapixels": 1,
+        "usdPerImage": 0.005
+      },
+      {
+        "maxMegapixels": 2,
+        "usdPerImage": 0.01
+      },
+      {
+        "maxMegapixels": 3,
+        "usdPerImage": 0.015
+      },
+      {
+        "maxMegapixels": 4,
+        "usdPerImage": 0.02
+      }
+    ]
+  }
+}

@@ -1,0 +1,107 @@
+{
+  "status": "completed",
+  "error": null,
+  "steps": {
+    "script": true,
+    "voiceover": true,
+    "keyframes": true,
+    "segments": true,
+    "compose": true
+  },
+  "artifacts": {
+    "renderSpecVersion": 2,
+    "aspectRatio": "9:16",
+    "keyframeSizeKey": "768x1024",
+    "storyHash": "f8db2ebe9bc48929d192dc544f006ba9a8cdaac3d6e6ee5850ebcea5bc46e11e",
+    "scriptSourceStoryHash": "f8db2ebe9bc48929d192dc544f006ba9a8cdaac3d6e6ee5850ebcea5bc46e11e",
+    "scriptHash": "13f893da836e866b8a23b484e6cedb6517a5d35b833150c49255c07cc9aa053b",
+    "shotHashes": [
+      "c253293eeab14bf53f7512a7ed1533b1db234f30bdbb4cad1c0fac0da24c6015",
+      "bc6ce038b9aed8e5ddd091b59e28ab8d072a96ec93faf6998d675b2e90c57be7",
+      "699e37f03991974e6cc40126593aafbadb3de6e892633abdbb351a2839b6dc02",
+      "9a384db5903876ce754ffb46a9d9c0e75ba9f7c93a1616876520ffca7077d06b",
+      "64a970623c8a9e72f8efc178a8b58a357edd5884bd08cf4ed551dea5d6a003cf",
+      "36cad197c51f46a00ce010ef3cd894fb6eb9661b92905a1e06753270b6f83e33"
+    ],
+    "script": "As the disciples battled a fierce storm on the Sea of Galilee, Jesus walked toward them on the water. Terrified, they thought he was a ghost—until he spoke. Peter stepped out, walking on water too—until fear made him sink. Jesus rescued him, calming the storm. Amazed, the disciples worshipped him as the Son of God.",
+    "tone": "dramatic",
+    "shots": [
+      "Dark, churning waves violently rock a small wooden boat filled with panicked disciples of Jesus, clutching the sides.",
+      "A distant Jesus-like figure emerges from the storm, walking calmly on the turbulent water as lightning flashes behind him.",
+      "The disciples of Jesus huddle together on a boat, wide-eyed and trembling, pointing at the approaching figure with terrified expressions.",
+      "The apostle Peter, hesitantly stepping over a boat's edge, takes his first steps on the water, his face a mix of awe and determination.",
+      "Peter's expression shifts to fear as he begins to sink, arms flailing, while Jesus reaches out to grasp his hand.",
+      "The storm instantly stills, the waves now gentle, as the disciples kneel in the boat, gazing up at Jesus with reverence."
+    ],
+    "timeline": [
+      {
+        "shot": 1,
+        "durationSec": 5
+      },
+      {
+        "shot": 2,
+        "durationSec": 5
+      },
+      {
+        "shot": 3,
+        "durationSec": 5
+      },
+      {
+        "shot": 4,
+        "durationSec": 5
+      },
+      {
+        "shot": 5,
+        "durationSec": 5
+      }
+    ],
+    "voiceoverUrl": "https://replicate.delivery/xezq/9vAwgATaiWqUGF5ACIACQVPQjTQ2M5BSHQF8NjIxs2Q8FKjF/tmplt6efou8.mp3",
+    "voiceoverPath": "projects/example-case/assets/audio/voiceover.mp3",
+    "keyframeUrls": [
+      "https://replicate.delivery/xezq/8WJpS3O8zpJgEJg51MJ5OO6TB1JdPJTNXyyzGFXeexzGf0ZsA/output_3843128421_0.jpeg",
+      "https://replicate.delivery/xezq/GgUHz8elImzmHqcIkvbDdLgXZdTijaC0CVuyiMJ8ooCkPdGLA/output_542864823_0.jpeg",
+      "https://replicate.delivery/xezq/cf9HLk03LjXjCitZx7diFt6OAPYfy0tuj5Wd4Xbc6v9Kf0ZsA/output_954301566_0.jpeg",
+      "https://replicate.delivery/xezq/iKy1bJTfgozzJCMIHAauWJ49sfx41prQf2a5nLtfg6mCfSnxC/output_3318720987_0.jpeg",
+      "https://replicate.delivery/xezq/hHYLWCmZJPLpKZXGCJN6fSVPWMAOEVJYwnFPLz62VeREYoMWA/output_1711327640_0.jpeg",
+      "https://replicate.delivery/xezq/5mxSMCp89QbMMZ3X8A69GH7EeAO4De0Hv6guQSq0Z9cGYoMWA/output_305121575_0.jpeg"
+    ],
+    "keyframePaths": [
+      "projects/example-case/assets/keyframes/keyframe_01.png",
+      "projects/example-case/assets/keyframes/keyframe_02.png",
+      "projects/example-case/assets/keyframes/keyframe_03.png",
+      "projects/example-case/assets/keyframes/keyframe_04.png",
+      "projects/example-case/assets/keyframes/keyframe_05.png",
+      "projects/example-case/assets/keyframes/keyframe_06.png"
+    ],
+    "segmentUrls": [
+      "https://replicate.delivery/xezq/I4wYTWFlWrZ8K5DX4EeLd6GJuxlaxtFrNKpUkT4nq5vOQdGLA/output.mp4",
+      "https://replicate.delivery/xezq/YVoiNbygekTOdCOje7d0cBOhsYyZflWPLHthE3yDjVwhD1ZsA/output.mp4",
+      "https://replicate.delivery/xezq/F3iFiPetC80db6Ds3Yf8aauWLsTnFmAkY8Bm42hJud47i6MWA/output.mp4",
+      "https://replicate.delivery/xezq/K1VLJDBHBfXwTq5yX2QWGgRsnGm5s0D7OWe0meV6RDBG00ZsA/output.mp4",
+      "https://replicate.delivery/xezq/DlBXq40tK75SDZ40QSHpwEGhquKkV1l6vffbGegMUSQq9QZsA/output.mp4"
+    ],
+    "segmentPaths": [
+      "projects/example-case/assets/segments/segment_01.mp4",
+      "projects/example-case/assets/segments/segment_02.mp4",
+      "projects/example-case/assets/segments/segment_03.mp4",
+      "projects/example-case/assets/segments/segment_04.mp4",
+      "projects/example-case/assets/segments/segment_05.mp4"
+    ],
+    "finalVideoPath": "projects/example-case/final.mp4",
+    "subtitlesUrl": "",
+    "finalDurationMode": "match_audio",
+    "targetDurationSec": 20,
+    "segmentDurationSec": 5,
+    "plannedShots": 4,
+    "scriptWordCount": 55,
+    "targetWordCount": 52,
+    "ttsPlan": {
+      "speed": 1.0576923076923077,
+      "words": 55,
+      "estimatedAtSpeedOneSec": 21.154,
+      "targetDurationSec": 20
+    },
+    "audioDurationSec": 21.276
+  },
+  "updatedAt": "2026-03-02T20:53:26.623Z"
+}

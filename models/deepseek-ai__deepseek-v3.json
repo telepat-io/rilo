@@ -1,0 +1,13 @@
+{
+  "modelId": "deepseek-ai/deepseek-v3",
+  "provider": "replicate",
+  "displayName": "DeepSeek V3",
+  "category": "text-generation",
+  "pricingSourceUrl": "https://replicate.com/deepseek-ai/deepseek-v3",
+  "pricingNotes": "Replicate page lists both input and output at $1.45 per million tokens.",
+  "pricing": {
+    "usdPerSecond": null,
+    "usdPer1kInputTokens": 0.00145,
+    "usdPer1kOutputTokens": 0.00145
+  }
+}

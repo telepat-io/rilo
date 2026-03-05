@@ -1,0 +1,13 @@
+{
+  "modelId": "minimax/speech-02-turbo",
+  "provider": "replicate",
+  "displayName": "Minimax Speech 02 Turbo",
+  "category": "text-to-speech",
+  "pricingSourceUrl": "https://replicate.com/minimax/speech-02-turbo",
+  "pricingNotes": "Replicate page lists $0.06 per thousand input tokens; output-token price is not shown.",
+  "pricing": {
+    "usdPerSecond": null,
+    "usdPer1kInputTokens": 0.06,
+    "usdPer1kOutputTokens": null
+  }
+}

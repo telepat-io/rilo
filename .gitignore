@@ -1,0 +1,72 @@
+# ------------------------------
+# Dependencies
+# ------------------------------
+node_modules/
+frontend/node_modules/
+
+# ------------------------------
+# Build outputs
+# ------------------------------
+dist/
+build/
+frontend/dist/
+coverage/
+.nyc_output/
+
+# ------------------------------
+# Runtime logs
+# ------------------------------
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ------------------------------
+# Environment and secrets
+# ------------------------------
+.env
+.env.*
+!.env.example
+
+# ------------------------------
+# Local tooling/cache
+# ------------------------------
+.eslintcache
+.cache/
+.vite/
+.tmp/
+tmp/
+
+# ------------------------------
+# IDE/editor files
+# ------------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ------------------------------
+# OS files
+# ------------------------------
+.DS_Store
+Thumbs.db
+
+# ------------------------------
+# Firebase local state
+# ------------------------------
+.firebase/
+
+# ------------------------------
+# Local generated project artifacts
+# Keep tracked example config/story files; ignore heavy generated media/debug outputs.
+# ------------------------------
+projects/*/assets/audio/
+projects/*/assets/debug/
+projects/*/assets/keyframes/
+projects/*/assets/segments/
+projects/*/assets/text/
+projects/*/analytics/runs/
