@@ -44,6 +44,60 @@ test('generateScript parses JSON payload and returns in-range candidate', async 
   assert.equal(result.tone, 'neutral');
 });
 
+test('step generators forward explicit modelId overrides to runModel', async () => {
+  const scriptModels = [];
+  await generateScript('Long source story for script model override checks.', {
+    targetDurationSec: 10,
+    modelId: 'custom/text-model',
+    deps: {
+      runModel: async ({ model }) => {
+        scriptModels.push(model);
+        return {
+          output: JSON.stringify({ script: 'w '.repeat(26).trim(), tone: 'neutral' })
+        };
+      }
+    }
+  });
+  assert.equal(scriptModels[0], 'custom/text-model');
+
+  const voiceModels = [];
+  await generateVoiceover('hello world narration body', {
+    shotsCount: 2,
+    modelId: 'custom/tts-model',
+    deps: {
+      runModel: async ({ model }) => {
+        voiceModels.push(model);
+        return { output: 'https://replicate.delivery/audio.mp3' };
+      }
+    }
+  });
+  assert.equal(voiceModels[0], 'custom/tts-model');
+
+  const keyframeModels = [];
+  await generateKeyframe('prompt', 'neutral', '9:16', 0, null, null, {
+    modelId: 'custom/image-model',
+    deps: {
+      runModel: async ({ model }) => {
+        keyframeModels.push(model);
+        return { output: 'https://replicate.delivery/kf.png' };
+      }
+    }
+  });
+  assert.equal(keyframeModels[0], 'custom/image-model');
+
+  const segmentModels = [];
+  await generateVideoSegmentAtIndex(0, ['k1', 'k2'], [{ durationSec: 5 }, { durationSec: 5 }], ['s1', 's2'], '9:16', null, {
+    modelId: 'custom/video-model',
+    deps: {
+      runModel: async ({ model }) => {
+        segmentModels.push(model);
+        return { output: 'https://replicate.delivery/seg.mp4' };
+      }
+    }
+  });
+  assert.equal(segmentModels[0], 'custom/video-model');
+});
+
 test('generateScript returns best fallback candidate across retries', async () => {
   let attempt = 0;
   const outputs = [40, 31, 30];

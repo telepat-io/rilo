@@ -4,8 +4,13 @@ import assert from 'node:assert/strict';
 import { preprocessStory } from '../src/pipeline/inputSanitizer.js';
 import { assertSafeStory, sanitizeStoryInput } from '../src/policy/contentGuardrails.js';
 import {
+  DEFAULT_MODEL_SELECTIONS,
+  MODEL_CATEGORIES,
   DEFAULT_VIDEO_CONFIG,
+  isKnownModelId,
   resolveKeyframeSize,
+  resolveModelForCategory,
+  resolveProjectModelSelections,
   resolveShotCount,
   resolveTargetDurationSec
 } from '../src/config/models.js';
@@ -52,4 +57,32 @@ test('resolveKeyframeSize prefers explicit dimensions then aspect preset fallbac
   const unknownAspectFallback = resolveKeyframeSize({ aspectRatio: 'unknown' });
   assert.equal(unknownAspectFallback.width, 576);
   assert.equal(unknownAspectFallback.height, 1024);
+});
+
+test('model selection helpers normalize defaults and validate category resolution', () => {
+  const resolvedFromNull = resolveProjectModelSelections(null);
+  assert.deepEqual(resolvedFromNull, DEFAULT_MODEL_SELECTIONS);
+
+  const resolvedFromPartial = resolveProjectModelSelections({
+    textToText: ' deepseek-ai/deepseek-v3 '
+  });
+  assert.equal(resolvedFromPartial.textToText, 'deepseek-ai/deepseek-v3');
+  assert.equal(resolvedFromPartial.textToSpeech, DEFAULT_MODEL_SELECTIONS.textToSpeech);
+
+  assert.equal(
+    resolveModelForCategory(MODEL_CATEGORIES.textToImage, { textToImage: 'prunaai/z-image-turbo' }),
+    'prunaai/z-image-turbo'
+  );
+
+  assert.throws(
+    () => resolveModelForCategory('unknown-category', {}),
+    /Unknown model category/
+  );
+});
+
+test('isKnownModelId accepts supported ids and rejects invalid inputs', () => {
+  assert.equal(isKnownModelId('deepseek-ai/deepseek-v3'), true);
+  assert.equal(isKnownModelId('unknown/model'), false);
+  assert.equal(isKnownModelId(''), false);
+  assert.equal(isKnownModelId(null), false);
 });

@@ -8,6 +8,22 @@ export const MODELS = {
   tts: 'minimax/speech-02-turbo'
 };
 
+export const MODEL_CATEGORIES = {
+  textToText: 'textToText',
+  textToSpeech: 'textToSpeech',
+  textToImage: 'textToImage',
+  imageTextToVideo: 'imageTextToVideo'
+};
+
+export const DEFAULT_MODEL_SELECTIONS = {
+  [MODEL_CATEGORIES.textToText]: MODELS.deepseek,
+  [MODEL_CATEGORIES.textToSpeech]: MODELS.tts,
+  [MODEL_CATEGORIES.textToImage]: MODELS.keyframe,
+  [MODEL_CATEGORIES.imageTextToVideo]: MODELS.video
+};
+
+export const MODEL_SELECTION_KEYS = Object.keys(DEFAULT_MODEL_SELECTIONS);
+
 const MODEL_METADATA_FILES = {
   [MODELS.deepseek]: 'deepseek-ai__deepseek-v3.json',
   [MODELS.keyframe]: 'prunaai__z-image-turbo.json',
@@ -61,9 +77,43 @@ export const MODEL_METADATA = Object.fromEntries(
   Object.values(MODELS).map((modelId) => [modelId, readModelMetadata(modelId)])
 );
 
+export const SUPPORTED_MODEL_IDS = Object.keys(MODEL_METADATA);
+
 export const MODEL_PRICING = Object.fromEntries(
   Object.entries(MODEL_METADATA).map(([modelId, metadata]) => [modelId, normalizePricing(metadata.pricing || {})])
 );
+
+export function isKnownModelId(modelId) {
+  return typeof modelId === 'string' && SUPPORTED_MODEL_IDS.includes(modelId);
+}
+
+export function resolveProjectModelSelections(modelSelections = {}) {
+  if (!modelSelections || typeof modelSelections !== 'object' || Array.isArray(modelSelections)) {
+    return {
+      ...DEFAULT_MODEL_SELECTIONS
+    };
+  }
+
+  const resolved = {
+    ...DEFAULT_MODEL_SELECTIONS
+  };
+
+  for (const key of MODEL_SELECTION_KEYS) {
+    const candidate = modelSelections[key];
+    if (typeof candidate === 'string' && candidate.trim()) {
+      resolved[key] = candidate.trim();
+    }
+  }
+
+  return resolved;
+}
+
+export function resolveModelForCategory(category, modelSelections = {}) {
+  if (!MODEL_SELECTION_KEYS.includes(category)) {
+    throw new Error(`Unknown model category: ${category}`);
+  }
+  return resolveProjectModelSelections(modelSelections)[category];
+}
 
 export const DEFAULT_VIDEO_CONFIG = {
   width: 720,

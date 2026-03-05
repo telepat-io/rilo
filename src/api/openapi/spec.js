@@ -83,7 +83,17 @@ const schemas = {
           targetDurationSec: { type: 'integer', minimum: 5, maximum: 600 },
           finalDurationMode: { type: 'string', enum: ['match_audio', 'match_visual'] },
           keyframeWidth: { type: 'integer', minimum: 64, maximum: 2048 },
-          keyframeHeight: { type: 'integer', minimum: 64, maximum: 2048 }
+          keyframeHeight: { type: 'integer', minimum: 64, maximum: 2048 },
+          models: {
+            type: 'object',
+            properties: {
+              textToText: { type: 'string', enum: ['deepseek-ai/deepseek-v3'] },
+              textToSpeech: { type: 'string', enum: ['minimax/speech-02-turbo'] },
+              textToImage: { type: 'string', enum: ['prunaai/z-image-turbo'] },
+              imageTextToVideo: { type: 'string', enum: ['wan-video/wan-2.2-i2v-fast'] }
+            },
+            additionalProperties: false
+          }
         },
         required: ['aspectRatio', 'targetDurationSec', 'finalDurationMode'],
         additionalProperties: false

@@ -25,7 +25,9 @@ import {
 } from '../store/jobStore.js';
 import {
   DEFAULT_VIDEO_CONFIG,
+  MODEL_CATEGORIES,
   resolveKeyframeSize,
+  resolveProjectModelSelections,
   resolveShotCount,
   resolveTargetDurationSec
 } from '../config/models.js';
@@ -151,9 +153,6 @@ function collectAffectedSegmentIndexes(changedShotIndexes, totalKeyframes) {
 }
 
 async function fileExists(targetPath) {
-  if (!targetPath) {
-    return false;
-  }
   try {
     await fs.access(targetPath);
     return true;
@@ -210,6 +209,7 @@ export async function regenerateProjectAsset(projectName, target, options = {}) 
 
   await deps.ensureProject(project);
   const projectConfig = await deps.readProjectConfig(project);
+  const modelSelections = resolveProjectModelSelections(projectConfig.models);
   const projectDir = deps.getProjectDir(project);
   const runState = await deps.readProjectRunState(project);
 
@@ -219,6 +219,7 @@ export async function regenerateProjectAsset(projectName, target, options = {}) 
 
   const artifacts = {
     ...runState.artifacts,
+    modelSelections,
     keyframeUrls: [...(runState.artifacts.keyframeUrls || [])],
     keyframePaths: [...(runState.artifacts.keyframePaths || [])],
     segmentUrls: [...(runState.artifacts.segmentUrls || [])],
@@ -259,7 +260,8 @@ export async function regenerateProjectAsset(projectName, target, options = {}) 
     const scriptResult = await deps.generateScript(
       safeStory,
       {
-        targetDurationSec: resolveTargetDurationSec(projectConfig)
+        targetDurationSec: resolveTargetDurationSec(projectConfig),
+        modelId: modelSelections[MODEL_CATEGORIES.textToText]
       },
       traceBase
     );
@@ -300,7 +302,8 @@ export async function regenerateProjectAsset(projectName, target, options = {}) 
       {
         shotsCount: Math.max(1, artifacts.shots.length - 1),
         segmentDurationSec: DEFAULT_VIDEO_CONFIG.segmentDurationSec,
-        targetDurationSec: resolveTargetDurationSec(projectConfig)
+        targetDurationSec: resolveTargetDurationSec(projectConfig),
+        modelId: modelSelections[MODEL_CATEGORIES.textToSpeech]
       },
       traceBase
     );
@@ -326,7 +329,8 @@ export async function regenerateProjectAsset(projectName, target, options = {}) 
         artifacts.script,
         {
           shotCount: requiredKeyframes,
-          tone: artifacts.tone || 'neutral'
+          tone: artifacts.tone || 'neutral',
+          modelId: modelSelections[MODEL_CATEGORIES.textToText]
         },
         traceBase
       );
@@ -354,7 +358,10 @@ export async function regenerateProjectAsset(projectName, target, options = {}) 
       projectConfig.aspectRatio,
       index,
       traceBase,
-      keyframeSize
+      keyframeSize,
+      {
+        modelId: modelSelections[MODEL_CATEGORIES.textToImage]
+      }
     );
     artifacts.keyframeUrls[index] = keyframeUrl;
     artifacts.keyframePaths[index] = await deps.persistKeyframe(projectDir, keyframeUrl, index);
@@ -389,7 +396,10 @@ export async function regenerateProjectAsset(projectName, target, options = {}) 
       artifacts.timeline,
       artifacts.shots,
       projectConfig.aspectRatio,
-      traceBase
+      traceBase,
+      {
+        modelId: modelSelections[MODEL_CATEGORIES.imageTextToVideo]
+      }
     );
     artifacts.segmentUrls[index] = segmentUrl;
     artifacts.segmentPaths[index] = await deps.persistSegment(projectDir, segmentUrl, index);
@@ -452,6 +462,7 @@ export async function runPipeline(jobId, options = {}) {
     analyticsProject = project;
     await deps.ensureProject(project);
     const projectConfig = await deps.readProjectConfig(project);
+    const modelSelections = resolveProjectModelSelections(projectConfig.models);
     const projectDir = deps.getProjectDir(project);
     const targetDurationSec = resolveTargetDurationSec(projectConfig);
     const plannedShots = resolveShotCount(projectConfig);
@@ -537,7 +548,8 @@ export async function runPipeline(jobId, options = {}) {
           alignedJob.artifacts.script,
           {
             shotCount: requiredKeyframes,
-            tone: alignedJob.artifacts.tone || 'neutral'
+            tone: alignedJob.artifacts.tone || 'neutral',
+            modelId: modelSelections[MODEL_CATEGORIES.textToText]
           },
           traceBase
         );
@@ -685,6 +697,7 @@ export async function runPipeline(jobId, options = {}) {
     const previousTargetDuration = Number.isInteger(seedArtifacts.targetDurationSec)
       ? seedArtifacts.targetDurationSec
       : DEFAULT_VIDEO_CONFIG.durationSec;
+    const previousModelSelections = resolveProjectModelSelections(seedArtifacts.modelSelections);
     if (previousTargetDuration !== targetDurationSec) {
       seedSteps[JobStep.SCRIPT] = false;
       seedSteps[JobStep.VOICE] = false;
@@ -704,6 +717,28 @@ export async function runPipeline(jobId, options = {}) {
       seedArtifacts.finalVideoPath = '';
       seedArtifacts.scriptHash = '';
       seedArtifacts.shotHashes = [];
+    }
+
+    if (JSON.stringify(previousModelSelections) !== JSON.stringify(modelSelections)) {
+      seedSteps[JobStep.SCRIPT] = false;
+      seedSteps[JobStep.VOICE] = false;
+      seedSteps[JobStep.KEYFRAMES] = false;
+      seedSteps[JobStep.SEGMENTS] = false;
+      seedSteps[JobStep.COMPOSE] = false;
+      seedArtifacts.script = '';
+      seedArtifacts.tone = '';
+      seedArtifacts.shots = [];
+      seedArtifacts.timeline = [];
+      seedArtifacts.voiceoverUrl = '';
+      seedArtifacts.voiceoverPath = '';
+      seedArtifacts.keyframeUrls = [];
+      seedArtifacts.keyframePaths = [];
+      seedArtifacts.segmentUrls = [];
+      seedArtifacts.segmentPaths = [];
+      seedArtifacts.finalVideoPath = '';
+      seedArtifacts.scriptHash = '';
+      seedArtifacts.shotHashes = [];
+      seedArtifacts.scriptSourceStoryHash = '';
     }
 
     if (
@@ -760,6 +795,7 @@ export async function runPipeline(jobId, options = {}) {
       error: null,
       artifacts: {
         ...seedArtifacts,
+        modelSelections,
         renderSpecVersion: DEFAULT_VIDEO_CONFIG.renderSpecVersion,
         keyframeSizeKey: keyframeSize.key,
         aspectRatio: projectConfig.aspectRatio,
@@ -784,7 +820,8 @@ export async function runPipeline(jobId, options = {}) {
       const scriptResult = await deps.generateScript(
         safeStory,
         {
-          targetDurationSec
+          targetDurationSec,
+          modelId: modelSelections[MODEL_CATEGORIES.textToText]
         },
         traceBase
       );
@@ -847,7 +884,8 @@ export async function runPipeline(jobId, options = {}) {
         {
           shotsCount: Math.max(1, (currentJob.artifacts.shots.length || plannedShots) - 1),
           segmentDurationSec: DEFAULT_VIDEO_CONFIG.segmentDurationSec,
-          targetDurationSec
+          targetDurationSec,
+          modelId: modelSelections[MODEL_CATEGORIES.textToSpeech]
         },
         traceBase
       );
@@ -910,7 +948,10 @@ export async function runPipeline(jobId, options = {}) {
           projectConfig.aspectRatio,
           shotIndex,
           traceBase,
-          keyframeSize
+          keyframeSize,
+          {
+            modelId: modelSelections[MODEL_CATEGORIES.textToImage]
+          }
         );
         keyframeUrls[shotIndex] = keyframeUrl;
         keyframePaths[shotIndex] = await deps.persistKeyframe(projectDir, keyframeUrl, shotIndex);
@@ -941,7 +982,10 @@ export async function runPipeline(jobId, options = {}) {
           currentJob.artifacts.timeline,
           currentJob.artifacts.shots,
           projectConfig.aspectRatio,
-          traceBase
+          traceBase,
+          {
+            modelId: modelSelections[MODEL_CATEGORIES.imageTextToVideo]
+          }
         );
         segmentUrls[segmentIndex] = segmentUrl;
         segmentPaths[segmentIndex] = await deps.persistSegment(projectDir, segmentUrl, segmentIndex);
@@ -999,7 +1043,10 @@ export async function runPipeline(jobId, options = {}) {
             projectConfig.aspectRatio,
             shotIndex,
             traceBase,
-            keyframeSize
+            keyframeSize,
+            {
+              modelId: modelSelections[MODEL_CATEGORIES.textToImage]
+            }
           );
         }
 
@@ -1072,7 +1119,10 @@ export async function runPipeline(jobId, options = {}) {
             currentJob.artifacts.timeline,
             currentJob.artifacts.shots,
             projectConfig.aspectRatio,
-            traceBase
+            traceBase,
+            {
+              modelId: modelSelections[MODEL_CATEGORIES.imageTextToVideo]
+            }
           );
         }
 

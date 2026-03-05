@@ -53,6 +53,7 @@ export function App() {
     configDirty,
     savingConfig,
     patchConfig,
+    patchConfigModel,
     patchOptionalIntConfig,
 
     keyframes,
@@ -146,6 +147,7 @@ export function App() {
                   savingConfig={savingConfig}
                   isRunning={isRunning}
                   onPatchConfig={patchConfig}
+                  onPatchModel={patchConfigModel}
                   onPatchOptionalInt={patchOptionalIntConfig}
                   onSaveConfig={handleSaveConfig}
                 />

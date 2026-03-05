@@ -12,6 +12,7 @@ import {
   resolveProjectName,
   writeProjectConfig
 } from '../src/store/projectStore.js';
+import { DEFAULT_MODEL_SELECTIONS } from '../src/config/models.js';
 
 function uniqueProject(prefix) {
   const project = `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
@@ -43,6 +44,7 @@ test('normalizeAndValidateProjectConfig applies defaults and validates fields', 
   assert.equal(normalized.aspectRatio, '9:16');
   assert.equal(normalized.targetDurationSec, 30);
   assert.equal(normalized.finalDurationMode, 'match_audio');
+  assert.deepEqual(normalized.models, DEFAULT_MODEL_SELECTIONS);
 
   assert.throws(
     () => normalizeAndValidateProjectConfig({ targetDurationSec: '30' }),
@@ -56,6 +58,27 @@ test('normalizeAndValidateProjectConfig applies defaults and validates fields', 
     () => normalizeAndValidateProjectConfig({ keyframeWidth: 512 }),
     /keyframeWidth and keyframeHeight must be set together/
   );
+  assert.throws(
+    () => normalizeAndValidateProjectConfig({ models: { unknownCategory: 'deepseek-ai/deepseek-v3' } }),
+    /not a supported model category/
+  );
+  assert.throws(
+    () => normalizeAndValidateProjectConfig({ models: { textToText: 'unknown/model' } }),
+    /must reference a supported model id/
+  );
+});
+
+test('normalizeAndValidateProjectConfig supports partial model overrides', () => {
+  const normalized = normalizeAndValidateProjectConfig({
+    models: {
+      textToText: 'deepseek-ai/deepseek-v3'
+    }
+  });
+
+  assert.equal(normalized.models.textToText, 'deepseek-ai/deepseek-v3');
+  assert.equal(normalized.models.textToSpeech, DEFAULT_MODEL_SELECTIONS.textToSpeech);
+  assert.equal(normalized.models.textToImage, DEFAULT_MODEL_SELECTIONS.textToImage);
+  assert.equal(normalized.models.imageTextToVideo, DEFAULT_MODEL_SELECTIONS.imageTextToVideo);
 });
 
 test('writeProjectConfig and readProjectConfig enforce canonical validated config', async () => {
@@ -67,12 +90,19 @@ test('writeProjectConfig and readProjectConfig enforce canonical validated confi
     targetDurationSec: 45,
     finalDurationMode: 'match_visual',
     keyframeWidth: 512,
-    keyframeHeight: 512
+    keyframeHeight: 512,
+    models: {
+      textToText: 'deepseek-ai/deepseek-v3',
+      textToSpeech: 'minimax/speech-02-turbo',
+      textToImage: 'prunaai/z-image-turbo',
+      imageTextToVideo: 'wan-video/wan-2.2-i2v-fast'
+    }
   });
 
   assert.equal(written.aspectRatio, '1:1');
   assert.equal(written.targetDurationSec, 45);
   assert.equal(written.finalDurationMode, 'match_visual');
+  assert.equal(written.models.textToImage, 'prunaai/z-image-turbo');
 
   const readBack = await readProjectConfig(project);
   assert.deepEqual(readBack, written);
@@ -89,6 +119,7 @@ test('ensureProjectConfig writes default config when missing', async () => {
   const config = await ensureProjectConfig(project);
   assert.equal(config.aspectRatio, '9:16');
   assert.equal(config.finalDurationMode, 'match_audio');
+  assert.deepEqual(config.models, DEFAULT_MODEL_SELECTIONS);
 
   const persistedRaw = JSON.parse(await fs.readFile(configPath, 'utf8'));
   assert.equal(persistedRaw.aspectRatio, '9:16');

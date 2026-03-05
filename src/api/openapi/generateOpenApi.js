@@ -13,7 +13,7 @@ export async function generateOpenApiFile({
   return outputPath;
 }
 
-const entryPoint = process.argv[1] ? pathToFileURL(process.argv[1]).href : '';
+const entryPoint = pathToFileURL(process.argv[1]).href;
 
 if (import.meta.url === entryPoint) {
   const outputPath = await generateOpenApiFile();

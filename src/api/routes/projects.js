@@ -2,7 +2,7 @@ import express from 'express';
 import { getProjectMetadataBackend } from '../../backends/projectMetadataBackend.js';
 import { syncProjectSnapshot } from '../../backends/outputBackend.js';
 import { env } from '../../config/env.js';
-import { resolveKeyframeSize } from '../../config/models.js';
+import { resolveKeyframeSize, resolveProjectModelSelections } from '../../config/models.js';
 import { regenerateProjectAsset, runPipeline } from '../../pipeline/orchestrator.js';
 import { createJob, findActiveJobByProject } from '../../store/jobStore.js';
 import { JobStep, emptyStepState } from '../../types/job.js';
@@ -120,8 +120,11 @@ function applyRunStateInvalidationForConfigChange({ runState, previousConfig, ne
   const durationChanged = previousConfig?.targetDurationSec !== nextConfig?.targetDurationSec;
   const aspectChanged = previousConfig?.aspectRatio !== nextConfig?.aspectRatio;
   const sizeChanged = previousSizeKey !== nextSizeKey;
+  const previousModels = resolveProjectModelSelections(previousConfig?.models);
+  const nextModels = resolveProjectModelSelections(nextConfig?.models);
+  const modelsChanged = JSON.stringify(previousModels) !== JSON.stringify(nextModels);
 
-  if (durationChanged) {
+  if (durationChanged || modelsChanged) {
     steps[JobStep.SCRIPT] = false;
     steps[JobStep.VOICE] = false;
     steps[JobStep.KEYFRAMES] = false;
@@ -151,6 +154,8 @@ function applyRunStateInvalidationForConfigChange({ runState, previousConfig, ne
     artifacts.segmentPaths = [];
     artifacts.finalVideoPath = '';
   }
+
+  artifacts.modelSelections = nextModels;
 
   return {
     status: runState.status,

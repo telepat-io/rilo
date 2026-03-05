@@ -71,3 +71,61 @@ test('project asset route serves local files and rejects traversal', async () =>
     await fs.rm(projectDir, { recursive: true, force: true });
   }
 });
+
+test('project asset route handles backend/file edge cases', async () => {
+  const app = express();
+  app.use('/projects', requireBearerTokenOrAccessToken, createProjectAssetsRouter());
+
+  const previousToken = env.apiBearerToken;
+  const previousOutputBackend = env.outputBackend;
+  env.apiBearerToken = 'asset-token';
+
+  const project = `ut-asset-route-edge-${Date.now()}`;
+  const projectDir = getProjectDir(project);
+
+  try {
+    await ensureProject(project);
+    const keyframeDir = path.join(projectDir, 'assets', 'keyframes');
+    await ensureDir(keyframeDir);
+    await fs.mkdir(path.join(keyframeDir, 'nested-dir'), { recursive: true });
+
+    await withServer(app, async (baseUrl) => {
+      env.outputBackend = 'firebase';
+      const firebaseBackendResponse = await fetch(
+        `${baseUrl}/projects/${project}/assets/assets/keyframes/missing.png?access_token=asset-token`
+      );
+      assert.equal(firebaseBackendResponse.status, 400);
+
+      env.outputBackend = 'local';
+
+      const missingFile = await fetch(
+        `${baseUrl}/projects/${project}/assets/assets/keyframes/missing.png?access_token=asset-token`
+      );
+      assert.equal(missingFile.status, 404);
+
+      const emptyAssetPath = await fetch(
+        `${baseUrl}/projects/${project}/assets/%20?access_token=asset-token`
+      );
+      assert.equal(emptyAssetPath.status, 400);
+
+      const directoryPath = await fetch(
+        `${baseUrl}/projects/${project}/assets/assets/keyframes/nested-dir?access_token=asset-token`
+      );
+      assert.equal(directoryPath.status, 404);
+
+      const encodedAbsolutePath = await fetch(
+        `${baseUrl}/projects/${project}/assets/%2Ftmp%2Fnot-inside-project.png?access_token=asset-token`
+      );
+      assert.equal(encodedAbsolutePath.status, 400);
+
+      const invalidProjectName = await fetch(
+        `${baseUrl}/projects/INVALID%20PROJECT%20NAME!/assets/assets/keyframes/keyframe_01.png?access_token=asset-token`
+      );
+      assert.equal(invalidProjectName.status, 400);
+    });
+  } finally {
+    env.apiBearerToken = previousToken;
+    env.outputBackend = previousOutputBackend;
+    await fs.rm(projectDir, { recursive: true, force: true });
+  }
+});

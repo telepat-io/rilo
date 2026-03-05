@@ -1,4 +1,4 @@
-import { MODELS, DEFAULT_VIDEO_CONFIG } from '../config/models.js';
+import { DEFAULT_VIDEO_CONFIG, MODEL_CATEGORIES, resolveModelForCategory } from '../config/models.js';
 import { runModel, extractOutputUri } from '../providers/predictions.js';
 import path from 'node:path';
 import { downloadToFile, ensureDir } from '../media/files.js';
@@ -74,9 +74,10 @@ export async function generateVoiceover(script, options = {}, trace = null) {
     ? options.targetDurationSec
     : shotsCount * segmentDurationSec;
   const ttsPlan = resolveTtsSpeed(script, targetDurationSec);
+  const modelId = options.modelId || resolveModelForCategory(MODEL_CATEGORIES.textToSpeech);
 
   const prediction = await runModelFn({
-    model: MODELS.tts,
+    model: modelId,
     input: {
       text: script,
       speed: ttsPlan.speed,

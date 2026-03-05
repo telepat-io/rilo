@@ -2,7 +2,12 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { env } from '../config/env.js';
 import { ensureDir, writeJson } from '../media/files.js';
-import { DEFAULT_VIDEO_CONFIG } from '../config/models.js';
+import {
+  DEFAULT_MODEL_SELECTIONS,
+  DEFAULT_VIDEO_CONFIG,
+  MODEL_SELECTION_KEYS,
+  SUPPORTED_MODEL_IDS
+} from '../config/models.js';
 
 export const SUPPORTED_ASPECT_RATIOS = ['1:1', '16:9', '9:16'];
 export const SUPPORTED_FINAL_DURATION_MODES = ['match_audio', 'match_visual'];
@@ -11,14 +16,48 @@ const PROJECT_NAME_PATTERN = /^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$/;
 export const DEFAULT_PROJECT_CONFIG = {
   aspectRatio: '9:16',
   targetDurationSec: DEFAULT_VIDEO_CONFIG.durationSec,
-  finalDurationMode: 'match_audio'
+  finalDurationMode: 'match_audio',
+  models: {
+    ...DEFAULT_MODEL_SELECTIONS
+  }
 };
 
 export function normalizeProjectConfig(config) {
+  const nextConfig = config || {};
+  const mergedModels = nextConfig.models === undefined
+    ? { ...DEFAULT_MODEL_SELECTIONS }
+    : {
+        ...DEFAULT_MODEL_SELECTIONS,
+        ...(nextConfig.models || {})
+      };
+
   return {
     ...DEFAULT_PROJECT_CONFIG,
-    ...(config || {})
+    ...nextConfig,
+    models: mergedModels
   };
+}
+
+function validateProjectModels(modelSelections) {
+  if (!modelSelections || typeof modelSelections !== 'object' || Array.isArray(modelSelections)) {
+    throw new Error('Invalid project config: models must be an object');
+  }
+
+  for (const key of Object.keys(modelSelections)) {
+    if (!MODEL_SELECTION_KEYS.includes(key)) {
+      throw new Error(`Invalid project config: models.${key} is not a supported model category`);
+    }
+  }
+
+  for (const key of MODEL_SELECTION_KEYS) {
+    const modelId = modelSelections[key];
+    if (typeof modelId !== 'string' || !modelId.trim()) {
+      throw new Error(`Invalid project config: models.${key} must be a non-empty model id string`);
+    }
+    if (!SUPPORTED_MODEL_IDS.includes(modelId.trim())) {
+      throw new Error(`Invalid project config: models.${key} must reference a supported model id`);
+    }
+  }
 }
 
 export function resolveProjectName(name) {
@@ -106,6 +145,8 @@ export function validateProjectConfig(config) {
       throw new Error('Invalid project config: keyframeHeight must be between 64 and 2048');
     }
   }
+
+  validateProjectModels(config.models);
 }
 
 export function normalizeAndValidateProjectConfig(config) {

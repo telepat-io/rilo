@@ -7,6 +7,8 @@ JavaScript system to generate short vertical videos from a story using Replicate
 - Narration: `minimax/speech-02-turbo`
 - Final composition: `ffmpeg`
 
+Project config supports selecting the model per generation category, defaulting to the model IDs above.
+
 ## Requirements
 
 - Node.js 20+
@@ -113,7 +115,13 @@ After first run, the project is stored in `./projects/housing-case/` with:
   "targetDurationSec": 60,
   "finalDurationMode": "match_audio",
   "keyframeWidth": 576,
-  "keyframeHeight": 1024
+  "keyframeHeight": 1024,
+  "models": {
+    "textToText": "deepseek-ai/deepseek-v3",
+    "textToSpeech": "minimax/speech-02-turbo",
+    "textToImage": "prunaai/z-image-turbo",
+    "imageTextToVideo": "wan-video/wan-2.2-i2v-fast"
+  }
 }
 ```
 
@@ -133,6 +141,14 @@ Narration duration matching behavior:
 - Final mux behavior is controlled by `finalDurationMode`.
 
 `keyframeWidth` + `keyframeHeight` are optional and override the text-to-image size directly (both must be set together).
+
+`models` is optional and allows per-category model selection:
+- `textToText`
+- `textToSpeech`
+- `textToImage`
+- `imageTextToVideo`
+
+Missing model keys are filled with defaults.
 
 When `aspectRatio` changes, visual assets (keyframes, segments, final video) are regenerated on the next run.
 
@@ -165,13 +181,29 @@ All supported `config.json` fields:
   - Rule: must be set together.
   - Effect: overrides keyframe size preset directly.
 
+- `models` (optional object)
+  - Type: object
+  - Keys: `textToText`, `textToSpeech`, `textToImage`, `imageTextToVideo`
+  - Current allowed values:
+    - `textToText`: `deepseek-ai/deepseek-v3`
+    - `textToSpeech`: `minimax/speech-02-turbo`
+    - `textToImage`: `prunaai/z-image-turbo`
+    - `imageTextToVideo`: `wan-video/wan-2.2-i2v-fast`
+  - Effect: controls which model implementation each generation stage uses.
+
 Default normalized config:
 
 ```json
 {
   "aspectRatio": "9:16",
   "targetDurationSec": 60,
-  "finalDurationMode": "match_audio"
+  "finalDurationMode": "match_audio",
+  "models": {
+    "textToText": "deepseek-ai/deepseek-v3",
+    "textToSpeech": "minimax/speech-02-turbo",
+    "textToImage": "prunaai/z-image-turbo",
+    "imageTextToVideo": "wan-video/wan-2.2-i2v-fast"
+  }
 }
 ```
 

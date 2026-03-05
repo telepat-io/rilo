@@ -67,6 +67,54 @@ test('runPipeline marks failed job and releases project lock on validation failu
   await cleanupProject(project);
 });
 
+test('regenerateProjectAsset validates target input combinations', async () => {
+  await assert.rejects(
+    () => regenerateProjectAsset('test-project', { targetType: 'unknown' }, {
+      deps: { resolveProjectName: (project) => project }
+    }),
+    /targetType must be one of/
+  );
+
+  await assert.rejects(
+    () => regenerateProjectAsset('test-project', { targetType: 'script', index: 0 }, {
+      deps: { resolveProjectName: (project) => project }
+    }),
+    /index is not supported for script\/voiceover/
+  );
+
+  await assert.rejects(
+    () => regenerateProjectAsset('test-project', { targetType: 'segment', index: -1 }, {
+      deps: { resolveProjectName: (project) => project }
+    }),
+    /index must be a non-negative integer/
+  );
+
+  await assert.rejects(
+    () => regenerateProjectAsset('test-project', { targetType: 'voiceover' }, {
+      deps: {
+        resolveProjectName: (project) => project,
+        ensureProject: async () => {},
+        readProjectConfig: async () => ({
+          aspectRatio: '9:16',
+          targetDurationSec: 60,
+          finalDurationMode: 'match_audio'
+        }),
+        getProjectDir: () => '/tmp/project-dir',
+        readProjectRunState: async () => ({
+          status: 'completed',
+          error: null,
+          steps: allStepsTrue(),
+          artifacts: {
+            ...emptyPipelineArtifacts(),
+            shots: ['Shot A', 'Shot B']
+          }
+        })
+      }
+    }),
+    /project has no script to regenerate voiceover from/
+  );
+});
+
 test('runPipeline executes all stages with injected deps and completes offline', async () => {
   const project = uniqueProject('ut-orch-mocked');
 
@@ -77,6 +125,13 @@ test('runPipeline executes all stages with injected deps and completes offline',
     segment: 0,
     compose: 0,
     checkpointSync: 0
+  };
+  const modelIds = {
+    script: null,
+    shots: null,
+    voice: null,
+    keyframe: null,
+    segment: null
   };
 
   const job = createJob({
@@ -103,8 +158,9 @@ test('runPipeline executes all stages with injected deps and completes offline',
       writeRunRecord: async () => {},
       collectRunPredictions: async () => [],
       preprocessStory: (story) => story,
-      generateScript: async () => {
+      generateScript: async (_story, options) => {
         stepsCalled.script += 1;
+        modelIds.script = options?.modelId || null;
         return {
           script: 'Generated script',
           tone: 'neutral',
@@ -112,11 +168,15 @@ test('runPipeline executes all stages with injected deps and completes offline',
           targetWordCount: 10
         };
       },
-      generateShots: async (_script, { shotCount }) => ({
-        shots: Array.from({ length: shotCount }, (_value, index) => `Shot ${index + 1}`)
-      }),
-      generateVoiceover: async () => {
+      generateShots: async (_script, { shotCount, modelId }) => {
+        modelIds.shots = modelId;
+        return {
+          shots: Array.from({ length: shotCount }, (_value, index) => `Shot ${index + 1}`)
+        };
+      },
+      generateVoiceover: async (_script, options) => {
         stepsCalled.voice += 1;
+        modelIds.voice = options.modelId;
         return {
           timeline: [
             { index: 0, startSec: 0, endSec: 5 },
@@ -133,13 +193,15 @@ test('runPipeline executes all stages with injected deps and completes offline',
         { index: 0, startSec: 0, endSec: 5 },
         { index: 1, startSec: 5, endSec: 10 }
       ],
-      generateKeyframe: async (_shot, _tone, _aspect, index) => {
+      generateKeyframe: async (_shot, _tone, _aspect, index, _trace, _size, options) => {
         stepsCalled.keyframe += 1;
+        modelIds.keyframe = options?.modelId || null;
         return `https://replicate.delivery/keyframe-${index}.png`;
       },
       persistKeyframe: async (_projectDir, _url, index) => `/tmp/keyframe-${index}.png`,
-      generateVideoSegmentAtIndex: async (index) => {
+      generateVideoSegmentAtIndex: async (index, _keyframes, _timeline, _shots, _aspect, _trace, options) => {
         stepsCalled.segment += 1;
+        modelIds.segment = options?.modelId || null;
         return `https://replicate.delivery/segment-${index}.mp4`;
       },
       persistSegment: async (_projectDir, _url, index) => `/tmp/segment-${index}.mp4`,
@@ -162,6 +224,11 @@ test('runPipeline executes all stages with injected deps and completes offline',
   assert.equal(stepsCalled.keyframe, 3);
   assert.equal(stepsCalled.segment, 2);
   assert.equal(stepsCalled.compose, 1);
+  assert.equal(modelIds.script, 'deepseek-ai/deepseek-v3');
+  assert.equal(modelIds.shots, 'deepseek-ai/deepseek-v3');
+  assert.equal(modelIds.voice, 'minimax/speech-02-turbo');
+  assert.equal(modelIds.keyframe, 'prunaai/z-image-turbo');
+  assert.equal(modelIds.segment, 'wan-video/wan-2.2-i2v-fast');
   assert.ok(stepsCalled.checkpointSync >= 1);
   assert.equal(getProjectRunLockOwner(project), null);
 
@@ -189,6 +256,237 @@ test('runPipeline fails fast when project lock is already owned by another job',
     releaseProjectRunLock(project, ownerJobId);
     await cleanupProject(project);
   }
+});
+
+test('runPipeline reuses existing local keyframe and segment files without regeneration', async () => {
+  const project = uniqueProject('ut-orch-existing-local-files');
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'videogen-orch-existing-'));
+
+  const keyframePaths = [
+    path.join(tempDir, 'kf-0.png'),
+    path.join(tempDir, 'kf-1.png'),
+    path.join(tempDir, 'kf-2.png')
+  ];
+  const segmentPaths = [
+    path.join(tempDir, 'seg-0.mp4'),
+    path.join(tempDir, 'seg-1.mp4')
+  ];
+  const voiceoverPath = path.join(tempDir, 'voice.mp3');
+
+  for (const filePath of [...keyframePaths, ...segmentPaths, voiceoverPath]) {
+    await fs.writeFile(filePath, 'x', 'utf8');
+  }
+
+  const timeline = [
+    { index: 0, startSec: 0, endSec: 5 },
+    { index: 1, startSec: 5, endSec: 10 }
+  ];
+  const shots = ['Shot 1', 'Shot 2', 'Shot 3'];
+
+  const job = createJob({
+    project,
+    story: 'A sufficiently long story for existing local file reuse test in orchestrator.'
+  });
+
+  const result = await runPipeline(job.id, {
+    deps: {
+      ensureProject: async () => {},
+      readProjectConfig: async () => ({
+        aspectRatio: '9:16',
+        targetDurationSec: 10,
+        finalDurationMode: 'match_audio'
+      }),
+      readProjectRunState: async () => ({
+        status: 'completed',
+        error: null,
+        steps: {
+          [JobStep.SCRIPT]: true,
+          [JobStep.VOICE]: true,
+          [JobStep.KEYFRAMES]: false,
+          [JobStep.SEGMENTS]: false,
+          [JobStep.COMPOSE]: false
+        },
+        artifacts: {
+          ...emptyPipelineArtifacts(),
+          aspectRatio: '9:16',
+          finalDurationMode: 'match_audio',
+          targetDurationSec: 10,
+          segmentDurationSec: 5,
+          plannedShots: 2,
+          script: 'Existing script',
+          scriptHash: hashText('Existing script'),
+          scriptSourceStoryHash: hashText('A sufficiently long story for existing local file reuse test in orchestrator.'),
+          tone: 'neutral',
+          shots,
+          shotHashes: shots.map((shot) => hashText(shot)),
+          timeline,
+          voiceoverUrl: 'https://existing/voice.mp3',
+          voiceoverPath,
+          renderSpecVersion: 2,
+          keyframeSizeKey: '576x1024',
+          keyframeUrls: ['https://existing/kf-0.png', 'https://existing/kf-1.png', 'https://existing/kf-2.png'],
+          keyframePaths,
+          segmentUrls: ['https://existing/seg-0.mp4', 'https://existing/seg-1.mp4'],
+          segmentPaths,
+          modelSelections: {
+            textToText: 'deepseek-ai/deepseek-v3',
+            textToSpeech: 'minimax/speech-02-turbo',
+            textToImage: 'prunaai/z-image-turbo',
+            imageTextToVideo: 'wan-video/wan-2.2-i2v-fast'
+          }
+        }
+      }),
+      archiveProjectAssets: async () => null,
+      persistArtifacts: async () => {},
+      writeProjectRunState: async () => {},
+      syncProjectSnapshot: async () => {},
+      writeRunRecord: async () => {},
+      collectRunPredictions: async () => [],
+      preprocessStory: (story) => story,
+      probeMediaDurationSeconds: async () => 10,
+      resolveSegmentCountFromAudioDuration: () => 2,
+      buildFixedTimeline: () => timeline,
+      generateScript: async () => {
+        throw new Error('generateScript should not run when script is reused');
+      },
+      generateVoiceover: async () => {
+        throw new Error('generateVoiceover should not run when voiceover is reused');
+      },
+      generateKeyframe: async () => {
+        throw new Error('generateKeyframe should not run when keyframe files already exist');
+      },
+      generateVideoSegmentAtIndex: async () => {
+        throw new Error('generateVideoSegmentAtIndex should not run when segment files already exist');
+      },
+      composeFinalVideo: async () => ({
+        finalVideoPath: path.join(tempDir, 'final.mp4'),
+        voiceoverPath,
+        keyframePaths,
+        segmentPaths
+      })
+    }
+  });
+
+  assert.equal(result.status, 'completed');
+  assert.match(result.artifacts.finalVideoPath, /final\.mp4$/);
+
+  await fs.rm(tempDir, { recursive: true, force: true });
+});
+
+test('runPipeline invalidates resume artifacts when model selections change', async () => {
+  const project = uniqueProject('ut-orch-model-selection-change');
+
+  const seededRunState = {
+    status: 'completed',
+    error: null,
+    steps: allStepsTrue(),
+    artifacts: {
+      ...emptyPipelineArtifacts(),
+      script: 'Existing script',
+      tone: 'neutral',
+      shots: ['Shot 1', 'Shot 2', 'Shot 3'],
+      timeline: [{ startSec: 0, endSec: 5 }, { startSec: 5, endSec: 10 }],
+      voiceoverUrl: 'https://old/voice.mp3',
+      voiceoverPath: '/tmp/old-voice.mp3',
+      keyframeUrls: ['https://old/kf1.png', 'https://old/kf2.png', 'https://old/kf3.png'],
+      segmentUrls: ['https://old/seg1.mp4', 'https://old/seg2.mp4'],
+      finalVideoPath: '/tmp/old-final.mp4',
+      scriptHash: hashText('Existing script'),
+      shotHashes: [hashText('Shot 1'), hashText('Shot 2'), hashText('Shot 3')],
+      scriptSourceStoryHash: hashText('A sufficiently long story for model selection reset testing.'),
+      modelSelections: {
+        textToText: 'minimax/speech-02-turbo',
+        textToSpeech: 'minimax/speech-02-turbo',
+        textToImage: 'prunaai/z-image-turbo',
+        imageTextToVideo: 'wan-video/wan-2.2-i2v-fast'
+      }
+    }
+  };
+
+  const calls = {
+    script: 0,
+    voice: 0,
+    keyframe: 0,
+    segment: 0
+  };
+
+  const job = createJob({
+    project,
+    story: 'A sufficiently long story for model selection reset testing.'
+  });
+
+  const result = await runPipeline(job.id, {
+    deps: {
+      ensureProject: async () => {},
+      readProjectConfig: async () => ({
+        aspectRatio: '9:16',
+        targetDurationSec: 10,
+        finalDurationMode: 'match_audio',
+        models: {
+          textToText: 'deepseek-ai/deepseek-v3',
+          textToSpeech: 'minimax/speech-02-turbo',
+          textToImage: 'prunaai/z-image-turbo',
+          imageTextToVideo: 'wan-video/wan-2.2-i2v-fast'
+        }
+      }),
+      readProjectRunState: async () => seededRunState,
+      archiveProjectAssets: async () => null,
+      persistArtifacts: async () => {},
+      writeProjectRunState: async () => {},
+      syncProjectSnapshot: async () => {},
+      writeRunRecord: async () => {},
+      collectRunPredictions: async () => [],
+      preprocessStory: (story) => story,
+      generateScript: async () => {
+        calls.script += 1;
+        return {
+          script: 'Regenerated script',
+          tone: 'neutral',
+          scriptWordCount: 12,
+          targetWordCount: 12
+        };
+      },
+      generateShots: async (_script, { shotCount }) => ({
+        shots: Array.from({ length: shotCount }, (_v, i) => `Shot ${i + 1}`)
+      }),
+      generateVoiceover: async () => {
+        calls.voice += 1;
+        return {
+          timeline: [{ startSec: 0, endSec: 5 }, { startSec: 5, endSec: 10 }],
+          voiceoverUrl: 'https://new/voice.mp3',
+          ttsPlan: { speed: 1 }
+        };
+      },
+      persistVoiceover: async () => '/tmp/new-voice.mp3',
+      probeMediaDurationSeconds: async () => 10,
+      resolveSegmentCountFromAudioDuration: () => 2,
+      buildFixedTimeline: () => [{ startSec: 0, endSec: 5 }, { startSec: 5, endSec: 10 }],
+      generateKeyframe: async (_shot, _tone, _aspect, index) => {
+        calls.keyframe += 1;
+        return `https://new/keyframe-${index}.png`;
+      },
+      persistKeyframe: async (_dir, _url, index) => `/tmp/new-keyframe-${index}.png`,
+      generateVideoSegmentAtIndex: async (index) => {
+        calls.segment += 1;
+        return `https://new/segment-${index}.mp4`;
+      },
+      persistSegment: async (_dir, _url, index) => `/tmp/new-segment-${index}.mp4`,
+      composeFinalVideo: async () => ({
+        finalVideoPath: '/tmp/new-final.mp4',
+        voiceoverPath: '/tmp/new-voice.mp3',
+        keyframePaths: ['/tmp/new-keyframe-0.png', '/tmp/new-keyframe-1.png', '/tmp/new-keyframe-2.png'],
+        segmentPaths: ['/tmp/new-segment-0.mp4', '/tmp/new-segment-1.mp4']
+      })
+    }
+  });
+
+  assert.equal(result.status, 'completed');
+  assert.equal(calls.script, 1);
+  assert.equal(calls.voice, 1);
+  assert.ok(calls.keyframe >= 1);
+  assert.ok(calls.segment >= 1);
+  assert.equal(result.artifacts.script, 'Regenerated script');
+  assert.equal(result.artifacts.finalVideoPath, '/tmp/new-final.mp4');
 });
 
 test('regenerateProjectAsset regenerates targeted keyframe and invalidates downstream stages', async () => {

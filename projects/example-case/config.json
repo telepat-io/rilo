@@ -3,5 +3,11 @@
   "targetDurationSec": 20,
   "finalDurationMode": "match_audio",
   "keyframeWidth": 768,
-  "keyframeHeight": 1024
+  "keyframeHeight": 1024,
+  "models": {
+    "textToText": "deepseek-ai/deepseek-v3",
+    "textToSpeech": "minimax/speech-02-turbo",
+    "textToImage": "prunaai/z-image-turbo",
+    "imageTextToVideo": "wan-video/wan-2.2-i2v-fast"
+  }
 }

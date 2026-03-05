@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
+import { spawnSync } from 'node:child_process';
 
 import { buildOpenApiSpec } from '../src/api/openapi/spec.js';
 import { generateOpenApiFile } from '../src/api/openapi/generateOpenApi.js';
@@ -49,6 +50,28 @@ test('generateOpenApiFile writes a valid JSON spec to target path', async () => 
     assert.equal(parsed.openapi, '3.1.0');
     assert.equal(parsed.servers[0].url, 'http://127.0.0.1:3100');
     assert.ok(parsed.paths['/jobs']);
+  } finally {
+    await fs.rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+test('generateOpenApi script entrypoint writes output in current working directory', async () => {
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'videogen-openapi-entry-'));
+  try {
+    const scriptPath = path.resolve('src/api/openapi/generateOpenApi.js');
+    const result = spawnSync(process.execPath, [scriptPath], {
+      cwd: tempDir,
+      encoding: 'utf8'
+    });
+
+    assert.equal(result.status, 0);
+    assert.match(result.stdout, /OpenAPI generated at/);
+
+    const generatedPath = path.join(tempDir, 'openapi', 'openapi.json');
+    const raw = await fs.readFile(generatedPath, 'utf8');
+    const parsed = JSON.parse(raw);
+    assert.equal(parsed.openapi, '3.1.0');
+    assert.ok(parsed.paths['/projects']);
   } finally {
     await fs.rm(tempDir, { recursive: true, force: true });
   }

@@ -1,4 +1,4 @@
-import { MODELS, DEFAULT_VIDEO_CONFIG } from '../config/models.js';
+import { DEFAULT_VIDEO_CONFIG, MODEL_CATEGORIES, resolveModelForCategory } from '../config/models.js';
 import { runModel, extractOutputText } from '../providers/predictions.js';
 
 const SCRIPT_WORDS_PER_SECOND = 2.6;
@@ -58,6 +58,7 @@ export async function generateScript(story, options = {}, trace = null) {
     ? options.targetDurationSec
     : DEFAULT_VIDEO_CONFIG.durationSec;
   const wordBudget = buildWordBudget(targetDurationSec);
+  const modelId = options.modelId || resolveModelForCategory(MODEL_CATEGORIES.textToText);
 
   let bestCandidate = null;
   let bestDistance = Number.POSITIVE_INFINITY;
@@ -65,7 +66,7 @@ export async function generateScript(story, options = {}, trace = null) {
   for (let attempt = 1; attempt <= SCRIPT_RETRY_LIMIT; attempt += 1) {
     const prompt = buildScriptPrompt(story, targetDurationSec, wordBudget, attempt);
     const prediction = await runModelFn({
-      model: MODELS.deepseek,
+      model: modelId,
       input: {
         prompt,
         max_tokens: 1800,
@@ -115,11 +116,12 @@ export async function generateShots(script, options = {}, trace = null) {
     ? options.shotCount
     : DEFAULT_VIDEO_CONFIG.shots;
   const tone = typeof options.tone === 'string' ? options.tone : 'neutral';
+  const modelId = options.modelId || resolveModelForCategory(MODEL_CATEGORIES.textToText);
 
   for (let attempt = 1; attempt <= SHOTS_RETRY_LIMIT; attempt += 1) {
     const prompt = buildShotsPrompt(script, shotCount, tone, attempt);
     const prediction = await runModelFn({
-      model: MODELS.deepseek,
+      model: modelId,
       input: {
         prompt,
         max_tokens: 1800,

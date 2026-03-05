@@ -1,4 +1,9 @@
-import { MODELS, DEFAULT_VIDEO_CONFIG, ASPECT_RATIO_PRESETS } from '../config/models.js';
+import {
+  DEFAULT_VIDEO_CONFIG,
+  ASPECT_RATIO_PRESETS,
+  MODEL_CATEGORIES,
+  resolveModelForCategory
+} from '../config/models.js';
 import { runModel, extractOutputUri } from '../providers/predictions.js';
 import path from 'node:path';
 import { downloadToFile, ensureDir } from '../media/files.js';
@@ -23,6 +28,7 @@ export async function generateVideoSegmentAtIndex(
   const preset = ASPECT_RATIO_PRESETS[aspectRatio] || ASPECT_RATIO_PRESETS['9:16'];
   const totalKeyframes = keyframeUrls.length;
   const durationSec = timeline[segmentIndex]?.durationSec || 5;
+  const modelId = options.modelId || resolveModelForCategory(MODEL_CATEGORIES.imageTextToVideo);
 
   if (segmentIndex < 0 || segmentIndex >= totalKeyframes - 1) {
     throw new Error(`segment index ${segmentIndex} out of range for ${Math.max(0, totalKeyframes - 1)} segments`);
@@ -30,7 +36,7 @@ export async function generateVideoSegmentAtIndex(
 
   const prompt = shots[segmentIndex] || `Cinematic continuity shot ${segmentIndex + 1}`;
   const prediction = await runModelFn({
-    model: MODELS.video,
+    model: modelId,
     input: {
       prompt,
       image: keyframeUrls[segmentIndex],

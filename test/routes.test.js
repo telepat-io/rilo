@@ -569,7 +569,13 @@ test('PATCH /projects/:project/config updates and validates project config', asy
         aspectRatio: '9:16',
         targetDurationSec: 20,
         finalDurationMode: 'match_audio',
-        keyframeSizeKey: '576x1024'
+        keyframeSizeKey: '576x1024',
+        modelSelections: {
+          textToText: 'deepseek-ai/deepseek-v3',
+          textToSpeech: 'minimax/speech-02-turbo',
+          textToImage: 'prunaai/z-image-turbo',
+          imageTextToVideo: 'wan-video/wan-2.2-i2v-fast'
+        }
       },
       updatedAt: new Date().toISOString()
     };
@@ -644,6 +650,77 @@ test('PATCH /projects/:project/config updates and validates project config', asy
     assert.deepEqual(sizePatchBody.details.runState.artifacts.keyframePaths, []);
     assert.deepEqual(sizePatchBody.details.runState.artifacts.segmentPaths, []);
     assert.equal(sizePatchBody.details.runState.artifacts.finalVideoPath, '');
+
+    // model selection payload should be accepted and persisted in normalized config
+    const modelPatchResponse = await fetch(`${baseUrl}/projects/${project}/config`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        config: {
+          aspectRatio: '16:9',
+          targetDurationSec: 30,
+          finalDurationMode: 'match_audio',
+          models: {
+            textToText: 'deepseek-ai/deepseek-v3',
+            textToSpeech: 'minimax/speech-02-turbo',
+            textToImage: 'prunaai/z-image-turbo',
+            imageTextToVideo: 'wan-video/wan-2.2-i2v-fast'
+          }
+        }
+      })
+    });
+    assert.equal(modelPatchResponse.status, 200);
+    const modelPatchBody = await modelPatchResponse.json();
+    assert.equal(modelPatchBody.config.models.textToText, 'deepseek-ai/deepseek-v3');
+
+    // model change should invalidate all stages and reset downstream artifacts
+    await writeProjectRunState(project, reseededState);
+    await writeProjectArtifacts(project, reseededState.artifacts);
+    const modelChangeResponse = await fetch(`${baseUrl}/projects/${project}/config`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        config: {
+          aspectRatio: '16:9',
+          targetDurationSec: 30,
+          finalDurationMode: 'match_audio',
+          models: {
+            textToText: 'minimax/speech-02-turbo',
+            textToSpeech: 'minimax/speech-02-turbo',
+            textToImage: 'prunaai/z-image-turbo',
+            imageTextToVideo: 'wan-video/wan-2.2-i2v-fast'
+          }
+        }
+      })
+    });
+    assert.equal(modelChangeResponse.status, 200);
+    const modelChangeBody = await modelChangeResponse.json();
+    assert.equal(modelChangeBody.details.runState.steps.script, false);
+    assert.equal(modelChangeBody.details.runState.steps.voiceover, false);
+    assert.equal(modelChangeBody.details.runState.steps.keyframes, false);
+    assert.equal(modelChangeBody.details.runState.steps.segments, false);
+    assert.equal(modelChangeBody.details.runState.steps.compose, false);
+    assert.equal(modelChangeBody.details.runState.artifacts.script, '');
+    assert.equal(modelChangeBody.details.runState.artifacts.voiceoverPath, '');
+    assert.deepEqual(modelChangeBody.details.runState.artifacts.keyframePaths, []);
+    assert.deepEqual(modelChangeBody.details.runState.artifacts.segmentPaths, []);
+    assert.equal(modelChangeBody.details.runState.artifacts.modelSelections.textToText, 'minimax/speech-02-turbo');
+
+    const invalidModelResponse = await fetch(`${baseUrl}/projects/${project}/config`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        config: {
+          aspectRatio: '16:9',
+          targetDurationSec: 30,
+          finalDurationMode: 'match_audio',
+          models: {
+            textToText: 'unknown/model'
+          }
+        }
+      })
+    });
+    assert.equal(invalidModelResponse.status, 400);
 
     // invalid config rejected
     const invalidResponse = await fetch(`${baseUrl}/projects/${project}/config`, {
@@ -724,4 +801,82 @@ test('projects routes return 400 for invalid project names across metadata endpo
       assert.equal(response.status, 400);
     }
   });
+});
+
+test('projects content and regenerate validation branches return 400 for malformed payloads', async () => {
+  const app = express();
+  app.use(express.json());
+  app.use('/projects', createProjectsRouter());
+
+  const project = uniqueProject('ut-route-project-validate-branches');
+
+  await withServer(app, async (baseUrl) => {
+    const createdResponse = await fetch(`${baseUrl}/projects`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        project,
+        story: 'Base story used for validation-branch route tests in content and regenerate handlers.'
+      })
+    });
+    assert.equal(createdResponse.status, 201);
+
+    const badStory = await fetch(`${baseUrl}/projects/${project}/content`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ story: 123 })
+    });
+    assert.equal(badStory.status, 400);
+
+    const badScript = await fetch(`${baseUrl}/projects/${project}/content`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ script: 42 })
+    });
+    assert.equal(badScript.status, 400);
+
+    const badTone = await fetch(`${baseUrl}/projects/${project}/content`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ tone: { value: 'cinematic' } })
+    });
+    assert.equal(badTone.status, 400);
+
+    const shotsAndPrompts = await fetch(`${baseUrl}/projects/${project}/content`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ shots: ['a'], prompts: ['b'] })
+    });
+    assert.equal(shotsAndPrompts.status, 400);
+
+    const badShotsShape = await fetch(`${baseUrl}/projects/${project}/content`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ shots: ['a', 2] })
+    });
+    assert.equal(badShotsShape.status, 400);
+
+    const emptyContentPatch = await fetch(`${baseUrl}/projects/${project}/content`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    assert.equal(emptyContentPatch.status, 400);
+
+    const indexWithoutTargetType = await fetch(`${baseUrl}/projects/${project}/regenerate`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ index: 0 })
+    });
+    assert.equal(indexWithoutTargetType.status, 400);
+
+    const nonBooleanForceRestart = await fetch(`${baseUrl}/projects/${project}/regenerate`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ forceRestart: 'yes' })
+    });
+    assert.equal(nonBooleanForceRestart.status, 400);
+  });
+
+  await cleanupProject(project);
 });

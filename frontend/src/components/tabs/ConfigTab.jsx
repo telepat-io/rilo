@@ -7,9 +7,12 @@ export function ConfigTab({
   savingConfig,
   isRunning,
   onPatchConfig,
+  onPatchModel,
   onPatchOptionalInt,
   onSaveConfig
 }) {
+  const models = configDraft?.models || {};
+
   return (
     <div className="tab-pane">
       {configDraft ? (
@@ -90,6 +93,47 @@ export function ConfigTab({
               <div className="config-form-field config-form-field--readonly">
                 <span className="config-form-label">Resolved Size</span>
                 <span className="config-value">{`${mediaW} × ${mediaH}`}</span>
+              </div>
+
+              <div className="config-form-field">
+                <label className="config-form-label" htmlFor="cfg-model-text">Text to Text Model</label>
+                <input
+                  id="cfg-model-text"
+                  type="text"
+                  className="config-input"
+                  value={models.textToText || ''}
+                  onChange={(event) => onPatchModel('textToText', event.target.value)}
+                />
+              </div>
+              <div className="config-form-field">
+                <label className="config-form-label" htmlFor="cfg-model-tts">Text to Speech Model</label>
+                <input
+                  id="cfg-model-tts"
+                  type="text"
+                  className="config-input"
+                  value={models.textToSpeech || ''}
+                  onChange={(event) => onPatchModel('textToSpeech', event.target.value)}
+                />
+              </div>
+              <div className="config-form-field">
+                <label className="config-form-label" htmlFor="cfg-model-image">Text to Image Model</label>
+                <input
+                  id="cfg-model-image"
+                  type="text"
+                  className="config-input"
+                  value={models.textToImage || ''}
+                  onChange={(event) => onPatchModel('textToImage', event.target.value)}
+                />
+              </div>
+              <div className="config-form-field">
+                <label className="config-form-label" htmlFor="cfg-model-video">Image + Text to Video Model</label>
+                <input
+                  id="cfg-model-video"
+                  type="text"
+                  className="config-input"
+                  value={models.imageTextToVideo || ''}
+                  onChange={(event) => onPatchModel('imageTextToVideo', event.target.value)}
+                />
               </div>
             </div>
             <div className="config-form-actions">

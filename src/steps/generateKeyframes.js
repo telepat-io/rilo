@@ -1,4 +1,4 @@
-import { ASPECT_RATIO_PRESETS, MODELS } from '../config/models.js';
+import { ASPECT_RATIO_PRESETS, MODEL_CATEGORIES, resolveModelForCategory } from '../config/models.js';
 import { runModel, extractOutputUri } from '../providers/predictions.js';
 import path from 'node:path';
 import { downloadToFile, ensureDir } from '../media/files.js';
@@ -24,9 +24,10 @@ export async function generateKeyframe(
   const prompt = `${stylePrefix(index, tone)} ${promptText}`;
   const width = sizeOverride?.width || preset.keyframeWidth || ASPECT_RATIO_PRESETS['9:16'].keyframeWidth;
   const height = sizeOverride?.height || preset.keyframeHeight || ASPECT_RATIO_PRESETS['9:16'].keyframeHeight;
+  const modelId = options.modelId || resolveModelForCategory(MODEL_CATEGORIES.textToImage);
 
   const prediction = await runModelFn({
-    model: MODELS.keyframe,
+    model: modelId,
     input: {
       prompt,
       width,

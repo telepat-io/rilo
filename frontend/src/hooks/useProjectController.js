@@ -13,6 +13,12 @@ import {
 
 const AR_PRESETS = { '9:16': [576, 1024], '16:9': [1024, 576], '1:1': [1024, 1024] };
 const POLL_INTERVAL_MS = Number(import.meta.env.VITE_POLL_INTERVAL_MS || 3000);
+const DEFAULT_MODEL_SELECTIONS = {
+  textToText: 'deepseek-ai/deepseek-v3',
+  textToSpeech: 'minimax/speech-02-turbo',
+  textToImage: 'prunaai/z-image-turbo',
+  imageTextToVideo: 'wan-video/wan-2.2-i2v-fast'
+};
 
 function resolveMediaDimensions(config, artifacts) {
   const sizeKey = artifacts?.keyframeSizeKey;
@@ -35,6 +41,20 @@ function sortByPath(arr) {
 
 function parseShotsText(input) {
   return input.split('\n').map((line) => line.trim()).filter(Boolean);
+}
+
+function normalizeConfigDraft(config) {
+  if (!config || typeof config !== 'object') {
+    return null;
+  }
+
+  return {
+    ...config,
+    models: {
+      ...DEFAULT_MODEL_SELECTIONS,
+      ...(config.models || {})
+    }
+  };
 }
 
 export function useProjectController() {
@@ -162,7 +182,7 @@ export function useProjectController() {
       setShotsText((prompts.shots || details.runState?.artifacts?.shots || []).join('\n'));
       setStoryDirty(false);
       setScriptDirty(false);
-      setConfigDraft(details.config ? { ...details.config } : null);
+      setConfigDraft(normalizeConfigDraft(details.config));
       setConfigDirty(false);
       setAssetCacheKey((value) => value + 1);
     } catch (error) {
@@ -359,6 +379,21 @@ export function useProjectController() {
     patchConfig(key, Number.isNaN(parsed) ? undefined : parsed);
   }
 
+  function patchConfigModel(category, value) {
+    setConfigDraft((previous) => {
+      const base = normalizeConfigDraft(previous) || normalizeConfigDraft({}) || { models: { ...DEFAULT_MODEL_SELECTIONS } };
+      const nextValue = typeof value === 'string' ? value.trim() : '';
+      return {
+        ...base,
+        models: {
+          ...base.models,
+          [category]: nextValue
+        }
+      };
+    });
+    setConfigDirty(true);
+  }
+
   async function handleSaveConfig() {
     if (!selectedProject || !configDraft) return;
 
@@ -465,6 +500,7 @@ export function useProjectController() {
     configDirty,
     savingConfig,
     patchConfig,
+    patchConfigModel,
     patchOptionalIntConfig,
 
     keyframes,

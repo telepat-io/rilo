@@ -148,6 +148,96 @@ test('env parser helpers cover fallback and coercion branches', () => {
   assert.deepEqual(parseAllowedHosts('', 'x.com'), ['x.com']);
 });
 
+test('env prefers SECRET_* variables over legacy/public env vars', async () => {
+  const originalEnv = { ...process.env };
+
+  try {
+    process.env.SECRET_REPLICATE_API_TOKEN = 'secret-replicate-token';
+    process.env.VIDEOGEN_REPLICATE_API_TOKEN = 'public-replicate-token';
+    process.env.REPLICATE_API_TOKEN = 'legacy-replicate-token';
+
+    process.env.SECRET_API_BEARER_TOKEN = 'secret-api-token';
+    process.env.VIDEOGEN_API_BEARER_TOKEN = 'public-api-token';
+    process.env.API_BEARER_TOKEN = 'legacy-api-token';
+
+    process.env.SECRET_OUTPUT_BACKEND = 'firebase';
+    process.env.VIDEOGEN_OUTPUT_BACKEND = 'local';
+    process.env.OUTPUT_BACKEND = 'local';
+
+    process.env.SECRET_FIREBASE_PROJECT_ID = 'secret-project';
+    process.env.VIDEOGEN_FIREBASE_PROJECT_ID = 'public-project';
+    process.env.FIREBASE_PROJECT_ID = 'legacy-project';
+
+    process.env.SECRET_FIREBASE_STORAGE_BUCKET = 'secret-bucket';
+    process.env.VIDEOGEN_FIREBASE_STORAGE_BUCKET = 'public-bucket';
+    process.env.FIREBASE_STORAGE_BUCKET = 'legacy-bucket';
+
+    const mod = await importEnvFresh('secret-precedence');
+    assert.equal(mod.env.replicateApiToken, 'secret-replicate-token');
+    assert.equal(mod.env.apiBearerToken, 'secret-api-token');
+    assert.equal(mod.env.outputBackend, 'firebase');
+    assert.equal(mod.env.firebaseProjectId, 'secret-project');
+    assert.equal(mod.env.firebaseStorageBucket, 'secret-bucket');
+  } finally {
+    process.env = originalEnv;
+  }
+});
+
+test('env falls back to VIDEOGEN_* and then legacy variables when SECRET_* is absent', async () => {
+  const originalEnv = { ...process.env };
+
+  try {
+    delete process.env.SECRET_REPLICATE_API_TOKEN;
+    process.env.VIDEOGEN_REPLICATE_API_TOKEN = 'videogen-replicate-token';
+    process.env.REPLICATE_API_TOKEN = 'legacy-replicate-token';
+
+    delete process.env.SECRET_API_BEARER_TOKEN;
+    process.env.VIDEOGEN_API_BEARER_TOKEN = 'videogen-api-token';
+    process.env.API_BEARER_TOKEN = 'legacy-api-token';
+
+    delete process.env.SECRET_OUTPUT_BACKEND;
+    process.env.VIDEOGEN_OUTPUT_BACKEND = 'firebase';
+    process.env.OUTPUT_BACKEND = 'local';
+
+    delete process.env.SECRET_FIREBASE_PROJECT_ID;
+    process.env.VIDEOGEN_FIREBASE_PROJECT_ID = 'videogen-project';
+    process.env.FIREBASE_PROJECT_ID = 'legacy-project';
+
+    delete process.env.SECRET_FIREBASE_STORAGE_BUCKET;
+    process.env.VIDEOGEN_FIREBASE_STORAGE_BUCKET = 'videogen-bucket';
+    process.env.FIREBASE_STORAGE_BUCKET = 'legacy-bucket';
+
+    process.env.VIDEOGEN_FIREBASE_CLIENT_EMAIL = '';
+    process.env.FIREBASE_CLIENT_EMAIL = 'legacy-client@example.com';
+    process.env.VIDEOGEN_FIREBASE_PRIVATE_KEY = '';
+    process.env.FIREBASE_PRIVATE_KEY = 'legacy-private-key';
+
+    const mod = await importEnvFresh('videogen-and-legacy-fallback');
+    assert.equal(mod.env.replicateApiToken, 'videogen-replicate-token');
+    assert.equal(mod.env.apiBearerToken, 'videogen-api-token');
+    assert.equal(mod.env.outputBackend, 'firebase');
+    assert.equal(mod.env.firebaseProjectId, 'videogen-project');
+    assert.equal(mod.env.firebaseStorageBucket, 'videogen-bucket');
+    assert.equal(mod.env.firebaseClientEmail, 'legacy-client@example.com');
+    assert.equal(mod.env.firebasePrivateKey, 'legacy-private-key');
+
+    process.env.VIDEOGEN_REPLICATE_API_TOKEN = '';
+    process.env.VIDEOGEN_API_BEARER_TOKEN = '';
+    process.env.VIDEOGEN_OUTPUT_BACKEND = '';
+    process.env.VIDEOGEN_FIREBASE_PROJECT_ID = '';
+    process.env.VIDEOGEN_FIREBASE_STORAGE_BUCKET = '';
+
+    const modLegacy = await importEnvFresh('legacy-only-fallback');
+    assert.equal(modLegacy.env.replicateApiToken, 'legacy-replicate-token');
+    assert.equal(modLegacy.env.apiBearerToken, 'legacy-api-token');
+    assert.equal(modLegacy.env.outputBackend, 'local');
+    assert.equal(modLegacy.env.firebaseProjectId, 'legacy-project');
+    assert.equal(modLegacy.env.firebaseStorageBucket, 'legacy-bucket');
+  } finally {
+    process.env = originalEnv;
+  }
+});
+
 test('model pricing helpers cover nullable and normalization branches', () => {
   assert.equal(toNullableNumber(null), null);
   assert.equal(toNullableNumber(undefined), null);
