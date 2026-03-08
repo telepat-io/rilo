@@ -11,6 +11,7 @@ import {
   readProjectArtifacts,
   readProjectConfig,
   readProjectMetadata,
+  readProjectScriptAsset,
   readProjectRunState,
   readProjectSync,
   resolveProjectName,
@@ -46,12 +47,13 @@ function parseJsonLines(rawText) {
     .filter(Boolean);
 }
 
-function buildPromptPayload(runState, logs = []) {
+function buildPromptPayload(runState, scriptAsset, logs = []) {
   const artifacts = runState?.artifacts || {};
+  const persisted = scriptAsset && typeof scriptAsset === 'object' ? scriptAsset : {};
   const promptCalls = logs.filter((entry) => entry?.type === 'request_start' && entry?.input?.prompt);
   return {
-    script: artifacts.script || '',
-    shots: artifacts.shots || [],
+    script: persisted.script || artifacts.script || '',
+    shots: persisted.shots || artifacts.shots || [],
     prompts: promptCalls.map((entry) => ({
       model: entry.model,
       step: entry.trace?.step || '',
@@ -215,13 +217,16 @@ export class LocalProjectMetadataBackend {
 
   async getPromptData(project, options = {}) {
     const resolved = resolveProjectName(project);
-    const runState = await readProjectRunState(resolved);
+    const [runState, scriptAsset] = await Promise.all([
+      readProjectRunState(resolved),
+      readProjectScriptAsset(resolved)
+    ]);
     const logsResult = await this.getRequestLogs(resolved, options);
 
     return {
       project: resolved,
       backend: 'local',
-      ...buildPromptPayload(runState, logsResult.entries),
+      ...buildPromptPayload(runState, scriptAsset, logsResult.entries),
       logs: logsResult.logs
     };
   }
@@ -431,12 +436,13 @@ export class FirebaseProjectMetadataBackend {
 
   async getPromptData(project, options = {}) {
     const details = await this.getProject(project);
+    const scriptAsset = await readProjectScriptAsset(project);
     const logs = await this.getRequestLogs(project, options);
     return {
       project: details.project,
       backend: 'firebase',
-      script: details.runState?.artifacts?.script || '',
-      shots: details.runState?.artifacts?.shots || [],
+      script: scriptAsset?.script || details.runState?.artifacts?.script || '',
+      shots: scriptAsset?.shots || details.runState?.artifacts?.shots || [],
       prompts: [],
       logs: logs.logs
     };

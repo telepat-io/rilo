@@ -13,6 +13,8 @@ import {
   persistSegments
 } from '../steps/generateVideoSegments.js';
 import { composeFinalVideo } from '../steps/composeFinalVideo.js';
+import { alignSubtitlesToVideo } from '../steps/alignSubtitles.js';
+import { burnInSubtitles } from '../steps/burnInSubtitles.js';
 import { JobStatus, JobStep, emptyStepState } from '../types/job.js';
 import { logError, logInfo } from '../observability/logger.js';
 import { persistArtifacts } from '../store/assetStore.js';
@@ -73,6 +75,8 @@ const DEFAULT_ORCHESTRATOR_DEPS = {
   persistSegment,
   persistSegments,
   composeFinalVideo,
+  alignSubtitlesToVideo,
+  burnInSubtitles,
   persistArtifacts,
   probeMediaDurationSeconds,
   ensureProject,
@@ -153,6 +157,17 @@ function collectAffectedSegmentIndexes(changedShotIndexes, totalKeyframes) {
   return affected;
 }
 
+function clearSubtitleArtifacts(artifacts) {
+  return {
+    ...artifacts,
+    subtitleSeedPath: '',
+    subtitleAlignedSrtPath: '',
+    subtitleAssPath: '',
+    finalCaptionedVideoPath: '',
+    subtitlesUrl: ''
+  };
+}
+
 async function fileExists(targetPath) {
   try {
     await fs.access(targetPath);
@@ -196,15 +211,15 @@ export async function regenerateProjectAsset(projectName, target, options = {}) 
   const hasIndex = target?.index !== undefined;
   const index = hasIndex ? Number(target?.index) : null;
 
-  if (!['script', 'voiceover', 'keyframe', 'segment'].includes(targetType)) {
-    throw new Error('targetType must be one of script, voiceover, keyframe, segment');
+  if (!['script', 'voiceover', 'keyframe', 'segment', 'align', 'burnin'].includes(targetType)) {
+    throw new Error('targetType must be one of script, voiceover, keyframe, segment, align, burnin');
   }
 
-  if ((targetType === 'script' || targetType === 'voiceover') && hasIndex) {
-    throw new Error('index is not supported for script/voiceover regeneration');
+  if (['script', 'voiceover', 'align', 'burnin'].includes(targetType) && hasIndex) {
+    throw new Error('index is not supported for script/voiceover/align/burnin regeneration');
   }
 
-  if (targetType !== 'script' && targetType !== 'voiceover' && (!Number.isInteger(index) || index < 0)) {
+  if (['keyframe', 'segment'].includes(targetType) && (!Number.isInteger(index) || index < 0)) {
     throw new Error('index must be a non-negative integer');
   }
 
@@ -223,6 +238,7 @@ export async function regenerateProjectAsset(projectName, target, options = {}) 
     ...runState.artifacts,
     modelSelections,
     modelOptions,
+    subtitleOptions: projectConfig.subtitleOptions,
     keyframeUrls: [...(runState.artifacts.keyframeUrls || [])],
     keyframePaths: [...(runState.artifacts.keyframePaths || [])],
     segmentUrls: [...(runState.artifacts.segmentUrls || [])],
@@ -235,7 +251,7 @@ export async function regenerateProjectAsset(projectName, target, options = {}) 
   const keyframeCount = Array.isArray(artifacts.shots) ? artifacts.shots.length : 0;
   const segmentCount = Math.max(0, keyframeCount - 1);
 
-  if (targetType !== 'script') {
+  if (['voiceover', 'keyframe', 'segment'].includes(targetType)) {
     if (!Array.isArray(artifacts.shots) || artifacts.shots.length === 0) {
       throw new Error('project has no shots to regenerate');
     }
@@ -254,7 +270,7 @@ export async function regenerateProjectAsset(projectName, target, options = {}) 
     projectDir,
     reason: 'targeted_asset_regeneration',
     targetType,
-    ...((targetType === 'voiceover' || targetType === 'script') ? {} : { index })
+    ...((targetType === 'keyframe' || targetType === 'segment') ? { index } : {})
   };
 
   if (targetType === 'script') {
@@ -285,13 +301,17 @@ export async function regenerateProjectAsset(projectName, target, options = {}) 
     artifacts.keyframePaths = [];
     artifacts.segmentUrls = [];
     artifacts.segmentPaths = [];
+    artifacts.finalBaseVideoPath = '';
     artifacts.finalVideoPath = '';
+    Object.assign(artifacts, clearSubtitleArtifacts(artifacts));
 
     steps[JobStep.SCRIPT] = true;
     steps[JobStep.VOICE] = false;
     steps[JobStep.KEYFRAMES] = false;
     steps[JobStep.SEGMENTS] = false;
     steps[JobStep.COMPOSE] = false;
+    steps[JobStep.ALIGN] = false;
+    steps[JobStep.BURNIN] = false;
 
     await persistTextAssets(projectDir, artifacts.script, artifacts.shots, artifacts.tone || 'neutral');
   }
@@ -361,6 +381,12 @@ export async function regenerateProjectAsset(projectName, target, options = {}) 
       await persistTextAssets(projectDir, artifacts.script, artifacts.shots, artifacts.tone || 'neutral');
       steps[JobStep.KEYFRAMES] = false;
       steps[JobStep.SEGMENTS] = false;
+      steps[JobStep.COMPOSE] = false;
+      steps[JobStep.ALIGN] = false;
+      steps[JobStep.BURNIN] = false;
+      artifacts.finalBaseVideoPath = '';
+      artifacts.finalVideoPath = '';
+      Object.assign(artifacts, clearSubtitleArtifacts(artifacts));
     }
 
     steps[JobStep.VOICE] = true;
@@ -382,13 +408,21 @@ export async function regenerateProjectAsset(projectName, target, options = {}) 
       });
 
       artifacts.finalVideoPath = composed.finalVideoPath;
+      artifacts.finalBaseVideoPath = composed.finalVideoPath;
       artifacts.voiceoverPath = composed.voiceoverPath;
       artifacts.keyframePaths = composed.keyframePaths;
       artifacts.segmentPaths = composed.segmentPaths;
       steps[JobStep.COMPOSE] = true;
+      steps[JobStep.ALIGN] = false;
+      steps[JobStep.BURNIN] = false;
+      Object.assign(artifacts, clearSubtitleArtifacts(artifacts));
     } else {
       steps[JobStep.COMPOSE] = false;
+      steps[JobStep.ALIGN] = false;
+      steps[JobStep.BURNIN] = false;
+      artifacts.finalBaseVideoPath = '';
       artifacts.finalVideoPath = '';
+      Object.assign(artifacts, clearSubtitleArtifacts(artifacts));
     }
   }
 
@@ -421,7 +455,11 @@ export async function regenerateProjectAsset(projectName, target, options = {}) 
 
     steps[JobStep.SEGMENTS] = false;
     steps[JobStep.COMPOSE] = false;
+    steps[JobStep.ALIGN] = false;
+    steps[JobStep.BURNIN] = false;
+    artifacts.finalBaseVideoPath = '';
     artifacts.finalVideoPath = '';
+    Object.assign(artifacts, clearSubtitleArtifacts(artifacts));
   }
 
   if (targetType === 'segment') {
@@ -449,7 +487,62 @@ export async function regenerateProjectAsset(projectName, target, options = {}) 
     artifacts.segmentPaths[index] = await deps.persistSegment(projectDir, segmentUrl, index);
 
     steps[JobStep.COMPOSE] = false;
+    steps[JobStep.ALIGN] = false;
+    steps[JobStep.BURNIN] = false;
+    artifacts.finalBaseVideoPath = '';
     artifacts.finalVideoPath = '';
+    Object.assign(artifacts, clearSubtitleArtifacts(artifacts));
+  }
+
+  if (targetType === 'align') {
+    const baseVideoPath = artifacts.finalBaseVideoPath || artifacts.finalVideoPath;
+    if (!baseVideoPath) {
+      throw new Error('project has no composed video to align subtitles against');
+    }
+
+    if (!artifacts.script || !String(artifacts.script).trim()) {
+      throw new Error('project has no script to align subtitles from');
+    }
+
+    const aligned = await deps.alignSubtitlesToVideo({
+      projectDir,
+      videoPath: baseVideoPath,
+      script: artifacts.script,
+      totalDurationSec: artifacts.audioDurationSec || resolveTargetDurationSec(projectConfig),
+      subtitleOptions: projectConfig.subtitleOptions
+    });
+
+    artifacts.subtitleSeedPath = aligned.subtitleSeedPath;
+    artifacts.subtitleAlignedSrtPath = aligned.subtitleAlignedSrtPath;
+    artifacts.subtitleAssPath = aligned.subtitleAssPath;
+    artifacts.finalBaseVideoPath = baseVideoPath;
+    artifacts.finalCaptionedVideoPath = '';
+    artifacts.finalVideoPath = baseVideoPath;
+    steps[JobStep.ALIGN] = true;
+    steps[JobStep.BURNIN] = false;
+  }
+
+  if (targetType === 'burnin') {
+    const baseVideoPath = artifacts.finalBaseVideoPath || artifacts.finalVideoPath;
+    if (!baseVideoPath) {
+      throw new Error('project has no composed video to burn subtitles into');
+    }
+
+    if (!artifacts.subtitleAssPath) {
+      throw new Error('project has no aligned subtitle file; run align first');
+    }
+
+    const burned = await deps.burnInSubtitles({
+      projectDir,
+      videoPath: baseVideoPath,
+      subtitleAssPath: artifacts.subtitleAssPath
+    });
+
+    artifacts.finalBaseVideoPath = baseVideoPath;
+    artifacts.finalCaptionedVideoPath = burned.finalCaptionedVideoPath;
+    artifacts.finalVideoPath = burned.finalCaptionedVideoPath;
+    steps[JobStep.BURNIN] = true;
+    steps[JobStep.ALIGN] = true;
   }
 
   const updatedAt = new Date().toISOString();
@@ -467,7 +560,7 @@ export async function regenerateProjectAsset(projectName, target, options = {}) 
   return {
     project,
     targetType,
-    ...((targetType === 'voiceover' || targetType === 'script') ? {} : { index }),
+    ...((targetType === 'keyframe' || targetType === 'segment') ? { index } : {}),
     artifacts,
     steps,
     updatedAt
@@ -630,17 +723,25 @@ export async function runPipeline(jobId, options = {}) {
         nextSteps[JobStep.KEYFRAMES] = false;
         nextSteps[JobStep.SEGMENTS] = false;
         nextSteps[JobStep.COMPOSE] = false;
+        nextSteps[JobStep.ALIGN] = false;
+        nextSteps[JobStep.BURNIN] = false;
         nextArtifacts.keyframeUrls = [];
         nextArtifacts.keyframePaths = [];
         nextArtifacts.segmentUrls = [];
         nextArtifacts.segmentPaths = [];
+        nextArtifacts.finalBaseVideoPath = '';
         nextArtifacts.finalVideoPath = '';
+        Object.assign(nextArtifacts, clearSubtitleArtifacts(nextArtifacts));
       } else if (timelineChanged) {
         nextSteps[JobStep.SEGMENTS] = false;
         nextSteps[JobStep.COMPOSE] = false;
+        nextSteps[JobStep.ALIGN] = false;
+        nextSteps[JobStep.BURNIN] = false;
         nextArtifacts.segmentUrls = [];
         nextArtifacts.segmentPaths = [];
+        nextArtifacts.finalBaseVideoPath = '';
         nextArtifacts.finalVideoPath = '';
+        Object.assign(nextArtifacts, clearSubtitleArtifacts(nextArtifacts));
       }
 
       if (shotsChanged) {
@@ -672,6 +773,8 @@ export async function runPipeline(jobId, options = {}) {
       seedSteps[JobStep.KEYFRAMES] = false;
       seedSteps[JobStep.SEGMENTS] = false;
       seedSteps[JobStep.COMPOSE] = false;
+      seedSteps[JobStep.ALIGN] = false;
+      seedSteps[JobStep.BURNIN] = false;
       seedArtifacts.script = '';
       seedArtifacts.tone = '';
       seedArtifacts.shots = [];
@@ -682,7 +785,9 @@ export async function runPipeline(jobId, options = {}) {
       seedArtifacts.keyframePaths = [];
       seedArtifacts.segmentUrls = [];
       seedArtifacts.segmentPaths = [];
+      seedArtifacts.finalBaseVideoPath = '';
       seedArtifacts.finalVideoPath = '';
+      Object.assign(seedArtifacts, clearSubtitleArtifacts(seedArtifacts));
       seedArtifacts.scriptHash = '';
       seedArtifacts.shotHashes = [];
       seedArtifacts.scriptSourceStoryHash = '';
@@ -699,6 +804,8 @@ export async function runPipeline(jobId, options = {}) {
       seedSteps[JobStep.KEYFRAMES] = false;
       seedSteps[JobStep.SEGMENTS] = false;
       seedSteps[JobStep.COMPOSE] = false;
+      seedSteps[JobStep.ALIGN] = false;
+      seedSteps[JobStep.BURNIN] = false;
       seedArtifacts.shots = [];
       seedArtifacts.shotHashes = [];
       seedArtifacts.timeline = [];
@@ -708,7 +815,9 @@ export async function runPipeline(jobId, options = {}) {
       seedArtifacts.keyframePaths = [];
       seedArtifacts.segmentUrls = [];
       seedArtifacts.segmentPaths = [];
+      seedArtifacts.finalBaseVideoPath = '';
       seedArtifacts.finalVideoPath = '';
+      Object.assign(seedArtifacts, clearSubtitleArtifacts(seedArtifacts));
     }
 
     const shotHashesFromAsset = scriptAsset ? hashShots(scriptAsset.shots) : [];
@@ -721,23 +830,35 @@ export async function runPipeline(jobId, options = {}) {
       seedArtifacts.shots = scriptAsset.shots;
       seedArtifacts.shotHashes = shotHashesFromAsset;
       seedSteps[JobStep.COMPOSE] = false;
+      seedSteps[JobStep.ALIGN] = false;
+      seedSteps[JobStep.BURNIN] = false;
+      seedArtifacts.finalBaseVideoPath = '';
       seedArtifacts.finalVideoPath = '';
+      Object.assign(seedArtifacts, clearSubtitleArtifacts(seedArtifacts));
     }
 
     if (seedArtifacts.aspectRatio && seedArtifacts.aspectRatio !== projectConfig.aspectRatio) {
       seedSteps[JobStep.KEYFRAMES] = false;
       seedSteps[JobStep.SEGMENTS] = false;
       seedSteps[JobStep.COMPOSE] = false;
+      seedSteps[JobStep.ALIGN] = false;
+      seedSteps[JobStep.BURNIN] = false;
       seedArtifacts.keyframeUrls = [];
       seedArtifacts.keyframePaths = [];
       seedArtifacts.segmentUrls = [];
       seedArtifacts.segmentPaths = [];
+      seedArtifacts.finalBaseVideoPath = '';
       seedArtifacts.finalVideoPath = '';
+      Object.assign(seedArtifacts, clearSubtitleArtifacts(seedArtifacts));
     }
 
     if ((seedArtifacts.finalDurationMode || 'match_audio') !== projectConfig.finalDurationMode) {
       seedSteps[JobStep.COMPOSE] = false;
+      seedSteps[JobStep.ALIGN] = false;
+      seedSteps[JobStep.BURNIN] = false;
+      seedArtifacts.finalBaseVideoPath = '';
       seedArtifacts.finalVideoPath = '';
+      Object.assign(seedArtifacts, clearSubtitleArtifacts(seedArtifacts));
     }
 
     const previousTargetDuration = Number.isInteger(seedArtifacts.targetDurationSec)
@@ -755,6 +876,8 @@ export async function runPipeline(jobId, options = {}) {
       seedSteps[JobStep.KEYFRAMES] = false;
       seedSteps[JobStep.SEGMENTS] = false;
       seedSteps[JobStep.COMPOSE] = false;
+      seedSteps[JobStep.ALIGN] = false;
+      seedSteps[JobStep.BURNIN] = false;
       seedArtifacts.script = '';
       seedArtifacts.tone = '';
       seedArtifacts.shots = [];
@@ -765,7 +888,9 @@ export async function runPipeline(jobId, options = {}) {
       seedArtifacts.keyframePaths = [];
       seedArtifacts.segmentUrls = [];
       seedArtifacts.segmentPaths = [];
+      seedArtifacts.finalBaseVideoPath = '';
       seedArtifacts.finalVideoPath = '';
+      Object.assign(seedArtifacts, clearSubtitleArtifacts(seedArtifacts));
       seedArtifacts.scriptHash = '';
       seedArtifacts.shotHashes = [];
       seedArtifacts.scriptSourceStoryHash = '';
@@ -776,6 +901,8 @@ export async function runPipeline(jobId, options = {}) {
       seedSteps[JobStep.KEYFRAMES] = false;
       seedSteps[JobStep.SEGMENTS] = false;
       seedSteps[JobStep.COMPOSE] = false;
+      seedSteps[JobStep.ALIGN] = false;
+      seedSteps[JobStep.BURNIN] = false;
       seedArtifacts.timeline = [];
       seedArtifacts.voiceoverUrl = '';
       seedArtifacts.voiceoverPath = '';
@@ -783,26 +910,36 @@ export async function runPipeline(jobId, options = {}) {
       seedArtifacts.keyframePaths = [];
       seedArtifacts.segmentUrls = [];
       seedArtifacts.segmentPaths = [];
+      seedArtifacts.finalBaseVideoPath = '';
       seedArtifacts.finalVideoPath = '';
+      Object.assign(seedArtifacts, clearSubtitleArtifacts(seedArtifacts));
     };
 
     const resetFromKeyframes = () => {
       seedSteps[JobStep.KEYFRAMES] = false;
       seedSteps[JobStep.SEGMENTS] = false;
       seedSteps[JobStep.COMPOSE] = false;
+      seedSteps[JobStep.ALIGN] = false;
+      seedSteps[JobStep.BURNIN] = false;
       seedArtifacts.keyframeUrls = [];
       seedArtifacts.keyframePaths = [];
       seedArtifacts.segmentUrls = [];
       seedArtifacts.segmentPaths = [];
+      seedArtifacts.finalBaseVideoPath = '';
       seedArtifacts.finalVideoPath = '';
+      Object.assign(seedArtifacts, clearSubtitleArtifacts(seedArtifacts));
     };
 
     const resetFromSegments = () => {
       seedSteps[JobStep.SEGMENTS] = false;
       seedSteps[JobStep.COMPOSE] = false;
+      seedSteps[JobStep.ALIGN] = false;
+      seedSteps[JobStep.BURNIN] = false;
       seedArtifacts.segmentUrls = [];
       seedArtifacts.segmentPaths = [];
+      seedArtifacts.finalBaseVideoPath = '';
       seedArtifacts.finalVideoPath = '';
+      Object.assign(seedArtifacts, clearSubtitleArtifacts(seedArtifacts));
     };
 
     if (previousTargetDuration !== targetDurationSec) {
@@ -832,22 +969,36 @@ export async function runPipeline(jobId, options = {}) {
       seedSteps[JobStep.KEYFRAMES] = false;
       seedSteps[JobStep.SEGMENTS] = false;
       seedSteps[JobStep.COMPOSE] = false;
+      seedSteps[JobStep.ALIGN] = false;
+      seedSteps[JobStep.BURNIN] = false;
       seedArtifacts.keyframeUrls = [];
       seedArtifacts.keyframePaths = [];
       seedArtifacts.segmentUrls = [];
       seedArtifacts.segmentPaths = [];
+      seedArtifacts.finalBaseVideoPath = '';
       seedArtifacts.finalVideoPath = '';
+      Object.assign(seedArtifacts, clearSubtitleArtifacts(seedArtifacts));
     }
 
     if ((seedArtifacts.renderSpecVersion || 0) !== DEFAULT_VIDEO_CONFIG.renderSpecVersion) {
       seedSteps[JobStep.KEYFRAMES] = false;
       seedSteps[JobStep.SEGMENTS] = false;
       seedSteps[JobStep.COMPOSE] = false;
+      seedSteps[JobStep.ALIGN] = false;
+      seedSteps[JobStep.BURNIN] = false;
       seedArtifacts.keyframeUrls = [];
       seedArtifacts.keyframePaths = [];
       seedArtifacts.segmentUrls = [];
       seedArtifacts.segmentPaths = [];
+      seedArtifacts.finalBaseVideoPath = '';
       seedArtifacts.finalVideoPath = '';
+      Object.assign(seedArtifacts, clearSubtitleArtifacts(seedArtifacts));
+    }
+
+    if (JSON.stringify(seedArtifacts.subtitleOptions || {}) !== JSON.stringify(projectConfig.subtitleOptions || {})) {
+      seedSteps[JobStep.ALIGN] = false;
+      seedSteps[JobStep.BURNIN] = false;
+      Object.assign(seedArtifacts, clearSubtitleArtifacts(seedArtifacts));
     }
 
     const shouldArchiveCurrentAssets =
@@ -863,7 +1014,9 @@ export async function runPipeline(jobId, options = {}) {
         seedArtifacts.voiceoverPath = '';
         seedArtifacts.keyframePaths = [];
         seedArtifacts.segmentPaths = [];
+        seedArtifacts.finalBaseVideoPath = '';
         seedArtifacts.finalVideoPath = '';
+        Object.assign(seedArtifacts, clearSubtitleArtifacts(seedArtifacts));
         logInfo('assets_archived_to_snapshots', { project, archivedSnapshot });
       }
     }
@@ -873,7 +1026,8 @@ export async function runPipeline(jobId, options = {}) {
         ...job.payload,
         project,
         projectConfig,
-        changedShotIndexes
+        changedShotIndexes,
+        activeSegmentIndex: null
       },
       status: JobStatus.RUNNING,
       error: null,
@@ -885,6 +1039,7 @@ export async function runPipeline(jobId, options = {}) {
         keyframeSizeKey: keyframeSize.key,
         aspectRatio: projectConfig.aspectRatio,
         finalDurationMode: projectConfig.finalDurationMode,
+        subtitleOptions: projectConfig.subtitleOptions,
         targetDurationSec,
         segmentDurationSec: DEFAULT_VIDEO_CONFIG.segmentDurationSec,
         plannedShots
@@ -1020,7 +1175,8 @@ export async function runPipeline(jobId, options = {}) {
       updateJob(jobId, {
         payload: {
           ...currentJob.payload,
-          activeStep: JobStep.KEYFRAMES
+          activeStep: JobStep.KEYFRAMES,
+          activeSegmentIndex: null
         }
       });
       currentJob = getJob(jobId);
@@ -1049,13 +1205,26 @@ export async function runPipeline(jobId, options = {}) {
       const totalSegments = Math.max(0, totalShots - 1);
       const affectedSegmentIndexes = collectAffectedSegmentIndexes(changed, totalShots);
 
+      // If assets were archived before this run, unchanged slots may still have URLs but no local files.
+      for (let shotIndex = 0; shotIndex < totalShots; shotIndex += 1) {
+        if (!keyframeUrls[shotIndex]) {
+          continue;
+        }
+
+        const hasPath = Boolean(keyframePaths[shotIndex]);
+        if (!hasPath) {
+          keyframePaths[shotIndex] = await deps.persistKeyframe(projectDir, keyframeUrls[shotIndex], shotIndex);
+        }
+      }
+
       const segmentUrls = [...(currentJob.artifacts.segmentUrls || [])];
       const segmentPaths = [...(currentJob.artifacts.segmentPaths || [])];
 
       updateJob(jobId, {
         payload: {
           ...currentJob.payload,
-          activeStep: JobStep.SEGMENTS
+          activeStep: JobStep.SEGMENTS,
+          activeSegmentIndex: null
         }
       });
       currentJob = getJob(jobId);
@@ -1064,6 +1233,14 @@ export async function runPipeline(jobId, options = {}) {
         if (segmentIndex < 0 || segmentIndex >= totalSegments) {
           continue;
         }
+        updateJob(jobId, {
+          payload: {
+            ...getJob(jobId).payload,
+            activeStep: JobStep.SEGMENTS,
+            activeSegmentIndex: segmentIndex
+          }
+        });
+        currentJob = getJob(jobId);
         const segmentUrl = await deps.generateVideoSegmentAtIndex(
           segmentIndex,
           keyframeUrls,
@@ -1080,11 +1257,23 @@ export async function runPipeline(jobId, options = {}) {
         segmentPaths[segmentIndex] = await deps.persistSegment(projectDir, segmentUrl, segmentIndex);
       }
 
+      for (let segmentIndex = 0; segmentIndex < totalSegments; segmentIndex += 1) {
+        if (!segmentUrls[segmentIndex]) {
+          continue;
+        }
+
+        const hasPath = Boolean(segmentPaths[segmentIndex]);
+        if (!hasPath) {
+          segmentPaths[segmentIndex] = await deps.persistSegment(projectDir, segmentUrls[segmentIndex], segmentIndex);
+        }
+      }
+
       updateJob(jobId, {
         payload: {
           ...currentJob.payload,
           changedShotIndexes: [],
-          activeStep: null
+          activeStep: null,
+          activeSegmentIndex: null
         },
         artifacts: {
           ...currentJob.artifacts,
@@ -1093,14 +1282,20 @@ export async function runPipeline(jobId, options = {}) {
           segmentUrls,
           segmentPaths,
           shotHashes: hashShots(currentJob.artifacts.shots),
+          finalBaseVideoPath: '',
           finalVideoPath: ''
         },
         steps: {
           ...currentJob.steps,
           [JobStep.KEYFRAMES]: true,
           [JobStep.SEGMENTS]: true,
-          [JobStep.COMPOSE]: false
+          [JobStep.COMPOSE]: false,
+          [JobStep.ALIGN]: false,
+          [JobStep.BURNIN]: false
         }
+      });
+      updateJob(jobId, {
+        artifacts: clearSubtitleArtifacts(getJob(jobId).artifacts)
       });
       await persistCheckpoint(getJob(jobId), null, deps);
       await finishStageAnalytics(JobStep.KEYFRAMES, { executed: true, status: 'succeeded', details: { mode: 'partial_regen', changedShots: changed } });
@@ -1189,6 +1384,14 @@ export async function runPipeline(jobId, options = {}) {
       await startStageAnalytics(JobStep.SEGMENTS, { mode: 'execute' });
       const segmentUrls = [...(currentJob.artifacts.segmentUrls || [])];
       const segmentPaths = [...(currentJob.artifacts.segmentPaths || [])];
+      updateJob(jobId, {
+        payload: {
+          ...currentJob.payload,
+          activeStep: JobStep.SEGMENTS,
+          activeSegmentIndex: null
+        }
+      });
+      currentJob = getJob(jobId);
       for (let segmentIndex = 0; segmentIndex < Math.max(0, currentJob.artifacts.shots.length - 1); segmentIndex += 1) {
         const hasUrl = Boolean(segmentUrls[segmentIndex]);
         let hasPath = Boolean(segmentPaths[segmentIndex]);
@@ -1203,6 +1406,14 @@ export async function runPipeline(jobId, options = {}) {
         }
 
         if (!hasUrl) {
+          updateJob(jobId, {
+            payload: {
+              ...getJob(jobId).payload,
+              activeStep: JobStep.SEGMENTS,
+              activeSegmentIndex: segmentIndex
+            }
+          });
+          currentJob = getJob(jobId);
           segmentUrls[segmentIndex] = await deps.generateVideoSegmentAtIndex(
             segmentIndex,
             currentJob.artifacts.keyframeUrls,
@@ -1231,6 +1442,11 @@ export async function runPipeline(jobId, options = {}) {
       }
 
       updateJob(jobId, {
+        payload: {
+          ...currentJob.payload,
+          activeStep: null,
+          activeSegmentIndex: null
+        },
         artifacts: {
           ...currentJob.artifacts,
           segmentUrls,
@@ -1277,6 +1493,7 @@ export async function runPipeline(jobId, options = {}) {
       updateJob(jobId, {
         artifacts: {
           ...currentJob.artifacts,
+          finalBaseVideoPath: composed.finalVideoPath,
           finalVideoPath: composed.finalVideoPath,
           voiceoverPath: composed.voiceoverPath,
           keyframePaths: composed.keyframePaths,
@@ -1286,14 +1503,105 @@ export async function runPipeline(jobId, options = {}) {
         },
         steps: {
           ...currentJob.steps,
-          [JobStep.COMPOSE]: true
+          [JobStep.COMPOSE]: true,
+          [JobStep.ALIGN]: false,
+          [JobStep.BURNIN]: false
         }
+      });
+      updateJob(jobId, {
+        artifacts: clearSubtitleArtifacts(getJob(jobId).artifacts)
       });
       await persistCheckpoint(getJob(jobId), null, deps);
       await finishStageAnalytics(JobStep.COMPOSE, { executed: true, status: 'succeeded' });
       currentJob = getJob(jobId);
     } else {
+      if (!currentJob.artifacts.finalBaseVideoPath && currentJob.artifacts.finalVideoPath) {
+        updateJob(jobId, {
+          artifacts: {
+            ...currentJob.artifacts,
+            finalBaseVideoPath: currentJob.artifacts.finalVideoPath
+          }
+        });
+        await persistCheckpoint(getJob(jobId), null, deps);
+        currentJob = getJob(jobId);
+      }
       await reuseStageAnalytics(JobStep.COMPOSE, { mode: 'reused' });
+    }
+
+    if (projectConfig.subtitleOptions?.enabled) {
+      if (!currentJob.steps[JobStep.ALIGN]) {
+        await startStageAnalytics(JobStep.ALIGN, { mode: 'execute' });
+        const subtitleSourceVideo = currentJob.artifacts.finalBaseVideoPath || currentJob.artifacts.finalVideoPath;
+        const durationForSubtitles = Number.isFinite(currentJob.artifacts.audioDurationSec)
+          ? currentJob.artifacts.audioDurationSec
+          : await deps.probeMediaDurationSeconds(subtitleSourceVideo);
+
+        const aligned = await deps.alignSubtitlesToVideo({
+          projectDir,
+          videoPath: subtitleSourceVideo,
+          script: currentJob.artifacts.script,
+          totalDurationSec: durationForSubtitles,
+          subtitleOptions: projectConfig.subtitleOptions
+        });
+
+        updateJob(jobId, {
+          artifacts: {
+            ...currentJob.artifacts,
+            ...aligned
+          },
+          steps: {
+            ...currentJob.steps,
+            [JobStep.ALIGN]: true
+          }
+        });
+        await persistCheckpoint(getJob(jobId), null, deps);
+        await finishStageAnalytics(JobStep.ALIGN, { executed: true, status: 'succeeded' });
+        currentJob = getJob(jobId);
+      } else {
+        await reuseStageAnalytics(JobStep.ALIGN, { mode: 'reused' });
+      }
+
+      if (!currentJob.steps[JobStep.BURNIN]) {
+        await startStageAnalytics(JobStep.BURNIN, { mode: 'execute' });
+        const burned = await deps.burnInSubtitles({
+          projectDir,
+          videoPath: currentJob.artifacts.finalBaseVideoPath || currentJob.artifacts.finalVideoPath,
+          subtitleAssPath: currentJob.artifacts.subtitleAssPath
+        });
+
+        updateJob(jobId, {
+          artifacts: {
+            ...currentJob.artifacts,
+            ...burned,
+            finalVideoPath: burned.finalCaptionedVideoPath
+          },
+          steps: {
+            ...currentJob.steps,
+            [JobStep.BURNIN]: true
+          }
+        });
+        await persistCheckpoint(getJob(jobId), null, deps);
+        await finishStageAnalytics(JobStep.BURNIN, { executed: true, status: 'succeeded' });
+        currentJob = getJob(jobId);
+      } else {
+        await reuseStageAnalytics(JobStep.BURNIN, { mode: 'reused' });
+      }
+    } else {
+      updateJob(jobId, {
+        artifacts: {
+          ...clearSubtitleArtifacts(currentJob.artifacts),
+          finalVideoPath: currentJob.artifacts.finalBaseVideoPath || currentJob.artifacts.finalVideoPath
+        },
+        steps: {
+          ...currentJob.steps,
+          [JobStep.ALIGN]: true,
+          [JobStep.BURNIN]: true
+        }
+      });
+      await persistCheckpoint(getJob(jobId), null, deps);
+      await reuseStageAnalytics(JobStep.ALIGN, { mode: 'disabled' });
+      await reuseStageAnalytics(JobStep.BURNIN, { mode: 'disabled' });
+      currentJob = getJob(jobId);
     }
 
     const completed = updateJob(jobId, {

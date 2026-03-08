@@ -9,6 +9,7 @@ export function ProjectHeader({
   loadingDetails,
   steps,
   activeStep,
+  includeSubtitleStages,
   tabs,
   activeTab,
   onRefresh,
@@ -37,7 +38,14 @@ export function ProjectHeader({
         </div>
       </div>
 
-      {steps && <StepDots steps={steps} running={isRunning} activeStep={activeStep} />}
+      {steps && (
+        <StepDots
+          steps={steps}
+          running={isRunning}
+          activeStep={activeStep}
+          includeSubtitleStages={includeSubtitleStages}
+        />
+      )}
 
       <TabBar tabs={tabs} active={activeTab} onChange={onChangeTab} />
     </div>

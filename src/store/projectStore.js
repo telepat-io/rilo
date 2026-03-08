@@ -14,12 +14,46 @@ import {
 
 export const SUPPORTED_ASPECT_RATIOS = ['1:1', '16:9', '9:16'];
 export const SUPPORTED_FINAL_DURATION_MODES = ['match_audio', 'match_visual'];
+export const SUPPORTED_SUBTITLE_POSITIONS = ['top', 'center', 'bottom'];
+export const SUPPORTED_SUBTITLE_HIGHLIGHT_MODES = ['spoken_upcoming', 'current_only'];
+export const SUPPORTED_SUBTITLE_TEMPLATE_IDS = [
+  'custom',
+  'social_center_punch',
+  'social_center_clean',
+  'social_center_story'
+];
 const PROJECT_NAME_PATTERN = /^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$/;
+
+export const DEFAULT_SUBTITLE_OPTIONS = {
+  enabled: false,
+  templateId: 'custom',
+  position: 'center',
+  fontName: 'Poppins',
+  fontSize: 100,
+  bold: true,
+  italic: false,
+  makeUppercase: false,
+  primaryColor: '#ffffff',
+  activeColor: '#ffe066',
+  outlineColor: '#111111',
+  backgroundEnabled: false,
+  backgroundColor: '#000000',
+  backgroundOpacity: 0.45,
+  outline: 3,
+  shadow: 0,
+  marginV: 70,
+  maxWordsPerLine: 7,
+  maxLines: 2,
+  highlightMode: 'spoken_upcoming'
+};
 
 export const DEFAULT_PROJECT_CONFIG = {
   aspectRatio: '9:16',
   targetDurationSec: DEFAULT_VIDEO_CONFIG.durationSec,
   finalDurationMode: 'match_audio',
+  subtitleOptions: {
+    ...DEFAULT_SUBTITLE_OPTIONS
+  },
   models: {
     ...DEFAULT_MODEL_SELECTIONS
   },
@@ -35,6 +69,130 @@ function normalizeOptionValue(value) {
     return value.trim();
   }
   return value;
+}
+
+function normalizeSubtitleOptions(candidate) {
+  if (!isPlainObject(candidate)) {
+    return {
+      ...DEFAULT_SUBTITLE_OPTIONS
+    };
+  }
+
+  const normalized = {
+    ...DEFAULT_SUBTITLE_OPTIONS,
+    ...candidate
+  };
+
+  // Preserve compatibility with older saved configs that used removed template ids.
+  if (normalized.templateId === 'social_top_minimal') {
+    normalized.templateId = 'social_center_clean';
+  } else if (normalized.templateId === 'social_bottom_classic') {
+    normalized.templateId = 'social_center_story';
+  }
+
+  for (const key of ['templateId', 'fontName', 'primaryColor', 'activeColor', 'outlineColor', 'backgroundColor']) {
+    if (typeof normalized[key] === 'string') {
+      normalized[key] = normalized[key].trim();
+    }
+  }
+
+  return normalized;
+}
+
+function validateHexColor(value, fieldPath) {
+  if (typeof value !== 'string' || !/^#[0-9a-f]{6}$/i.test(value.trim())) {
+    throw new Error(`Invalid project config: ${fieldPath} must be a hex color like #RRGGBB`);
+  }
+}
+
+function validateSubtitleOptions(subtitleOptions) {
+  if (!isPlainObject(subtitleOptions)) {
+    throw new Error('Invalid project config: subtitleOptions must be an object');
+  }
+
+  if (typeof subtitleOptions.enabled !== 'boolean') {
+    throw new Error('Invalid project config: subtitleOptions.enabled must be a boolean');
+  }
+
+  if (!SUPPORTED_SUBTITLE_TEMPLATE_IDS.includes(subtitleOptions.templateId)) {
+    throw new Error(
+      `Invalid project config: subtitleOptions.templateId must be one of ${SUPPORTED_SUBTITLE_TEMPLATE_IDS.join(', ')}`
+    );
+  }
+
+  if (!SUPPORTED_SUBTITLE_POSITIONS.includes(subtitleOptions.position)) {
+    throw new Error(
+      `Invalid project config: subtitleOptions.position must be one of ${SUPPORTED_SUBTITLE_POSITIONS.join(', ')}`
+    );
+  }
+
+  if (!SUPPORTED_SUBTITLE_HIGHLIGHT_MODES.includes(subtitleOptions.highlightMode)) {
+    throw new Error(
+      `Invalid project config: subtitleOptions.highlightMode must be one of ${SUPPORTED_SUBTITLE_HIGHLIGHT_MODES.join(', ')}`
+    );
+  }
+
+  if (typeof subtitleOptions.fontName !== 'string' || !subtitleOptions.fontName.trim()) {
+    throw new Error('Invalid project config: subtitleOptions.fontName must be a non-empty string');
+  }
+
+  if (typeof subtitleOptions.bold !== 'boolean') {
+    throw new Error('Invalid project config: subtitleOptions.bold must be a boolean');
+  }
+
+  if (typeof subtitleOptions.italic !== 'boolean') {
+    throw new Error('Invalid project config: subtitleOptions.italic must be a boolean');
+  }
+
+  if (typeof subtitleOptions.makeUppercase !== 'boolean') {
+    throw new Error('Invalid project config: subtitleOptions.makeUppercase must be a boolean');
+  }
+
+  if (!Number.isInteger(subtitleOptions.fontSize) || subtitleOptions.fontSize < 16 || subtitleOptions.fontSize > 120) {
+    throw new Error('Invalid project config: subtitleOptions.fontSize must be an integer between 16 and 120');
+  }
+
+  validateHexColor(subtitleOptions.primaryColor, 'subtitleOptions.primaryColor');
+  validateHexColor(subtitleOptions.activeColor, 'subtitleOptions.activeColor');
+  validateHexColor(subtitleOptions.outlineColor, 'subtitleOptions.outlineColor');
+
+  if (typeof subtitleOptions.backgroundEnabled !== 'boolean') {
+    throw new Error('Invalid project config: subtitleOptions.backgroundEnabled must be a boolean');
+  }
+
+  validateHexColor(subtitleOptions.backgroundColor, 'subtitleOptions.backgroundColor');
+
+  if (typeof subtitleOptions.backgroundOpacity !== 'number' || !Number.isFinite(subtitleOptions.backgroundOpacity)) {
+    throw new Error('Invalid project config: subtitleOptions.backgroundOpacity must be a number between 0 and 0.85');
+  }
+
+  if (subtitleOptions.backgroundOpacity < 0 || subtitleOptions.backgroundOpacity > 0.85) {
+    throw new Error('Invalid project config: subtitleOptions.backgroundOpacity must be between 0 and 0.85');
+  }
+
+  if (!Number.isInteger(subtitleOptions.outline) || subtitleOptions.outline < 0 || subtitleOptions.outline > 12) {
+    throw new Error('Invalid project config: subtitleOptions.outline must be an integer between 0 and 12');
+  }
+
+  if (!Number.isInteger(subtitleOptions.shadow) || subtitleOptions.shadow < 0 || subtitleOptions.shadow > 12) {
+    throw new Error('Invalid project config: subtitleOptions.shadow must be an integer between 0 and 12');
+  }
+
+  if (!Number.isInteger(subtitleOptions.marginV) || subtitleOptions.marginV < 0 || subtitleOptions.marginV > 400) {
+    throw new Error('Invalid project config: subtitleOptions.marginV must be an integer between 0 and 400');
+  }
+
+  if (
+    !Number.isInteger(subtitleOptions.maxWordsPerLine)
+    || subtitleOptions.maxWordsPerLine < 1
+    || subtitleOptions.maxWordsPerLine > 20
+  ) {
+    throw new Error('Invalid project config: subtitleOptions.maxWordsPerLine must be an integer between 1 and 20');
+  }
+
+  if (!Number.isInteger(subtitleOptions.maxLines) || subtitleOptions.maxLines < 1 || subtitleOptions.maxLines > 3) {
+    throw new Error('Invalid project config: subtitleOptions.maxLines must be an integer between 1 and 3');
+  }
 }
 
 function normalizeCategoryModelOptions(category, categoryOptions, modelSelections) {
@@ -238,6 +396,7 @@ export function normalizeProjectConfig(config) {
   return {
     ...DEFAULT_PROJECT_CONFIG,
     ...nextConfig,
+    subtitleOptions: normalizeSubtitleOptions(nextConfig.subtitleOptions),
     models: mergedModels,
     modelOptions: mergedModelOptions
   };
@@ -332,6 +491,8 @@ export function validateProjectConfig(config) {
       `Invalid project config: finalDurationMode must be one of ${SUPPORTED_FINAL_DURATION_MODES.join(', ')}`
     );
   }
+
+  validateSubtitleOptions(config.subtitleOptions);
 
   const hasWidth = config.keyframeWidth !== undefined;
   const hasHeight = config.keyframeHeight !== undefined;

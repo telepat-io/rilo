@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { env } from '../src/config/env.js';
-import { concatSegments, muxVoiceover, probeMediaDurationSeconds } from '../src/media/ffmpeg.js';
+import { burnInAssSubtitles, concatSegments, muxVoiceover, probeMediaDurationSeconds } from '../src/media/ffmpeg.js';
 import { runModel } from '../src/providers/predictions.js';
 
 test('concatSegments writes list and invokes ffmpeg with expected args', async () => {
@@ -51,6 +51,24 @@ test('muxVoiceover toggles shortest flag based on trim option', async () => {
 
   assert.ok(argsTrim.includes('-shortest'));
   assert.equal(argsNoTrim.includes('-shortest'), false);
+});
+
+test('burnInAssSubtitles configures libass filter and quality-focused encode defaults', async () => {
+  let argsSeen = null;
+
+  await burnInAssSubtitles('/tmp/in.mp4', '/tmp/captions/aligned.ass', '/tmp/out.mp4', {
+    runFfmpeg: async (args) => {
+      argsSeen = args;
+    }
+  });
+
+  assert.ok(argsSeen.includes('-vf'));
+  const vfIndex = argsSeen.indexOf('-vf');
+  assert.match(argsSeen[vfIndex + 1], /^ass='/);
+  assert.ok(argsSeen.includes('-c:v'));
+  assert.ok(argsSeen.includes('libx264'));
+  assert.ok(argsSeen.includes('-crf'));
+  assert.ok(argsSeen.includes('18'));
 });
 
 test('probeMediaDurationSeconds parses valid output and rejects invalid output', async () => {

@@ -72,6 +72,9 @@ DOWNLOAD_MAX_BYTES=104857600
 DOWNLOAD_ALLOWED_HOSTS=replicate.delivery,replicate.com
 API_DEFAULT_LOGS_LIMIT=100
 API_MAX_LOGS_LIMIT=1000
+FFMPEG_BIN=ffmpeg
+FFPROBE_BIN=ffprobe
+FFSUBSYNC_BIN=ffsubsync
 ```
 
 ## Output backends
@@ -231,6 +234,23 @@ All supported `config.json` fields:
   - Validation: strict allowlist per selected model id, including type/range/enum checks.
   - Runtime precedence: pipeline-managed fields (for example prompt, text, image, width/height, frames/resolution) override conflicting user values.
 
+- `subtitleOptions` (optional object)
+  - Type: object
+  - Fields:
+    - `enabled` (boolean)
+    - `templateId` (`custom`, `social_center_punch`, `social_center_clean`, `social_center_story`)
+    - `position` (`top`, `center`, `bottom`)
+    - `fontName` (string)
+    - `fontSize` (16-120)
+    - `bold` (boolean), `italic` (boolean), `makeUppercase` (boolean)
+    - `primaryColor`, `activeColor`, `outlineColor` (hex `#RRGGBB`), where `outlineColor` is the caption border color
+    - `backgroundEnabled` (boolean), `backgroundColor` (hex `#RRGGBB`), `backgroundOpacity` (0-0.85)
+    - `outline` (0-12), `shadow` (0-12), `marginV` (0-400)
+    - `maxWordsPerLine` (1-20)
+    - `maxLines` (1-3)
+    - `highlightMode` (`spoken_upcoming`, `current_only`)
+  - Effect: enables post-compose subtitle alignment using ffsubsync, ASS karaoke generation, and optional burn-in output (`final_captioned.mp4`).
+
 Default normalized config:
 
 ```json
@@ -238,6 +258,27 @@ Default normalized config:
   "aspectRatio": "9:16",
   "targetDurationSec": 60,
   "finalDurationMode": "match_audio",
+  "subtitleOptions": {
+    "enabled": false,
+    "templateId": "custom",
+    "position": "center",
+    "fontName": "Poppins",
+    "fontSize": 100,
+    "bold": true,
+    "italic": false,
+    "primaryColor": "#ffffff",
+    "activeColor": "#ffe066",
+    "outlineColor": "#111111",
+    "backgroundEnabled": false,
+    "backgroundColor": "#000000",
+    "backgroundOpacity": 0.45,
+    "outline": 3,
+    "shadow": 0,
+    "marginV": 70,
+    "maxWordsPerLine": 7,
+    "maxLines": 2,
+    "highlightMode": "spoken_upcoming"
+  },
   "models": {
     "textToText": "deepseek-ai/deepseek-v3",
     "textToSpeech": "minimax/speech-02-turbo",
@@ -292,6 +333,7 @@ Default normalized config:
 - Visual planning: required segment/keyframe count is recalculated from measured audio as `ceil(audioDurationSec / 5)`, then shot prompts are generated for that exact count.
 - Media generation: one keyframe and one segment are generated per planned shot.
 - Compose: segments are concatenated, then narration is muxed according to `finalDurationMode`.
+- Captions (optional): when `subtitleOptions.enabled=true`, the composed video is aligned with ffsubsync, converted to ASS karaoke word highlights, and burned into `final_captioned.mp4`.
 - Resume/cache: reruns reuse valid artifacts; only affected downstream stages regenerate after changes.
 
 Whenever regeneration is required, current project assets are moved to `snapshots/<timestamp>-<id>/` before new assets are written. This preserves full asset history without overlap.

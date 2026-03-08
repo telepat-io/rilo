@@ -399,7 +399,7 @@ test('projects content update persists story/script asset and regenerate respect
   await cleanupProject(project);
 });
 
-test('projects regenerate supports targeted script, voiceover, keyframe and segment requests', async () => {
+test('projects regenerate supports targeted script, voiceover, keyframe, segment, align, and burnin requests', async () => {
   const app = express();
   app.use(express.json());
   app.use('/projects', createProjectsRouter({
@@ -468,6 +468,26 @@ test('projects regenerate supports targeted script, voiceover, keyframe and segm
     assert.equal(scriptBody.targetType, 'script');
     assert.equal(scriptBody.index, undefined);
 
+    const alignTarget = await fetch(`${baseUrl}/projects/${project}/regenerate`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ targetType: 'align' })
+    });
+    assert.equal(alignTarget.status, 200);
+    const alignBody = await alignTarget.json();
+    assert.equal(alignBody.targetType, 'align');
+    assert.equal(alignBody.index, undefined);
+
+    const burninTarget = await fetch(`${baseUrl}/projects/${project}/regenerate`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ targetType: 'burnin' })
+    });
+    assert.equal(burninTarget.status, 200);
+    const burninBody = await burninTarget.json();
+    assert.equal(burninBody.targetType, 'burnin');
+    assert.equal(burninBody.index, undefined);
+
     const missingIndex = await fetch(`${baseUrl}/projects/${project}/regenerate`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -495,6 +515,13 @@ test('projects regenerate supports targeted script, voiceover, keyframe and segm
       body: JSON.stringify({ targetType: 'script', index: 0 })
     });
     assert.equal(unsupportedScriptIndex.status, 400);
+
+    const unsupportedAlignIndex = await fetch(`${baseUrl}/projects/${project}/regenerate`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ targetType: 'align', index: 0 })
+    });
+    assert.equal(unsupportedAlignIndex.status, 400);
   });
 
   await cleanupProject(project);
@@ -780,6 +807,23 @@ test('PATCH /projects/:project/config updates and validates project config', asy
       })
     });
     assert.equal(invalidResponse.status, 400);
+
+    const invalidSubtitleTemplateResponse = await fetch(`${baseUrl}/projects/${project}/config`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        config: {
+          aspectRatio: '16:9',
+          targetDurationSec: 30,
+          finalDurationMode: 'match_audio',
+          subtitleOptions: {
+            ...modelPatchBody.config.subtitleOptions,
+            templateId: 'not_real_template'
+          }
+        }
+      })
+    });
+    assert.equal(invalidSubtitleTemplateResponse.status, 400);
 
     // missing config field rejected
     const missingConfig = await fetch(`${baseUrl}/projects/${project}/config`, {

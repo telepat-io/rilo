@@ -68,6 +68,7 @@ export function App() {
     isRunning,
     steps,
     activeStep,
+    activeSegmentIndex,
     tabs,
 
     loadProjects,
@@ -84,6 +85,9 @@ export function App() {
 
   const parsedShots = parseShotsText(shotsText);
   const expectedSegmentCount = Math.max(0, parsedShots.length - 1);
+  const includeSubtitleStages = Boolean(
+    configDraft?.subtitleOptions?.enabled ?? projectDetails?.config?.subtitleOptions?.enabled
+  );
 
   useEffect(() => {
     setActiveTab('story');
@@ -118,6 +122,7 @@ export function App() {
               loadingDetails={loadingDetails}
               steps={steps}
               activeStep={activeStep}
+              includeSubtitleStages={includeSubtitleStages}
               tabs={tabs}
               activeTab={activeTab}
               onRefresh={() => loadProjectDetails(selectedProject)}
@@ -192,6 +197,7 @@ export function App() {
                   selectedProject={selectedProject}
                   isRunning={isRunning}
                   activeStep={activeStep}
+                  activeSegmentIndex={activeSegmentIndex}
                   regeneratingMap={regeneratingMap}
                   mediaCss={mediaCss}
                   mediaColMin={mediaColMin}
@@ -239,14 +245,20 @@ export function App() {
                   assetCacheKey={assetCacheKey}
                   mediaCss={mediaCss}
                   isRunning={isRunning}
+                  subtitleEnabled={includeSubtitleStages}
+                  alignBusy={Boolean(regeneratingMap.align)}
+                  burninBusy={Boolean(regeneratingMap.burnin)}
                   toDisplayAssetUrl={toDisplayAssetUrl}
                   onRegenerateProject={() => handleRunRegenerate(false)}
+                  onRegenerateAlign={() => handleTargetedRegenerate('align')}
+                  onRegenerateBurnin={() => handleTargetedRegenerate('burnin')}
                 />
               )}
 
               {activeTab === 'analytics' && (
                 <AnalyticsTab
                   selectedProject={selectedProject}
+                  includeSubtitleStages={includeSubtitleStages}
                 />
               )}
             </div>

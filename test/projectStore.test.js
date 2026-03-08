@@ -44,6 +44,16 @@ test('normalizeAndValidateProjectConfig applies defaults and validates fields', 
   assert.equal(normalized.aspectRatio, '9:16');
   assert.equal(normalized.targetDurationSec, 30);
   assert.equal(normalized.finalDurationMode, 'match_audio');
+  assert.equal(normalized.subtitleOptions.enabled, false);
+  assert.equal(normalized.subtitleOptions.templateId, 'custom');
+  assert.equal(normalized.subtitleOptions.position, 'center');
+  assert.equal(normalized.subtitleOptions.fontSize, 100);
+  assert.equal(normalized.subtitleOptions.bold, true);
+  assert.equal(normalized.subtitleOptions.italic, false);
+  assert.equal(normalized.subtitleOptions.makeUppercase, false);
+  assert.equal(normalized.subtitleOptions.backgroundEnabled, false);
+  assert.equal(normalized.subtitleOptions.maxLines, 2);
+  assert.equal(normalized.subtitleOptions.highlightMode, 'spoken_upcoming');
   assert.deepEqual(normalized.models, DEFAULT_MODEL_SELECTIONS);
 
   assert.throws(
@@ -66,6 +76,30 @@ test('normalizeAndValidateProjectConfig applies defaults and validates fields', 
     () => normalizeAndValidateProjectConfig({ models: { textToText: 'unknown/model' } }),
     /must reference a supported model id/
   );
+  assert.throws(
+    () => normalizeAndValidateProjectConfig({ subtitleOptions: { enabled: true, primaryColor: 'yellow' } }),
+    /must be a hex color/
+  );
+  assert.throws(
+    () => normalizeAndValidateProjectConfig({ subtitleOptions: { highlightMode: 'blink' } }),
+    /subtitleOptions\.highlightMode must be one of/
+  );
+  assert.throws(
+    () => normalizeAndValidateProjectConfig({ subtitleOptions: { templateId: 'invalid_template' } }),
+    /subtitleOptions\.templateId must be one of/
+  );
+  assert.throws(
+    () => normalizeAndValidateProjectConfig({ subtitleOptions: { backgroundOpacity: 0.95 } }),
+    /subtitleOptions\.backgroundOpacity must be between 0 and 0\.85/
+  );
+  assert.throws(
+    () => normalizeAndValidateProjectConfig({ subtitleOptions: { outlineColor: 'orange' } }),
+    /must be a hex color/
+  );
+  assert.throws(
+    () => normalizeAndValidateProjectConfig({ subtitleOptions: { makeUppercase: 'yes' } }),
+    /subtitleOptions\.makeUppercase must be a boolean/
+  );
 });
 
 test('normalizeAndValidateProjectConfig supports partial model overrides', () => {
@@ -79,6 +113,14 @@ test('normalizeAndValidateProjectConfig supports partial model overrides', () =>
   assert.equal(normalized.models.textToSpeech, DEFAULT_MODEL_SELECTIONS.textToSpeech);
   assert.equal(normalized.models.textToImage, DEFAULT_MODEL_SELECTIONS.textToImage);
   assert.equal(normalized.models.imageTextToVideo, DEFAULT_MODEL_SELECTIONS.imageTextToVideo);
+});
+
+test('normalizeAndValidateProjectConfig remaps legacy subtitle template ids', () => {
+  const topLegacy = normalizeAndValidateProjectConfig({ subtitleOptions: { templateId: 'social_top_minimal' } });
+  const bottomLegacy = normalizeAndValidateProjectConfig({ subtitleOptions: { templateId: 'social_bottom_classic' } });
+
+  assert.equal(topLegacy.subtitleOptions.templateId, 'social_center_clean');
+  assert.equal(bottomLegacy.subtitleOptions.templateId, 'social_center_story');
 });
 
 test('normalizeAndValidateProjectConfig validates modelOptions per selected model', () => {

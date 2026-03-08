@@ -6,7 +6,9 @@
     "voiceover": true,
     "keyframes": true,
     "segments": true,
-    "compose": true
+    "compose": true,
+    "align": true,
+    "burnin": true
   },
   "artifacts": {
     "renderSpecVersion": 2,
@@ -14,24 +16,24 @@
     "keyframeSizeKey": "768x1024",
     "storyHash": "f8db2ebe9bc48929d192dc544f006ba9a8cdaac3d6e6ee5850ebcea5bc46e11e",
     "scriptSourceStoryHash": "f8db2ebe9bc48929d192dc544f006ba9a8cdaac3d6e6ee5850ebcea5bc46e11e",
-    "scriptHash": "13f893da836e866b8a23b484e6cedb6517a5d35b833150c49255c07cc9aa053b",
+    "scriptHash": "93be2c32f8715d27f21d4acd4f89d43b6e4ab313ca0750403eec613f32459516",
     "shotHashes": [
-      "c253293eeab14bf53f7512a7ed1533b1db234f30bdbb4cad1c0fac0da24c6015",
-      "bc6ce038b9aed8e5ddd091b59e28ab8d072a96ec93faf6998d675b2e90c57be7",
-      "699e37f03991974e6cc40126593aafbadb3de6e892633abdbb351a2839b6dc02",
-      "9a384db5903876ce754ffb46a9d9c0e75ba9f7c93a1616876520ffca7077d06b",
-      "64a970623c8a9e72f8efc178a8b58a357edd5884bd08cf4ed551dea5d6a003cf",
-      "36cad197c51f46a00ce010ef3cd894fb6eb9661b92905a1e06753270b6f83e33"
+      "3b61bf308898918d4a8026019d2a522baf6429a117308d84488720143dc8b2ac",
+      "827b0484ef4c2ff3544ff5ce6fba4d3efc0e84314386849cbb47361b9e1d71c8",
+      "d042da2f487d1dab9375452f344adf6b4fb1380cb0b30e4a124d848cc3971df4",
+      "0ea1958393f505326a4af168063d5df7e8e80b3be86fc9423a8cbd35918f00a6",
+      "73c6979cda38af21f609d55bd7482666b01f6431ac3443fac3901f89c13dbdca",
+      "15193a2dc63710e98da0aed2d6fd540c158dc7cd4de67d9b2aadc0312454e1ba"
     ],
-    "script": "As the disciples battled a fierce storm on the Sea of Galilee, Jesus walked toward them on the water. Terrified, they thought he was a ghost—until he spoke. Peter stepped out, walking on water too—until fear made him sink. Jesus rescued him, calming the storm. Amazed, the disciples worshipped him as the Son of God.",
+    "script": "In the dead of night, a violent storm battered the disciples' boat on the Sea of Galilee. Suddenly, Jesus appeared, walking on water. Peter stepped out to meet him but faltered when he saw the waves. As he sank, Jesus saved him, calming the storm. The disciples worshipped, proclaiming him the Son of God.",
     "tone": "dramatic",
     "shots": [
-      "Dark, churning waves violently rock a small wooden boat filled with panicked disciples of Jesus, clutching the sides.",
-      "A distant Jesus-like figure emerges from the storm, walking calmly on the turbulent water as lightning flashes behind him.",
-      "The disciples of Jesus huddle together on a boat, wide-eyed and trembling, pointing at the approaching figure with terrified expressions.",
-      "The apostle Peter, hesitantly stepping over a boat's edge, takes his first steps on the water, his face a mix of awe and determination.",
-      "Peter's expression shifts to fear as he begins to sink, arms flailing, while Jesus reaches out to grasp his hand.",
-      "The storm instantly stills, the waves now gentle, as the disciples kneel in the boat, gazing up at Jesus with reverence."
+      "A small wooden boat is violently tossed by towering waves under a pitch-black sky, with terrified disciples clinging to the sides as lightning illuminates the stormy Sea of Galilee at night.",
+      "A figure in a flowing robe, Jesus, strides calmly across the churning water toward the boat, his silhouette glowing faintly against the dark storm clouds.",
+      "Peter, dressed in simple first-century clothing, steps hesitantly out of the boat onto the raging waves, his face a mix of awe and fear as wind whips his hair.",
+      "The aposle Peter's eyes widen in panic as he looks down at the frothing water swallowing his feet, his arms flailing as he begins to sink beneath the stormy surface.",
+      "Jesus reaches out with a strong hand to grasp the apostle Peter's wrist, pulling him up from the waves as the wind suddenly stills around them, moonlight breaking through the clouds.",
+      "The disciples kneel in the now-calm boat, their faces illuminated by soft moonlight as they raise their hands in worship toward Jesus, who stands serenely on the water."
     ],
     "timeline": [
       {
@@ -55,15 +57,15 @@
         "durationSec": 5
       }
     ],
-    "voiceoverUrl": "https://replicate.delivery/xezq/2Ywn70fsQiRRbiJJoCuOTRXHgwOUQhzKXSudFZ9e2TYuw5NWA/tmpn83cug1s.mp3",
+    "voiceoverUrl": "https://replicate.delivery/xezq/KAOZnUCPsqrdIdup0vkhixlRw9gcadaf9DK99Vlt8xfnJROWA/tmp8f1qhv2_.mp3",
     "voiceoverPath": "projects/example-case/assets/audio/voiceover.mp3",
     "keyframeUrls": [
-      "https://replicate.delivery/xezq/exM7aXHNrixGGqdQKj8M2kf4t5lKuDBuvqgJqFApriVEx5NWA/output_2120716141_0.jpeg",
-      "https://replicate.delivery/xezq/3O9WQFnl0WI0C5OXENlNwKewCmCAmu6jb0dYq22hR0mi48GLA/output_3544552094_0.jpeg",
-      "https://replicate.delivery/xezq/c6d7QNYDYoJ4NpWTO86xFp2DEYENwjlD32VIKhd1D6OSceGLA/output_1098562678_0.jpeg",
-      "https://replicate.delivery/xezq/sd6JavoA1TaSCNSex67c2wpbdEfm7CJBcmElNHTkgLbKx5NWA/output_4054692169_0.jpeg",
-      "https://replicate.delivery/xezq/Rbyd7NdeKLwsGKLCYuOcUCW1IsoTcfefSyRRoNwUH2GxEn3YB/output_641669634_0.jpeg",
-      "https://replicate.delivery/xezq/n5fObPkpCYwbGC6U6yhuffdw6pesrw0WmcJPFps54zi6En3YB/output_2709832989_0.jpeg"
+      "https://replicate.delivery/xezq/mbuKeE3sj8QVbSYbQbV6cpf5OvjhZLkEmpXiqnSwf02xTicsA/output_3362005563_0.jpeg",
+      "https://replicate.delivery/xezq/C6VU2bnvj4oHOtf3gKRcOVv5gjoYWeP9AVbAb6bygej0TicsA/output_675517288_0.jpeg",
+      "https://replicate.delivery/xezq/rrqY12MMwhp7EBZYMyOMQrp0YVD4JSTPfvARcWWKTMOeJROWA/output_3356654744_0.jpeg",
+      "https://replicate.delivery/xezq/6SpIKO3GcK7qIt8Qs5W3b6BvutfB4HhI0kbvMfLiIepeMF5YB/output_2722668408_0.jpeg",
+      "https://replicate.delivery/xezq/I1GbeE2TFoVSUK7v2Gbwqq602ze1kiwgYIXxCeNHen3WNF5YB/output_4250387412_0.jpeg",
+      "https://replicate.delivery/xezq/NGlzDqBPVTJYGxWbFEeSmm4jh1aeSLiFsAJzePRH8JBFUicsA/output_464925177_0.jpeg"
     ],
     "keyframePaths": [
       "projects/example-case/assets/keyframes/keyframe_01.png",
@@ -74,11 +76,11 @@
       "projects/example-case/assets/keyframes/keyframe_06.png"
     ],
     "segmentUrls": [
-      "https://replicate.delivery/xezq/fPoE1hgt9hyeNkbpYSZzUwwospXivy5FZXf3oi4vkQTfJn3YB/output.mp4",
-      "https://replicate.delivery/xezq/JOqGFmS4L86jEdRWdk3lKpqto4NkStyviHk5xfBX7BUfz5NWA/output.mp4",
-      "https://replicate.delivery/xezq/lL3WV6aT0PomKtt72koZyxCfbMlU0uxQwSHqrymJlSfK15NWA/output.mp4",
-      "https://replicate.delivery/xezq/G9f4YRi2nST1aCz04qlBD0yYtgx2mFHASnceeX1jI7imszbsA/output.mp4",
-      "https://replicate.delivery/xezq/iNgcjsSvWVJxDpD2qonGdj7YIlnuuY8dfefuaQfDFYD0dn3YB/output.mp4"
+      "https://replicate.delivery/xezq/f311PtNyfdnKGEnKQJbt3wQyiYNF2vSum5agFrlfV1H1WicsA/output.mp4",
+      "https://replicate.delivery/xezq/7UQSpt2e8VQgVKjUfeWMtKtuYYwgGeizwmocOBFe7wDgkJyxC/output.mp4",
+      "https://replicate.delivery/xezq/ItXmWxHpdxKnE10SngtOBEE1U10GHETYqSvGC8CA4cJIVkjF/output.mp4",
+      "https://replicate.delivery/xezq/J2mlM4preE1eYkqpMVoeOaJNuyTxQYqB3f72wId6reB4tKyxC/output.mp4",
+      "https://replicate.delivery/xezq/vWgjZFxRNA4PNR4GRP8fCae9eaNd4FeM5tP5ThqRA54icF5YB/output.mp4"
     ],
     "segmentPaths": [
       "projects/example-case/assets/segments/segment_01.mp4",
@@ -87,21 +89,13 @@
       "projects/example-case/assets/segments/segment_04.mp4",
       "projects/example-case/assets/segments/segment_05.mp4"
     ],
-    "finalVideoPath": "projects/example-case/final.mp4",
+    "subtitleSeedPath": "projects/example-case/assets/subtitles/seed.srt",
+    "subtitleAlignedSrtPath": "projects/example-case/assets/subtitles/aligned.srt",
+    "subtitleAssPath": "projects/example-case/assets/subtitles/aligned.ass",
+    "finalBaseVideoPath": "projects/example-case/final.mp4",
+    "finalCaptionedVideoPath": "projects/example-case/final_captioned.mp4",
+    "finalVideoPath": "projects/example-case/final_captioned.mp4",
     "subtitlesUrl": "",
-    "finalDurationMode": "match_audio",
-    "targetDurationSec": 20,
-    "segmentDurationSec": 5,
-    "plannedShots": 4,
-    "scriptWordCount": 55,
-    "targetWordCount": 52,
-    "ttsPlan": {
-      "speed": 1.0576923076923077,
-      "words": 55,
-      "estimatedAtSpeedOneSec": 21.154,
-      "targetDurationSec": 20
-    },
-    "audioDurationSec": 21.96,
     "modelSelections": {
       "textToText": "deepseek-ai/deepseek-v3",
       "textToSpeech": "minimax/speech-02-turbo",
@@ -145,7 +139,42 @@
         "lora_scale_transformer": 1,
         "lora_scale_transformer_2": 1
       }
-    }
+    },
+    "finalDurationMode": "match_audio",
+    "subtitleOptions": {
+      "enabled": true,
+      "templateId": "social_center_clean",
+      "position": "center",
+      "fontName": "Helvetica",
+      "fontSize": 92,
+      "bold": true,
+      "italic": false,
+      "makeUppercase": true,
+      "primaryColor": "#ffffff",
+      "activeColor": "#9ae6ff",
+      "outlineColor": "#111111",
+      "backgroundEnabled": true,
+      "backgroundColor": "#000000",
+      "backgroundOpacity": 0.45,
+      "outline": 3,
+      "shadow": 0,
+      "marginV": 120,
+      "maxWordsPerLine": 4,
+      "maxLines": 2,
+      "highlightMode": "current_only"
+    },
+    "targetDurationSec": 20,
+    "segmentDurationSec": 5,
+    "plannedShots": 4,
+    "scriptWordCount": 54,
+    "targetWordCount": 52,
+    "ttsPlan": {
+      "speed": 1.0384615384615385,
+      "words": 54,
+      "estimatedAtSpeedOneSec": 20.769,
+      "targetDurationSec": 20
+    },
+    "audioDurationSec": 20.7
   },
-  "updatedAt": "2026-03-05T20:47:27.714Z"
+  "updatedAt": "2026-03-08T19:56:06.588Z"
 }

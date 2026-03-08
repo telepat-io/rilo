@@ -89,7 +89,8 @@ export const env = {
   apiDefaultLogsLimit: parseEnvNumber(process.env.API_DEFAULT_LOGS_LIMIT, 100),
   apiMaxLogsLimit: parseEnvNumber(process.env.API_MAX_LOGS_LIMIT, 1000),
   ffmpegBin: parseEnvString(process.env.FFMPEG_BIN, 'ffmpeg'),
-  ffprobeBin: parseEnvString(process.env.FFPROBE_BIN, 'ffprobe')
+  ffprobeBin: parseEnvString(process.env.FFPROBE_BIN, 'ffprobe'),
+  ffsubsyncBin: parseEnvString(process.env.FFSUBSYNC_BIN, 'ffsubsync')
 };
 
 export function assertRequiredEnv() {

@@ -38,6 +38,11 @@ test('buildOpenApiSpec includes auth, public endpoints, and core paths', () => {
     configPatchSchema.properties.config.properties.models.properties.textToText.enum[0],
     'deepseek-ai/deepseek-v3'
   );
+  const subtitleSchema = configPatchSchema.properties.config.properties.subtitleOptions.properties;
+  assert.ok(subtitleSchema.templateId.enum.includes('social_center_punch'));
+  assert.ok(subtitleSchema.outlineColor.pattern.includes('#[0-9a-fA-F]{6}'));
+  assert.equal(subtitleSchema.backgroundOpacity.maximum, 0.85);
+  assert.equal(subtitleSchema.makeUppercase.type, 'boolean');
 });
 
 test('generateOpenApiFile writes a valid JSON spec to target path', async () => {

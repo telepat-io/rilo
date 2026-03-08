@@ -686,6 +686,13 @@ textarea:focus, input:focus {
   gap: 0.75rem;
 }
 
+.output-actions-row {
+  margin-top: 0.75rem;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
 /* ── project config ─────────────────────────────────────────────────────── */
 .config-grid {
   display: grid;
@@ -741,6 +748,36 @@ textarea:focus, input:focus {
 .config-form-fields {
   display: flex;
   flex-direction: column;
+  gap: 0.75rem;
+}
+
+.config-group {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--bg-elevated) 65%, transparent);
+  padding: 0.85rem;
+}
+
+.config-group-header {
+  margin-bottom: 0.7rem;
+}
+
+.config-group-title {
+  margin: 0;
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.config-group-note {
+  margin: 0.2rem 0 0;
+}
+
+.config-group-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.75rem;
 }
 
@@ -809,6 +846,35 @@ textarea:focus, input:focus {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+}
+
+.config-color-input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.config-inline-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.config-color-picker {
+  width: 2.35rem;
+  height: 2.1rem;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 0.1rem;
+  background: var(--bg-elevated);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+@media (max-width: 860px) {
+  .config-group-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ── combo-box ──────────────────────────────────────────────────────────── */

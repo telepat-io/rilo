@@ -25,6 +25,8 @@ import {
   persistSegments
 } from '../src/steps/generateVideoSegments.js';
 import { composeFinalVideo } from '../src/steps/composeFinalVideo.js';
+import { alignSubtitlesToVideo } from '../src/steps/alignSubtitles.js';
+import { burnInSubtitles } from '../src/steps/burnInSubtitles.js';
 import { env } from '../src/config/env.js';
 
 test('generateScript parses JSON payload and returns in-range candidate', async () => {
@@ -42,6 +44,139 @@ test('generateScript parses JSON payload and returns in-range candidate', async 
 
   assert.equal(result.scriptWordCount, 26);
   assert.equal(result.tone, 'neutral');
+});
+
+test('alignSubtitlesToVideo creates seed srt, runs ffsubsync, and writes ass', async () => {
+  const calls = {
+    seed: 0,
+    run: 0,
+    ass: 0
+  };
+
+  const result = await alignSubtitlesToVideo({
+    projectDir: '/tmp/project',
+    videoPath: '/tmp/project/final.mp4',
+    script: 'One two three four five six seven eight',
+    totalDurationSec: 12,
+    subtitleOptions: {
+      maxWordsPerLine: 4
+    },
+    deps: {
+      ensureDir: async () => {},
+      writeSeedSrtFromScript: async ({ outputPath }) => {
+        calls.seed += 1;
+        assert.match(outputPath, /seed\.srt$/);
+        await fs.mkdir(path.dirname(outputPath), { recursive: true });
+        await fs.writeFile(outputPath, [
+          '1',
+          '00:00:00,000 --> 00:00:02,400',
+          'One two three four',
+          ''
+        ].join('\n'), 'utf8');
+      },
+      runCommand: async (command, args) => {
+        calls.run += 1;
+        assert.equal(command, env.ffsubsyncBin);
+        assert.ok(args.includes('-i'));
+        assert.ok(args.includes('-o'));
+
+        const outputIndex = args.indexOf('-o');
+        const alignedPath = args[outputIndex + 1];
+        await fs.mkdir(path.dirname(alignedPath), { recursive: true });
+        await fs.writeFile(alignedPath, [
+          '1',
+          '00:00:00,100 --> 00:00:02,500',
+          'One two three four',
+          ''
+        ].join('\n'), 'utf8');
+      },
+      writeAssFromSrt: async ({ sourceSrtPath, outputAssPath }) => {
+        calls.ass += 1;
+        assert.match(sourceSrtPath, /aligned\.srt$/);
+        assert.match(outputAssPath, /aligned\.ass$/);
+      }
+    }
+  });
+
+  assert.equal(calls.seed, 1);
+  assert.equal(calls.run, 1);
+  assert.equal(calls.ass, 1);
+  assert.match(result.subtitleSeedPath, /seed\.srt$/);
+  assert.match(result.subtitleAlignedSrtPath, /aligned\.srt$/);
+  assert.match(result.subtitleAssPath, /aligned\.ass$/);
+});
+
+test('alignSubtitlesToVideo restores leading cue when ffsubsync drops first line', async () => {
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'videogen-align-'));
+  const projectDir = path.join(tempDir, 'project');
+  await fs.mkdir(path.join(projectDir, 'assets', 'subtitles'), { recursive: true });
+
+  const seedSrt = [
+    '1',
+    '00:00:00,000 --> 00:00:02,000',
+    'First sentence',
+    '',
+    '2',
+    '00:00:02,000 --> 00:00:04,000',
+    'Second sentence',
+    ''
+  ].join('\n');
+
+  let capturedAlignedSrt = '';
+
+  await alignSubtitlesToVideo({
+    projectDir,
+    videoPath: '/tmp/project/final.mp4',
+    script: 'First sentence Second sentence',
+    totalDurationSec: 4,
+    subtitleOptions: {
+      maxWordsPerLine: 4
+    },
+    deps: {
+      ensureDir: async () => {},
+      writeSeedSrtFromScript: async ({ outputPath }) => {
+        await fs.writeFile(outputPath, seedSrt, 'utf8');
+      },
+      runCommand: async (command, args) => {
+        assert.equal(command, env.ffsubsyncBin);
+        const outputIndex = args.indexOf('-o');
+        assert.ok(outputIndex >= 0);
+        const alignedPath = args[outputIndex + 1];
+        await fs.writeFile(alignedPath, [
+          '1',
+          '00:00:02,500 --> 00:00:04,500',
+          'Second sentence',
+          ''
+        ].join('\n'), 'utf8');
+      },
+      writeAssFromSrt: async ({ sourceSrtPath }) => {
+        capturedAlignedSrt = await fs.readFile(sourceSrtPath, 'utf8');
+      }
+    }
+  });
+
+  assert.match(capturedAlignedSrt, /First sentence/);
+  assert.match(capturedAlignedSrt, /Second sentence/);
+});
+
+test('burnInSubtitles builds captioned output path and delegates ffmpeg burn-in', async () => {
+  let called = false;
+  const result = await burnInSubtitles({
+    projectDir: '/tmp/project',
+    videoPath: '/tmp/project/final.mp4',
+    subtitleAssPath: '/tmp/project/assets/subtitles/aligned.ass',
+    deps: {
+      burnInAssSubtitles: async (videoPath, assPath, outputPath) => {
+        called = true;
+        assert.equal(videoPath, '/tmp/project/final.mp4');
+        assert.equal(assPath, '/tmp/project/assets/subtitles/aligned.ass');
+        assert.match(outputPath, /final_captioned\.mp4$/);
+      }
+    }
+  });
+
+  assert.equal(called, true);
+  assert.match(result.finalCaptionedVideoPath, /final_captioned\.mp4$/);
 });
 
 test('step generators forward explicit modelId overrides to runModel', async () => {

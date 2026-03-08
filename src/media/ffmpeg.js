@@ -91,6 +91,38 @@ export async function muxVoiceover(videoPath, audioPath, outputPath, options = {
   await runFfmpegFn(args);
 }
 
+function escapeFilterPath(filePath) {
+  return String(filePath || '')
+    .replace(/\\/g, '\\\\')
+    .replace(/:/g, '\\:')
+    .replace(/'/g, "\\'")
+    .replace(/,/g, '\\,');
+}
+
+export async function burnInAssSubtitles(videoPath, assPath, outputPath, options = {}) {
+  const runFfmpegFn = options.runFfmpeg || runFfmpeg;
+  const crf = Number.isFinite(options.crf) ? String(options.crf) : '18';
+  const preset = options.preset || 'slow';
+  const escapedAssPath = escapeFilterPath(path.resolve(assPath));
+
+  await runFfmpegFn([
+    '-y',
+    '-i',
+    videoPath,
+    '-vf',
+    `ass='${escapedAssPath}'`,
+    '-c:v',
+    'libx264',
+    '-preset',
+    preset,
+    '-crf',
+    crf,
+    '-c:a',
+    'copy',
+    outputPath
+  ]);
+}
+
 export async function probeMediaDurationSeconds(mediaPath, options = {}) {
   const runCaptureFn = options.runCapture || runCapture;
   const output = await runCaptureFn(env.ffprobeBin, [

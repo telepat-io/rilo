@@ -62,11 +62,5 @@ Thumbs.db
 
 # ------------------------------
 # Local generated project artifacts
-# Keep tracked example config/story files; ignore heavy generated media/debug outputs.
 # ------------------------------
-projects/*/assets/audio/
-projects/*/assets/debug/
-projects/*/assets/keyframes/
-projects/*/assets/segments/
-projects/*/assets/text/
-projects/*/analytics/runs/
+projects/

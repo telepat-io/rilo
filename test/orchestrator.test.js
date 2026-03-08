@@ -40,7 +40,9 @@ function allStepsTrue() {
     [JobStep.VOICE]: true,
     [JobStep.KEYFRAMES]: true,
     [JobStep.SEGMENTS]: true,
-    [JobStep.COMPOSE]: true
+    [JobStep.COMPOSE]: true,
+    [JobStep.ALIGN]: true,
+    [JobStep.BURNIN]: true
   };
 }
 
@@ -79,7 +81,7 @@ test('regenerateProjectAsset validates target input combinations', async () => {
     () => regenerateProjectAsset('test-project', { targetType: 'script', index: 0 }, {
       deps: { resolveProjectName: (project) => project }
     }),
-    /index is not supported for script\/voiceover/
+    /index is not supported for script\/voiceover\/align\/burnin/
   );
 
   await assert.rejects(
@@ -87,6 +89,13 @@ test('regenerateProjectAsset validates target input combinations', async () => {
       deps: { resolveProjectName: (project) => project }
     }),
     /index must be a non-negative integer/
+  );
+
+  await assert.rejects(
+    () => regenerateProjectAsset('test-project', { targetType: 'align', index: 0 }, {
+      deps: { resolveProjectName: (project) => project }
+    }),
+    /index is not supported for script\/voiceover\/align\/burnin/
   );
 
   await assert.rejects(
@@ -113,6 +122,64 @@ test('regenerateProjectAsset validates target input combinations', async () => {
     }),
     /project has no script to regenerate voiceover from/
   );
+});
+
+test('regenerateProjectAsset supports targeted align and burnin', async () => {
+  const runStateWrites = [];
+
+  const deps = {
+    resolveProjectName: (project) => project,
+    ensureProject: async () => {},
+    readProjectConfig: async () => ({
+      aspectRatio: '9:16',
+      targetDurationSec: 30,
+      finalDurationMode: 'match_audio',
+      subtitleOptions: { enabled: true }
+    }),
+    getProjectDir: () => '/tmp/project-dir',
+    readProjectRunState: async () => ({
+      status: 'completed',
+      error: null,
+      steps: allStepsTrue(),
+      artifacts: {
+        ...emptyPipelineArtifacts(),
+        script: 'Seed script body.',
+        shots: ['Shot A', 'Shot B'],
+        audioDurationSec: 12,
+        finalBaseVideoPath: '/tmp/final-base.mp4',
+        finalVideoPath: '/tmp/final_captioned.mp4',
+        subtitleAssPath: '/tmp/project-dir/assets/subtitles/aligned.ass'
+      }
+    }),
+    alignSubtitlesToVideo: async () => ({
+      subtitleSeedPath: '/tmp/project-dir/assets/subtitles/seed.srt',
+      subtitleAlignedSrtPath: '/tmp/project-dir/assets/subtitles/aligned.srt',
+      subtitleAssPath: '/tmp/project-dir/assets/subtitles/aligned.ass'
+    }),
+    burnInSubtitles: async () => ({
+      finalCaptionedVideoPath: '/tmp/project-dir/final_captioned.mp4'
+    }),
+    persistArtifacts: async () => {},
+    writeProjectRunState: async (_project, nextState) => {
+      runStateWrites.push(nextState);
+    },
+    syncProjectSnapshot: async () => {}
+  };
+
+  const alignResult = await regenerateProjectAsset('test-project', { targetType: 'align' }, { deps });
+  assert.equal(alignResult.targetType, 'align');
+  assert.equal(alignResult.index, undefined);
+  assert.equal(alignResult.steps.align, true);
+  assert.equal(alignResult.steps.burnin, false);
+  assert.equal(alignResult.artifacts.finalVideoPath, '/tmp/final-base.mp4');
+
+  const burninResult = await regenerateProjectAsset('test-project', { targetType: 'burnin' }, { deps });
+  assert.equal(burninResult.targetType, 'burnin');
+  assert.equal(burninResult.index, undefined);
+  assert.equal(burninResult.steps.burnin, true);
+  assert.equal(burninResult.artifacts.finalVideoPath, '/tmp/project-dir/final_captioned.mp4');
+
+  assert.ok(runStateWrites.length >= 2);
 });
 
 test('runPipeline executes all stages with injected deps and completes offline', async () => {
@@ -1037,14 +1104,14 @@ test('regenerateProjectAsset validates target and state preconditions', async ()
     regenerateProjectAsset('p', { targetType: 'unknown', index: 0 }, {
       deps: { resolveProjectName: (project) => project }
     }),
-    /targetType must be one of script, voiceover, keyframe, segment/
+    /targetType must be one of script, voiceover, keyframe, segment, align, burnin/
   );
 
   await assert.rejects(
     regenerateProjectAsset('p', { targetType: 'voiceover', index: 0 }, {
       deps: { resolveProjectName: (project) => project }
     }),
-    /index is not supported for script\/voiceover regeneration/
+    /index is not supported for script\/voiceover\/align\/burnin regeneration/
   );
 
   await assert.rejects(
@@ -1650,6 +1717,114 @@ test('runPipeline partial regen skips out-of-range changed shot indexes from has
   assert.deepEqual(result.payload.changedShotIndexes, []);
   assert.equal(result.payload.activeStep, null);
   assert.equal(result.artifacts.finalVideoPath, '/tmp/new-final-out-of-range.mp4');
+  assert.equal(getProjectRunLockOwner(project), null);
+
+  await fs.rm(projectDir, { recursive: true, force: true });
+});
+
+test('runPipeline partial regen restores missing local keyframe and segment paths after archive', async () => {
+  const project = uniqueProject('ut-orch-partial-regen-archived-path-repair');
+  const projectDir = await fs.mkdtemp(path.join(os.tmpdir(), 'videogen-orch-partial-archived-'));
+  const story = 'This is a sufficiently long story for partial regeneration path-repair validation after archiving.';
+
+  const artifacts = {
+    ...emptyPipelineArtifacts(),
+    renderSpecVersion: 2,
+    aspectRatio: '9:16',
+    keyframeSizeKey: '576x1024',
+    finalDurationMode: 'match_audio',
+    targetDurationSec: 60,
+    segmentDurationSec: 5,
+    plannedShots: 3,
+    script: 'Narration text',
+    scriptSourceStoryHash: hashText(story),
+    scriptHash: hashText('Narration text'),
+    shotHashes: [hashText('Shot 1'), hashText('Shot 2'), hashText('Shot 3')],
+    shots: ['Shot 1', 'Shot 2', 'Shot 3'],
+    tone: 'neutral',
+    timeline: [{ durationSec: 5 }, { durationSec: 5 }],
+    voiceoverUrl: 'https://replicate.delivery/voice.mp3',
+    voiceoverPath: '/tmp/voice.mp3',
+    keyframeUrls: ['https://replicate.delivery/k1.png', 'https://replicate.delivery/k2.png', 'https://replicate.delivery/k3.png'],
+    keyframePaths: ['/tmp/k1.png', '/tmp/k2.png', '/tmp/k3.png'],
+    segmentUrls: ['https://replicate.delivery/s1.mp4', 'https://replicate.delivery/s2.mp4'],
+    segmentPaths: ['/tmp/s1.mp4', '/tmp/s2.mp4'],
+    finalVideoPath: '/tmp/old-final.mp4'
+  };
+
+  await fs.mkdir(path.join(projectDir, 'assets', 'text'), { recursive: true });
+  await fs.writeFile(
+    path.join(projectDir, 'assets', 'text', 'script.json'),
+    JSON.stringify({
+      script: 'Narration text',
+      shots: ['Shot 1 changed', 'Shot 2', 'Shot 3'],
+      tone: 'neutral'
+    }),
+    'utf8'
+  );
+
+  const keyframePersisted = [];
+  const segmentPersisted = [];
+
+  const job = createJob({
+    project,
+    story
+  });
+
+  const result = await runPipeline(job.id, {
+    deps: {
+      ensureProject: async () => {},
+      readProjectConfig: async () => ({
+        aspectRatio: '9:16',
+        targetDurationSec: 60,
+        finalDurationMode: 'match_audio'
+      }),
+      getProjectDir: () => projectDir,
+      readProjectRunState: async () => ({
+        status: 'completed',
+        error: null,
+        steps: {
+          ...allStepsTrue(),
+          [JobStep.SEGMENTS]: false,
+          [JobStep.COMPOSE]: false
+        },
+        artifacts,
+        updatedAt: new Date().toISOString()
+      }),
+      archiveProjectAssets: async () => '/tmp/snapshots/archived',
+      persistArtifacts: async () => {},
+      writeProjectRunState: async () => {},
+      syncProjectSnapshot: async () => {},
+      writeRunRecord: async () => {},
+      collectRunPredictions: async () => [],
+      persistVoiceover: async () => '/tmp/new-voice.mp3',
+      generateKeyframe: async (_shot, _tone, _aspectRatio, index) => `https://replicate.delivery/new-k-${index}.png`,
+      persistKeyframe: async (_projectDir, _keyframeUrl, index) => {
+        keyframePersisted.push(index);
+        return `/tmp/new-k-${index}.png`;
+      },
+      generateVideoSegmentAtIndex: async (segmentIndex) => `https://replicate.delivery/new-s-${segmentIndex}.mp4`,
+      persistSegment: async (_projectDir, _segmentUrl, index) => {
+        segmentPersisted.push(index);
+        return `/tmp/new-s-${index}.mp4`;
+      },
+      composeFinalVideo: async () => ({
+        finalVideoPath: '/tmp/new-final.mp4',
+        voiceoverPath: '/tmp/voice.mp3',
+        keyframePaths: ['/tmp/new-k-0.png', '/tmp/new-k-1.png', '/tmp/new-k-2.png'],
+        segmentPaths: ['/tmp/new-s-0.mp4', '/tmp/new-s-1.mp4']
+      }),
+      probeMediaDurationSeconds: async () => 10,
+      resolveSegmentCountFromAudioDuration: () => 2,
+      buildFixedTimeline: () => [{ durationSec: 5 }, { durationSec: 5 }]
+    }
+  });
+
+  assert.equal(result.status, 'completed');
+  assert.equal(result.artifacts.keyframePaths.length, 3);
+  assert.equal(result.artifacts.segmentPaths.length, 2);
+  assert.deepEqual([...new Set(keyframePersisted)].sort((a, b) => a - b), [0, 1, 2]);
+  assert.deepEqual([...new Set(segmentPersisted)].sort((a, b) => a - b), [0, 1]);
   assert.equal(getProjectRunLockOwner(project), null);
 
   await fs.rm(projectDir, { recursive: true, force: true });

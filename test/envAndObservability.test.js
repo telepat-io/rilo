@@ -54,6 +54,7 @@ test('env parses booleans/numbers/hosts and assertRequiredEnv behavior', async (
     process.env.API_MAX_LOGS_LIMIT = '91';
     process.env.FFMPEG_BIN = '/tmp/custom-ffmpeg';
     process.env.FFPROBE_BIN = '/tmp/custom-ffprobe';
+    process.env.FFSUBSYNC_BIN = '/tmp/custom-ffsubsync';
 
     const modA = await importEnvFresh('a');
     assert.equal(modA.env.useWebhooks, true);
@@ -70,6 +71,7 @@ test('env parses booleans/numbers/hosts and assertRequiredEnv behavior', async (
     assert.equal(modA.env.apiMaxLogsLimit, 91);
     assert.equal(modA.env.ffmpegBin, '/tmp/custom-ffmpeg');
     assert.equal(modA.env.ffprobeBin, '/tmp/custom-ffprobe');
+    assert.equal(modA.env.ffsubsyncBin, '/tmp/custom-ffsubsync');
     assert.deepEqual(modA.env.downloadAllowedHosts, ['example.com', 'replicate.delivery']);
     assert.throws(() => modA.assertRequiredEnv(), /Missing REPLICATE_API_TOKEN/);
     assert.throws(() => modA.assertRequiredApiEnv(), /Missing API_BEARER_TOKEN/);

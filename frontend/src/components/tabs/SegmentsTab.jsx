@@ -7,6 +7,7 @@ export function SegmentsTab({
   selectedProject,
   isRunning,
   activeStep,
+  activeSegmentIndex,
   regeneratingMap,
   mediaCss,
   mediaColMin,
@@ -98,7 +99,16 @@ export function SegmentsTab({
           const asset = assets[index] || null;
           const mapKey = `segment-${index}`;
           const busy = Boolean(regeneratingMap[mapKey]);
-          const isGenerating = !asset && isRunning && activeStep === 'segments' && index === assets.length;
+          const isGeneratingByIndex = Number.isInteger(activeSegmentIndex)
+            && isRunning
+            && activeStep === 'segments'
+            && activeSegmentIndex === index;
+          const isGeneratingBySlot = !asset
+            && isRunning
+            && activeStep === 'segments'
+            && !Number.isInteger(activeSegmentIndex)
+            && index === assets.length;
+          const isGenerating = isGeneratingByIndex || isGeneratingBySlot;
           const isPending = !asset && !isGenerating;
           return (
             <article key={asset?.path || `segment-slot-${index}`} className="asset-card">

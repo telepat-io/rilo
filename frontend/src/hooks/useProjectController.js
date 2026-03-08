@@ -101,7 +101,12 @@ export function useProjectController() {
   );
   const keyframes = useMemo(() => sortByPath(assets.filter((asset) => asset.path.startsWith('assets/keyframes/'))), [assets]);
   const segments = useMemo(() => sortByPath(assets.filter((asset) => asset.path.startsWith('assets/segments/'))), [assets]);
-  const finalVideo = useMemo(() => assets.find((asset) => asset.path === 'final.mp4') || null, [assets]);
+  const finalVideo = useMemo(
+    () => assets.find((asset) => asset.path === 'final_captioned.mp4')
+      || assets.find((asset) => asset.path === 'final.mp4')
+      || null,
+    [assets]
+  );
 
   const { width: mediaW, height: mediaH } = resolveMediaDimensions(
     projectDetails?.config,
@@ -116,6 +121,11 @@ export function useProjectController() {
     isRunning
     && typeof currentJob?.payload?.activeStep === 'string'
       ? currentJob.payload.activeStep
+      : null;
+  const activeSegmentIndex =
+    isRunning
+    && Number.isInteger(currentJob?.payload?.activeSegmentIndex)
+      ? currentJob.payload.activeSegmentIndex
       : null;
   const hasPendingChangedShots =
     isRunning
@@ -453,19 +463,24 @@ export function useProjectController() {
   async function handleTargetedRegenerate(targetType, index) {
     if (!selectedProject) return;
 
-    const key = targetType === 'voiceover' || targetType === 'script'
+    const noIndexTargets = new Set(['voiceover', 'script', 'align', 'burnin']);
+    const key = noIndexTargets.has(targetType)
       ? targetType
       : `${targetType}-${index}`;
     setRegeneratingMap((map) => ({ ...map, [key]: true }));
     try {
       await regenerateProject(
         selectedProject,
-        targetType === 'voiceover' || targetType === 'script' ? { targetType } : { targetType, index }
+        noIndexTargets.has(targetType) ? { targetType } : { targetType, index }
       );
       if (targetType === 'voiceover') {
         flash('Voiceover regenerated.');
       } else if (targetType === 'script') {
         flash('Script regenerated.');
+      } else if (targetType === 'align') {
+        flash('Subtitles re-aligned.');
+      } else if (targetType === 'burnin') {
+        flash('Subtitle burn-in completed.');
       } else {
         flash(`${targetType === 'keyframe' ? 'Keyframe' : 'Segment'} ${index + 1} regenerated.`);
       }
@@ -535,6 +550,7 @@ export function useProjectController() {
     isRunning,
     steps,
     activeStep,
+    activeSegmentIndex,
     tabs,
 
     loadProjects,

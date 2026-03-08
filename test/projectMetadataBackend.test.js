@@ -8,6 +8,7 @@ import {
   getProjectDir,
   writeProjectArtifacts,
   writeProjectRunState,
+  writeProjectScriptAsset,
   writeProjectSync
 } from '../src/store/projectStore.js';
 import { ensureDir } from '../src/media/files.js';
@@ -108,6 +109,10 @@ test('local metadata backend returns logs/prompts/artifacts/sync/snapshots and a
     },
     updatedAt: new Date().toISOString()
   });
+  await writeProjectScriptAsset(project, {
+    script: 'Edited script',
+    shots: ['Edited shot 1', 'Edited shot 2']
+  });
   await writeProjectArtifacts(project, { finalVideoPath: 'final.mp4' });
   await writeProjectSync(project, { backend: 'local', syncedAt: new Date().toISOString() });
 
@@ -137,7 +142,8 @@ test('local metadata backend returns logs/prompts/artifacts/sync/snapshots and a
 
   const prompts = await backend.getPromptData(project, { limit: 1 });
   assert.equal(prompts.prompts.length, 1);
-  assert.equal(prompts.script, 'Story script');
+  assert.equal(prompts.script, 'Edited script');
+  assert.deepEqual(prompts.shots, ['Edited shot 1', 'Edited shot 2']);
 
   const artifacts = await backend.getArtifacts(project);
   assert.equal(artifacts.artifacts.finalVideoPath, 'final.mp4');

@@ -10,7 +10,9 @@ export const JobStep = {
   VOICE: 'voiceover',
   KEYFRAMES: 'keyframes',
   SEGMENTS: 'segments',
-  COMPOSE: 'compose'
+  COMPOSE: 'compose',
+  ALIGN: 'align',
+  BURNIN: 'burnin'
 };
 
 export function emptyStepState() {
@@ -19,6 +21,8 @@ export function emptyStepState() {
     [JobStep.VOICE]: false,
     [JobStep.KEYFRAMES]: false,
     [JobStep.SEGMENTS]: false,
-    [JobStep.COMPOSE]: false
+    [JobStep.COMPOSE]: false,
+    [JobStep.ALIGN]: false,
+    [JobStep.BURNIN]: false
   };
 }

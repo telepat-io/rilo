@@ -17,6 +17,11 @@ export function emptyPipelineArtifacts() {
     keyframePaths: [],
     segmentUrls: [],
     segmentPaths: [],
+    subtitleSeedPath: '',
+    subtitleAlignedSrtPath: '',
+    subtitleAssPath: '',
+    finalBaseVideoPath: '',
+    finalCaptionedVideoPath: '',
     finalVideoPath: '',
     subtitlesUrl: ''
   };

@@ -6,8 +6,13 @@ export function OutputTab({
   assetCacheKey,
   mediaCss,
   isRunning,
+  subtitleEnabled,
+  alignBusy,
+  burninBusy,
   toDisplayAssetUrl,
-  onRegenerateProject
+  onRegenerateProject,
+  onRegenerateAlign,
+  onRegenerateBurnin
 }) {
   return (
     <div className="tab-pane tab-pane-output">
@@ -24,6 +29,26 @@ export function OutputTab({
               />
             </MediaWrap>
           </div>
+          {subtitleEnabled && (
+            <div className="output-actions-row">
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={onRegenerateAlign}
+                disabled={isRunning || alignBusy || burninBusy}
+              >
+                {alignBusy ? 'Re-aligning…' : '↺ Re-align subtitles'}
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={onRegenerateBurnin}
+                disabled={isRunning || burninBusy || alignBusy}
+              >
+                {burninBusy ? 'Re-burning…' : '↺ Re-burn subtitles'}
+              </button>
+            </div>
+          )}
         </section>
       ) : (
         <div className="empty-state">

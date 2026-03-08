@@ -6,10 +6,18 @@ const STAGE_LABELS = {
   voiceover: 'Voice',
   keyframes: 'Keyframes',
   segments: 'Segments',
-  compose: 'Compose'
+  compose: 'Compose',
+  align: 'Align',
+  burnin: 'Burn In'
 };
 
-const STAGE_ORDER = ['script', 'voiceover', 'keyframes', 'segments', 'compose'];
+const STAGE_ORDER = ['script', 'voiceover', 'keyframes', 'segments', 'compose', 'align', 'burnin'];
+
+function getStageOrder(includeSubtitleStages) {
+  return includeSubtitleStages
+    ? STAGE_ORDER
+    : STAGE_ORDER.filter((stage) => stage !== 'align' && stage !== 'burnin');
+}
 
 function fmtDuration(ms) {
   if (!Number.isFinite(ms) || ms <= 0) return '—';
@@ -61,8 +69,9 @@ function StageStatusDot({ status }) {
   return <span className="stage-dot stage-dot-idle" title="Pending" />;
 }
 
-function RunRow({ run }) {
+function RunRow({ run, includeSubtitleStages }) {
   const [expanded, setExpanded] = useState(false);
+  const stageOrder = getStageOrder(includeSubtitleStages);
   return (
     <div className="run-row">
       <button
@@ -91,7 +100,7 @@ function RunRow({ run }) {
               </tr>
             </thead>
             <tbody>
-              {STAGE_ORDER.map((stage) => {
+              {stageOrder.map((stage) => {
                 const s = run.stages?.[stage];
                 if (!s) return null;
                 return (
@@ -117,7 +126,7 @@ function RunRow({ run }) {
   );
 }
 
-export function AnalyticsTab({ selectedProject }) {
+export function AnalyticsTab({ selectedProject, includeSubtitleStages = true }) {
   const [summary, setSummary] = useState(null);
   const [runs, setRuns] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -205,7 +214,7 @@ export function AnalyticsTab({ selectedProject }) {
         <div className="analytics-runs">
           <p className="analytics-runs-title">Recent runs</p>
           {runs.map((run) => (
-            <RunRow key={run.runId} run={run} />
+            <RunRow key={run.runId} run={run} includeSubtitleStages={includeSubtitleStages} />
           ))}
         </div>
       )}

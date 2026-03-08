@@ -140,6 +140,8 @@ function applyRunStateInvalidationForConfigChange({ runState, previousConfig, ne
     steps[JobStep.KEYFRAMES] = false;
     steps[JobStep.SEGMENTS] = false;
     steps[JobStep.COMPOSE] = false;
+    steps[JobStep.ALIGN] = false;
+    steps[JobStep.BURNIN] = false;
     artifacts.script = '';
     artifacts.tone = '';
     artifacts.shots = [];
@@ -150,6 +152,11 @@ function applyRunStateInvalidationForConfigChange({ runState, previousConfig, ne
     artifacts.keyframePaths = [];
     artifacts.segmentUrls = [];
     artifacts.segmentPaths = [];
+    artifacts.finalBaseVideoPath = '';
+    artifacts.finalCaptionedVideoPath = '';
+    artifacts.subtitleSeedPath = '';
+    artifacts.subtitleAlignedSrtPath = '';
+    artifacts.subtitleAssPath = '';
     artifacts.finalVideoPath = '';
     artifacts.scriptHash = '';
     artifacts.shotHashes = [];
@@ -161,6 +168,8 @@ function applyRunStateInvalidationForConfigChange({ runState, previousConfig, ne
     steps[JobStep.KEYFRAMES] = false;
     steps[JobStep.SEGMENTS] = false;
     steps[JobStep.COMPOSE] = false;
+    steps[JobStep.ALIGN] = false;
+    steps[JobStep.BURNIN] = false;
     artifacts.timeline = [];
     artifacts.voiceoverUrl = '';
     artifacts.voiceoverPath = '';
@@ -168,6 +177,11 @@ function applyRunStateInvalidationForConfigChange({ runState, previousConfig, ne
     artifacts.keyframePaths = [];
     artifacts.segmentUrls = [];
     artifacts.segmentPaths = [];
+    artifacts.finalBaseVideoPath = '';
+    artifacts.finalCaptionedVideoPath = '';
+    artifacts.subtitleSeedPath = '';
+    artifacts.subtitleAlignedSrtPath = '';
+    artifacts.subtitleAssPath = '';
     artifacts.finalVideoPath = '';
   };
 
@@ -175,18 +189,32 @@ function applyRunStateInvalidationForConfigChange({ runState, previousConfig, ne
     steps[JobStep.KEYFRAMES] = false;
     steps[JobStep.SEGMENTS] = false;
     steps[JobStep.COMPOSE] = false;
+    steps[JobStep.ALIGN] = false;
+    steps[JobStep.BURNIN] = false;
     artifacts.keyframeUrls = [];
     artifacts.keyframePaths = [];
     artifacts.segmentUrls = [];
     artifacts.segmentPaths = [];
+    artifacts.finalBaseVideoPath = '';
+    artifacts.finalCaptionedVideoPath = '';
+    artifacts.subtitleSeedPath = '';
+    artifacts.subtitleAlignedSrtPath = '';
+    artifacts.subtitleAssPath = '';
     artifacts.finalVideoPath = '';
   };
 
   const resetFromSegments = () => {
     steps[JobStep.SEGMENTS] = false;
     steps[JobStep.COMPOSE] = false;
+    steps[JobStep.ALIGN] = false;
+    steps[JobStep.BURNIN] = false;
     artifacts.segmentUrls = [];
     artifacts.segmentPaths = [];
+    artifacts.finalBaseVideoPath = '';
+    artifacts.finalCaptionedVideoPath = '';
+    artifacts.subtitleSeedPath = '';
+    artifacts.subtitleAlignedSrtPath = '';
+    artifacts.subtitleAssPath = '';
     artifacts.finalVideoPath = '';
   };
 
@@ -208,6 +236,17 @@ function applyRunStateInvalidationForConfigChange({ runState, previousConfig, ne
 
   artifacts.modelSelections = nextModels;
   artifacts.modelOptions = nextModelOptions;
+  artifacts.subtitleOptions = nextConfig?.subtitleOptions;
+
+  if (JSON.stringify(previousConfig?.subtitleOptions || {}) !== JSON.stringify(nextConfig?.subtitleOptions || {})) {
+    steps[JobStep.ALIGN] = false;
+    steps[JobStep.BURNIN] = false;
+    artifacts.finalCaptionedVideoPath = '';
+    artifacts.subtitleSeedPath = '';
+    artifacts.subtitleAlignedSrtPath = '';
+    artifacts.subtitleAssPath = '';
+    artifacts.finalVideoPath = artifacts.finalBaseVideoPath || artifacts.finalVideoPath;
+  }
 
   return {
     status: runState.status,
@@ -246,6 +285,11 @@ function applyRunStateInvalidationForContentChange({ runState, updates }) {
   artifacts.keyframePaths = [];
   artifacts.segmentUrls = [];
   artifacts.segmentPaths = [];
+  artifacts.finalBaseVideoPath = '';
+  artifacts.finalCaptionedVideoPath = '';
+  artifacts.subtitleSeedPath = '';
+  artifacts.subtitleAlignedSrtPath = '';
+  artifacts.subtitleAssPath = '';
   artifacts.finalVideoPath = '';
 
   steps[JobStep.SCRIPT] = true;
@@ -253,6 +297,8 @@ function applyRunStateInvalidationForContentChange({ runState, updates }) {
   steps[JobStep.KEYFRAMES] = false;
   steps[JobStep.SEGMENTS] = false;
   steps[JobStep.COMPOSE] = false;
+  steps[JobStep.ALIGN] = false;
+  steps[JobStep.BURNIN] = false;
 
   return {
     status: runState.status,
@@ -557,8 +603,8 @@ export function createProjectsRouter(deps = {}) {
           return;
         }
 
-        if ((normalizedTargetType === 'voiceover' || normalizedTargetType === 'script') && hasIndex) {
-          res.status(400).json({ error: 'index is not supported for script/voiceover targeted regeneration' });
+        if (['voiceover', 'script', 'align', 'burnin'].includes(normalizedTargetType) && hasIndex) {
+          res.status(400).json({ error: 'index is not supported for script/voiceover/align/burnin targeted regeneration' });
           return;
         }
 

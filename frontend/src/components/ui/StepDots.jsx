@@ -1,20 +1,26 @@
-const STEP_ORDER = ['script', 'voiceover', 'keyframes', 'segments', 'compose'];
+const BASE_STEP_ORDER = ['script', 'voiceover', 'keyframes', 'segments', 'compose'];
+const SUBTITLE_STEP_ORDER = ['align', 'burnin'];
 const STEP_LABELS = {
   script: 'Script',
   voiceover: 'Voice',
   keyframes: 'Keyframes',
   segments: 'Segments',
-  compose: 'Compose'
+  compose: 'Compose',
+  align: 'Align',
+  burnin: 'Burn In'
 };
 
-export function StepDots({ steps, running, activeStep }) {
+export function StepDots({ steps, running, activeStep, includeSubtitleStages = true }) {
+  const stepOrder = includeSubtitleStages
+    ? [...BASE_STEP_ORDER, ...SUBTITLE_STEP_ORDER]
+    : BASE_STEP_ORDER;
   const resolvedActiveStep = running
-    ? (STEP_ORDER.includes(activeStep) ? activeStep : STEP_ORDER.find((key) => !steps?.[key]) || null)
+    ? (stepOrder.includes(activeStep) ? activeStep : stepOrder.find((key) => !steps?.[key]) || null)
     : null;
 
   return (
     <div className="step-dots">
-      {STEP_ORDER.map((key) => {
+      {stepOrder.map((key) => {
         const done = steps?.[key];
         const className = done
           ? 'dot dot-done'

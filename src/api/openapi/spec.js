@@ -116,6 +116,35 @@ const schemas = {
             type: 'object',
             properties: modelOptionsProperties,
             additionalProperties: false
+          },
+          subtitleOptions: {
+            type: 'object',
+            properties: {
+              enabled: { type: 'boolean' },
+              templateId: {
+                type: 'string',
+                enum: ['custom', 'social_center_punch', 'social_center_clean', 'social_center_story']
+              },
+              position: { type: 'string', enum: ['top', 'center', 'bottom'] },
+              highlightMode: { type: 'string', enum: ['spoken_upcoming', 'current_only'] },
+              fontName: { type: 'string' },
+              fontSize: { type: 'integer', minimum: 16, maximum: 120 },
+              bold: { type: 'boolean' },
+              italic: { type: 'boolean' },
+              makeUppercase: { type: 'boolean' },
+              primaryColor: { type: 'string', pattern: '^#[0-9a-fA-F]{6}$' },
+              activeColor: { type: 'string', pattern: '^#[0-9a-fA-F]{6}$' },
+              outlineColor: { type: 'string', pattern: '^#[0-9a-fA-F]{6}$' },
+              backgroundEnabled: { type: 'boolean' },
+              backgroundColor: { type: 'string', pattern: '^#[0-9a-fA-F]{6}$' },
+              backgroundOpacity: { type: 'number', minimum: 0, maximum: 0.85 },
+              outline: { type: 'integer', minimum: 0, maximum: 12 },
+              shadow: { type: 'integer', minimum: 0, maximum: 12 },
+              marginV: { type: 'integer', minimum: 0, maximum: 400 },
+              maxWordsPerLine: { type: 'integer', minimum: 1, maximum: 20 },
+              maxLines: { type: 'integer', minimum: 1, maximum: 3 }
+            },
+            additionalProperties: false
           }
         },
         required: ['aspectRatio', 'targetDurationSec', 'finalDurationMode'],
@@ -148,7 +177,7 @@ const schemas = {
       forceRestart: { type: 'boolean' },
       targetType: {
         type: 'string',
-        enum: ['script', 'voiceover', 'keyframe', 'segment']
+        enum: ['script', 'voiceover', 'keyframe', 'segment', 'align', 'burnin']
       },
       index: {
         type: 'integer',
