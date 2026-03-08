@@ -179,6 +179,47 @@ test('burnInSubtitles builds captioned output path and delegates ffmpeg burn-in'
   assert.match(result.finalCaptionedVideoPath, /final_captioned\.mp4$/);
 });
 
+test('alignSubtitlesToVideo rejects empty script input', async () => {
+  await assert.rejects(
+    () => alignSubtitlesToVideo({
+      projectDir: '/tmp/project',
+      videoPath: '/tmp/project/final.mp4',
+      script: '   ',
+      totalDurationSec: 12,
+      subtitleOptions: {},
+      deps: {
+        ensureDir: async () => {}
+      }
+    }),
+    /script is empty/
+  );
+});
+
+test('burnInSubtitles rejects missing ASS path', async () => {
+  await assert.rejects(
+    () => burnInSubtitles({
+      projectDir: '/tmp/project',
+      videoPath: '/tmp/project/final.mp4',
+      subtitleAssPath: '',
+      deps: {
+        burnInAssSubtitles: async () => {}
+      }
+    }),
+    /subtitle ASS path is missing/
+  );
+});
+
+test('burnInSubtitles validates missing ASS path without injected deps', async () => {
+  await assert.rejects(
+    () => burnInSubtitles({
+      projectDir: '/tmp/project',
+      videoPath: '/tmp/project/final.mp4',
+      subtitleAssPath: ''
+    }),
+    /subtitle ASS path is missing/
+  );
+});
+
 test('step generators forward explicit modelId overrides to runModel', async () => {
   const scriptModels = [];
   await generateScript('Long source story for script model override checks.', {
@@ -274,6 +315,44 @@ test('step generators merge modelOptions and preserve runtime-managed fields', a
   assert.equal(voiceInput.speed, 1.4);
   assert.equal(voiceInput.text, 'hello world narration body');
 
+  let chatterboxInput;
+  await generateVoiceover('hello world narration body', {
+    modelId: 'resemble-ai/chatterbox-turbo',
+    modelOptions: {
+      voice: 'Andy',
+      top_k: 1000
+    },
+    deps: {
+      runModel: async ({ input }) => {
+        chatterboxInput = input;
+        return { output: 'https://replicate.delivery/chatterbox.mp3' };
+      }
+    }
+  });
+  assert.equal(chatterboxInput.voice, 'Andy');
+  assert.equal(chatterboxInput.top_k, 1000);
+  assert.equal(chatterboxInput.text, 'hello world narration body');
+  assert.equal(Object.prototype.hasOwnProperty.call(chatterboxInput, 'speed'), false);
+  assert.equal(Object.prototype.hasOwnProperty.call(chatterboxInput, 'subtitle_enable'), false);
+
+  let kokoroInput;
+  await generateVoiceover('hello world narration body', {
+    modelId: 'jaaari/kokoro-82m',
+    modelOptions: {
+      voice: 'af_bella'
+    },
+    deps: {
+      runModel: async ({ input }) => {
+        kokoroInput = input;
+        return { output: 'https://replicate.delivery/kokoro.mp3' };
+      }
+    }
+  });
+  assert.equal(kokoroInput.voice, 'af_bella');
+  assert.equal(typeof kokoroInput.speed, 'number');
+  assert.equal(kokoroInput.text, 'hello world narration body');
+  assert.equal(Object.prototype.hasOwnProperty.call(kokoroInput, 'subtitle_enable'), false);
+
   let keyframeInput;
   await generateKeyframe('prompt body', 'neutral', '9:16', 0, null, { width: 700, height: 1200 }, {
     modelOptions: {
@@ -307,6 +386,269 @@ test('step generators merge modelOptions and preserve runtime-managed fields', a
   });
   assert.equal(segmentInput.sample_shift, 14);
   assert.equal(segmentInput.resolution, '720p');
+});
+
+test('generateKeyframe uses Flux adapter mapping for custom-size keyframes', async () => {
+  let fluxInput;
+  await generateKeyframe('modern courtroom interior', 'cinematic', '9:16', 1, null, { width: 768, height: 1344 }, {
+    modelId: 'black-forest-labs/flux-2-pro',
+    modelOptions: {
+      aspect_ratio: '16:9',
+      safety_tolerance: 4,
+      output_format: 'png'
+    },
+    deps: {
+      runModel: async ({ model, input }) => {
+        assert.equal(model, 'black-forest-labs/flux-2-pro');
+        fluxInput = input;
+        return { output: 'https://replicate.delivery/flux-kf.png' };
+      }
+    }
+  });
+
+  assert.equal(fluxInput.safety_tolerance, 4);
+  assert.equal(fluxInput.output_format, 'png');
+  assert.equal(fluxInput.aspect_ratio, 'custom');
+  assert.equal(fluxInput.width, 768);
+  assert.equal(fluxInput.height, 1344);
+  assert.match(fluxInput.prompt, /shot 2/);
+});
+
+test('generateKeyframe uses Flux Schnell adapter mapping with aspect ratio', async () => {
+  let schnellInput;
+  await generateKeyframe('speed-focused image generation', 'neutral', '16:9', 0, null, { width: 1024, height: 576 }, {
+    modelId: 'black-forest-labs/flux-schnell',
+    modelOptions: {
+      num_outputs: 2,
+      go_fast: false
+    },
+    deps: {
+      runModel: async ({ model, input }) => {
+        assert.equal(model, 'black-forest-labs/flux-schnell');
+        schnellInput = input;
+        return { output: ['https://replicate.delivery/schnell-1.webp', 'https://replicate.delivery/schnell-2.webp'] };
+      }
+    }
+  });
+
+  assert.equal(schnellInput.num_outputs, 2);
+  assert.equal(schnellInput.go_fast, false);
+  assert.equal(schnellInput.aspect_ratio, '16:9');
+  assert.equal(schnellInput.width, undefined);
+  assert.equal(schnellInput.height, undefined);
+  assert.match(schnellInput.prompt, /shot 1/);
+});
+
+test('generateKeyframe uses Nano Banana Pro adapter mapping with aspect ratio and options', async () => {
+  let nanoInput;
+  await generateKeyframe('high fidelity infographic style', 'neutral', '1:1', 2, null, { width: 1024, height: 1024 }, {
+    modelId: 'google/nano-banana-pro',
+    modelOptions: {
+      resolution: '4K',
+      output_format: 'png',
+      safety_filter_level: 'block_only_high',
+      allow_fallback_model: true
+    },
+    deps: {
+      runModel: async ({ model, input }) => {
+        assert.equal(model, 'google/nano-banana-pro');
+        nanoInput = input;
+        return { output: 'https://replicate.delivery/nano.webp' };
+      }
+    }
+  });
+
+  assert.equal(nanoInput.resolution, '4K');
+  assert.equal(nanoInput.output_format, 'png');
+  assert.equal(nanoInput.safety_filter_level, 'block_only_high');
+  assert.equal(nanoInput.allow_fallback_model, true);
+  assert.equal(nanoInput.aspect_ratio, '1:1');
+  assert.equal(nanoInput.width, undefined);
+  assert.equal(nanoInput.height, undefined);
+  assert.match(nanoInput.prompt, /shot 3/);
+});
+
+test('generateKeyframe uses Seedream 4 adapter mapping with aspect ratio and options', async () => {
+  let seedreamInput;
+  await generateKeyframe('dynamic storyboard panel', 'neutral', '16:9', 3, null, { width: 1024, height: 576 }, {
+    modelId: 'bytedance/seedream-4',
+    modelOptions: {
+      size: '4K',
+      sequential_image_generation: 'auto',
+      max_images: 2,
+      enhance_prompt: true
+    },
+    deps: {
+      runModel: async ({ model, input }) => {
+        assert.equal(model, 'bytedance/seedream-4');
+        seedreamInput = input;
+        return { output: ['https://replicate.delivery/seedream-1.jpg', 'https://replicate.delivery/seedream-2.jpg'] };
+      }
+    }
+  });
+
+  assert.equal(seedreamInput.size, '4K');
+  assert.equal(seedreamInput.sequential_image_generation, 'auto');
+  assert.equal(seedreamInput.max_images, 2);
+  assert.equal(seedreamInput.enhance_prompt, true);
+  assert.equal(seedreamInput.aspect_ratio, '16:9');
+  assert.equal(seedreamInput.width, undefined);
+  assert.equal(seedreamInput.height, undefined);
+  assert.match(seedreamInput.prompt, /shot 4/);
+});
+
+test('generateVideoSegmentAtIndex uses Kling v3 adapter mapping with start/end images and fixed 5s duration', async () => {
+  let klingInput;
+  const segmentUrl = await generateVideoSegmentAtIndex(
+    0,
+    ['https://example.com/start.png', 'https://example.com/end.png'],
+    [{ durationSec: 9 }, { durationSec: 9 }],
+    ['A smooth dolly shot through fog'],
+    '9:16',
+    null,
+    {
+      modelId: 'kwaivgi/kling-v3-video',
+      modelOptions: {
+        negative_prompt: 'text artifacts',
+        mode: 'standard',
+        generate_audio: true
+      },
+      deps: {
+        runModel: async ({ model, input }) => {
+          assert.equal(model, 'kwaivgi/kling-v3-video');
+          klingInput = input;
+          return { output: 'https://replicate.delivery/kling-segment.mp4' };
+        }
+      }
+    }
+  );
+
+  assert.equal(segmentUrl, 'https://replicate.delivery/kling-segment.mp4');
+  assert.equal(klingInput.start_image, 'https://example.com/start.png');
+  assert.equal(klingInput.end_image, 'https://example.com/end.png');
+  assert.equal(klingInput.aspect_ratio, '9:16');
+  assert.equal(klingInput.duration, 5);
+  assert.equal(klingInput.mode, 'standard');
+  assert.equal(klingInput.generate_audio, false);
+  assert.equal(klingInput.num_frames, undefined);
+  assert.equal(klingInput.frames_per_second, undefined);
+  assert.equal(klingInput.resolution, undefined);
+});
+
+test('generateVideoSegmentAtIndex uses PixVerse adapter mapping with start/end images and fixed 5s duration', async () => {
+  let pixverseInput;
+  const segmentUrl = await generateVideoSegmentAtIndex(
+    0,
+    ['https://example.com/start.png', 'https://example.com/end.png'],
+    [{ durationSec: 8 }, { durationSec: 8 }],
+    ['A dramatic reveal shot'],
+    '16:9',
+    null,
+    {
+      modelId: 'pixverse/pixverse-v5.6',
+      modelOptions: {
+        quality: '720p',
+        negative_prompt: 'artifacts',
+        seed: 7,
+        generate_audio_switch: true,
+        thinking_type: 'auto'
+      },
+      deps: {
+        runModel: async ({ model, input }) => {
+          assert.equal(model, 'pixverse/pixverse-v5.6');
+          pixverseInput = input;
+          return { output: 'https://replicate.delivery/pixverse-segment.mp4' };
+        }
+      }
+    }
+  );
+
+  assert.equal(segmentUrl, 'https://replicate.delivery/pixverse-segment.mp4');
+  assert.equal(pixverseInput.image, 'https://example.com/start.png');
+  assert.equal(pixverseInput.last_frame_image, 'https://example.com/end.png');
+  assert.equal(pixverseInput.aspect_ratio, '16:9');
+  assert.equal(pixverseInput.duration, 5);
+  assert.equal(pixverseInput.quality, '720p');
+  assert.equal(pixverseInput.generate_audio_switch, false);
+  assert.equal(pixverseInput.num_frames, undefined);
+  assert.equal(pixverseInput.frames_per_second, undefined);
+  assert.equal(pixverseInput.resolution, undefined);
+});
+
+test('generateVideoSegmentAtIndex uses Veo 3.1 Fast adapter mapping with start/end images and fixed 5s duration', async () => {
+  let veoInput;
+  const segmentUrl = await generateVideoSegmentAtIndex(
+    0,
+    ['https://example.com/start.png', 'https://example.com/end.png'],
+    [{ durationSec: 8 }, { durationSec: 8 }],
+    ['A cinematic crane shot over a city'],
+    '16:9',
+    null,
+    {
+      modelId: 'google/veo-3.1-fast',
+      modelOptions: {
+        resolution: '720p',
+        negative_prompt: 'low detail',
+        seed: 23,
+        generate_audio: true
+      },
+      deps: {
+        runModel: async ({ model, input }) => {
+          assert.equal(model, 'google/veo-3.1-fast');
+          veoInput = input;
+          return { output: 'https://replicate.delivery/veo-segment.mp4' };
+        }
+      }
+    }
+  );
+
+  assert.equal(segmentUrl, 'https://replicate.delivery/veo-segment.mp4');
+  assert.equal(veoInput.image, 'https://example.com/start.png');
+  assert.equal(veoInput.last_frame, 'https://example.com/end.png');
+  assert.equal(veoInput.aspect_ratio, '16:9');
+  assert.equal(veoInput.duration, 5);
+  assert.equal(veoInput.resolution, '720p');
+  assert.equal(veoInput.generate_audio, false);
+  assert.equal(veoInput.num_frames, undefined);
+  assert.equal(veoInput.frames_per_second, undefined);
+});
+
+test('generateVideoSegmentAtIndex uses Veo 3.1 adapter mapping with start/end images and fixed 5s duration', async () => {
+  let veoInput;
+  const segmentUrl = await generateVideoSegmentAtIndex(
+    0,
+    ['https://example.com/start.png', 'https://example.com/end.png'],
+    [{ durationSec: 8 }, { durationSec: 8 }],
+    ['A cinematic dialogue shot with dynamic lighting'],
+    '9:16',
+    null,
+    {
+      modelId: 'google/veo-3.1',
+      modelOptions: {
+        resolution: '1080p',
+        negative_prompt: 'artifacts',
+        seed: 31,
+        generate_audio: true
+      },
+      deps: {
+        runModel: async ({ model, input }) => {
+          assert.equal(model, 'google/veo-3.1');
+          veoInput = input;
+          return { output: 'https://replicate.delivery/veo31-segment.mp4' };
+        }
+      }
+    }
+  );
+
+  assert.equal(segmentUrl, 'https://replicate.delivery/veo31-segment.mp4');
+  assert.equal(veoInput.image, 'https://example.com/start.png');
+  assert.equal(veoInput.last_frame, 'https://example.com/end.png');
+  assert.equal(veoInput.aspect_ratio, '9:16');
+  assert.equal(veoInput.duration, 5);
+  assert.equal(veoInput.resolution, '1080p');
+  assert.equal(veoInput.generate_audio, false);
+  assert.equal(veoInput.num_frames, undefined);
+  assert.equal(veoInput.frames_per_second, undefined);
 });
 
 test('generateScript returns best fallback candidate across retries', async () => {

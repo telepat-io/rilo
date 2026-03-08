@@ -1,0 +1,71 @@
+{
+  "modelId": "bytedance/seedream-4",
+  "provider": "replicate",
+  "displayName": "Seedream 4",
+  "category": "image-generation",
+  "pricingSourceUrl": "https://replicate.com/bytedance/seedream-4",
+  "pricingNotes": "Replicate pricing: $0.03 per output image.",
+  "pricing": {
+    "usdPerSecond": null,
+    "usdPer1kInputTokens": null,
+    "usdPer1kOutputTokens": null
+  },
+  "pricingRules": {
+    "basis": "output_image_count",
+    "usdPerImage": 0.03
+  },
+  "inputOptions": {
+    "userConfigurable": [
+      "size",
+      "sequential_image_generation",
+      "max_images",
+      "enhance_prompt"
+    ],
+    "pipelineManaged": [
+      "prompt",
+      "aspect_ratio"
+    ],
+    "fields": {
+      "size": {
+        "type": "string",
+        "default": "2K",
+        "enum": [
+          "1K",
+          "2K",
+          "4K"
+        ]
+      },
+      "sequential_image_generation": {
+        "type": "string",
+        "default": "disabled",
+        "enum": [
+          "disabled",
+          "auto"
+        ]
+      },
+      "max_images": {
+        "type": "integer",
+        "default": 1,
+        "minimum": 1,
+        "maximum": 15
+      },
+      "enhance_prompt": {
+        "type": "boolean",
+        "default": true
+      },
+      "prompt": {
+        "type": "string",
+        "required": true
+      },
+      "aspect_ratio": {
+        "type": "string",
+        "required": true,
+        "enum": [
+          "1:1",
+          "16:9",
+          "9:16"
+        ]
+      }
+    }
+  }
+}

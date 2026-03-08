@@ -2,17 +2,7 @@ import { ASPECT_RATIO_PRESETS, MODEL_CATEGORIES, resolveModelForCategory } from 
 import { runModel, extractOutputUri } from '../providers/predictions.js';
 import path from 'node:path';
 import { downloadToFile, ensureDir } from '../media/files.js';
-
-function stylePrefix(index, tone) {
-  return `Cinematic documentary style, coherent character continuity, shot ${index + 1}, tone ${tone}.`;
-}
-
-function asModelOptions(candidate) {
-  if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) {
-    return {};
-  }
-  return candidate;
-}
+import { resolveTextToImageAdapter } from './textToImageAdapters.js';
 
 export async function generateKeyframe(
   promptText,
@@ -28,20 +18,15 @@ export async function generateKeyframe(
   const extractOutputUriFn = deps.extractOutputUri || extractOutputUri;
 
   const preset = ASPECT_RATIO_PRESETS[aspectRatio] || ASPECT_RATIO_PRESETS['9:16'];
-  const prompt = `${stylePrefix(index, tone)} ${promptText}`;
   const width = sizeOverride?.width || preset.keyframeWidth || ASPECT_RATIO_PRESETS['9:16'].keyframeWidth;
   const height = sizeOverride?.height || preset.keyframeHeight || ASPECT_RATIO_PRESETS['9:16'].keyframeHeight;
   const modelId = options.modelId || resolveModelForCategory(MODEL_CATEGORIES.textToImage);
-  const modelOptions = asModelOptions(options.modelOptions);
+  const modelOptions = options.modelOptions;
+  const adapter = resolveTextToImageAdapter(modelId);
 
   const prediction = await runModelFn({
     model: modelId,
-    input: {
-      ...modelOptions,
-      prompt,
-      width,
-      height
-    },
+    input: adapter.buildInput({ promptText, tone, index, aspectRatio, width, height, modelOptions }),
     trace: trace ? { ...trace, step: 'keyframe', index } : null
   });
 

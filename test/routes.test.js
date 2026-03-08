@@ -213,6 +213,20 @@ test('projects routes return expected local backend payloads and error codes', a
     });
     assert.equal(createdResponse.status, 201);
 
+    // no run-state present yet: config patch should still succeed
+    const noRunStatePatch = await fetch(`${baseUrl}/projects/${project}/config`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        config: {
+          aspectRatio: '9:16',
+          targetDurationSec: 20,
+          finalDurationMode: 'match_audio'
+        }
+      })
+    });
+    assert.equal(noRunStatePatch.status, 200);
+
     await writeProjectStory(project, 'Story text for prompts extraction and local project retrieval.');
     await writeProjectRunState(project, {
       status: 'completed',
@@ -731,6 +745,138 @@ test('PATCH /projects/:project/config updates and validates project config', asy
     assert.equal(modelOptionsPatchBody.details.runState.artifacts.voiceoverPath, '');
     assert.equal(modelOptionsPatchBody.details.runState.artifacts.modelOptions.textToSpeech.speed, 1.2);
 
+    // textToText option change should invalidate from script
+    await writeProjectRunState(project, reseededState);
+    await writeProjectArtifacts(project, reseededState.artifacts);
+    const textToTextOptionsPatch = await fetch(`${baseUrl}/projects/${project}/config`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        config: {
+          aspectRatio: '16:9',
+          targetDurationSec: 30,
+          finalDurationMode: 'match_audio',
+          modelOptions: {
+            textToText: {
+              temperature: 0.7
+            }
+          }
+        }
+      })
+    });
+    assert.equal(textToTextOptionsPatch.status, 200);
+    const textToTextBody = await textToTextOptionsPatch.json();
+    assert.equal(textToTextBody.details.runState.steps.script, false);
+
+    // textToImage option change should invalidate from keyframes
+    await writeProjectRunState(project, reseededState);
+    await writeProjectArtifacts(project, reseededState.artifacts);
+    const textToImageOptionsPatch = await fetch(`${baseUrl}/projects/${project}/config`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        config: {
+          aspectRatio: '16:9',
+          targetDurationSec: 30,
+          finalDurationMode: 'match_audio',
+          modelOptions: {
+            textToImage: {
+              output_quality: 75
+            }
+          }
+        }
+      })
+    });
+    assert.equal(textToImageOptionsPatch.status, 200);
+    const textToImageBody = await textToImageOptionsPatch.json();
+    assert.equal(textToImageBody.details.runState.steps.keyframes, false);
+
+    // imageTextToVideo option change should invalidate from segments
+    await writeProjectRunState(project, reseededState);
+    await writeProjectArtifacts(project, reseededState.artifacts);
+    const i2vOptionsPatch = await fetch(`${baseUrl}/projects/${project}/config`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        config: {
+          aspectRatio: '16:9',
+          targetDurationSec: 30,
+          finalDurationMode: 'match_audio',
+          modelOptions: {
+            imageTextToVideo: {
+              sample_shift: 13
+            }
+          }
+        }
+      })
+    });
+    assert.equal(i2vOptionsPatch.status, 200);
+    const i2vBody = await i2vOptionsPatch.json();
+    assert.equal(i2vBody.details.runState.steps.segments, false);
+
+    // changes in multiple model-option categories should invalidate from script
+    await writeProjectRunState(project, reseededState);
+    await writeProjectArtifacts(project, reseededState.artifacts);
+    const multiCategoryOptionsPatch = await fetch(`${baseUrl}/projects/${project}/config`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        config: {
+          aspectRatio: '16:9',
+          targetDurationSec: 30,
+          finalDurationMode: 'match_audio',
+          modelOptions: {
+            textToText: {
+              temperature: 0.8
+            },
+            textToSpeech: {
+              speed: 1.1
+            }
+          }
+        }
+      })
+    });
+    assert.equal(multiCategoryOptionsPatch.status, 200);
+    const multiCategoryBody = await multiCategoryOptionsPatch.json();
+    assert.equal(multiCategoryBody.details.runState.steps.script, false);
+
+    // subtitle options change should invalidate subtitle artifacts and preserve base video fallback
+    await writeProjectRunState(project, {
+      ...reseededState,
+      artifacts: {
+        ...reseededState.artifacts,
+        finalBaseVideoPath: 'assets/final_base.mp4',
+        finalVideoPath: 'assets/final_captioned.mp4',
+        subtitleSeedPath: 'assets/subtitles/seed.srt',
+        subtitleAlignedSrtPath: 'assets/subtitles/aligned.srt',
+        subtitleAssPath: 'assets/subtitles/aligned.ass',
+        subtitleOptions: {
+          ...modelPatchBody.config.subtitleOptions,
+          highlightMode: 'spoken_upcoming'
+        }
+      }
+    });
+    const subtitlePatch = await fetch(`${baseUrl}/projects/${project}/config`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        config: {
+          aspectRatio: '16:9',
+          targetDurationSec: 30,
+          finalDurationMode: 'match_audio',
+          subtitleOptions: {
+            ...modelPatchBody.config.subtitleOptions,
+            highlightMode: 'current_only'
+          }
+        }
+      })
+    });
+    assert.equal(subtitlePatch.status, 200);
+    const subtitlePatchBody = await subtitlePatch.json();
+    assert.equal(subtitlePatchBody.details.runState.steps.align, false);
+    assert.equal(subtitlePatchBody.details.runState.steps.burnin, false);
+    assert.equal(subtitlePatchBody.details.runState.artifacts.subtitleAssPath, '');
+
     const invalidModelOptionsResponse = await fetch(`${baseUrl}/projects/${project}/config`, {
       method: 'PATCH',
       headers: { 'content-type': 'application/json' },
@@ -914,6 +1060,13 @@ test('projects content and regenerate validation branches return 400 for malform
     });
     assert.equal(createdResponse.status, 201);
 
+    const storyOnlyPatch = await fetch(`${baseUrl}/projects/${project}/content`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ story: 'Updated story only for branch coverage checks.' })
+    });
+    assert.equal(storyOnlyPatch.status, 200);
+
     const badStory = await fetch(`${baseUrl}/projects/${project}/content`, {
       method: 'PATCH',
       headers: { 'content-type': 'application/json' },
@@ -969,6 +1122,13 @@ test('projects content and regenerate validation branches return 400 for malform
       body: JSON.stringify({ forceRestart: 'yes' })
     });
     assert.equal(nonBooleanForceRestart.status, 400);
+
+    const invalidProjectRegenerate = await fetch(`${baseUrl}/projects/${encodeURIComponent('INVALID PROJECT NAME!')}/regenerate`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ forceRestart: false })
+    });
+    assert.equal(invalidProjectRegenerate.status, 400);
   });
 
   await cleanupProject(project);

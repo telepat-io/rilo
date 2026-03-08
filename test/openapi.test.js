@@ -34,9 +34,59 @@ test('buildOpenApiSpec includes auth, public endpoints, and core paths', () => {
 
   const configPatchSchema = spec.components.schemas.ProjectConfigPatchRequest;
   assert.ok(configPatchSchema.properties.config.properties.modelOptions);
-  assert.equal(
-    configPatchSchema.properties.config.properties.models.properties.textToText.enum[0],
-    'deepseek-ai/deepseek-v3'
+  assert.deepEqual(
+    configPatchSchema.properties.config.properties.models.properties.textToText.enum,
+    ['deepseek-ai/deepseek-v3']
+  );
+  assert.ok(
+    configPatchSchema.properties.config.properties.models.properties.textToSpeech.enum.includes(
+      'resemble-ai/chatterbox-turbo'
+    )
+  );
+  assert.ok(
+    configPatchSchema.properties.config.properties.models.properties.textToSpeech.enum.includes(
+      'jaaari/kokoro-82m'
+    )
+  );
+  assert.ok(
+    configPatchSchema.properties.config.properties.models.properties.textToImage.enum.includes(
+      'black-forest-labs/flux-2-pro'
+    )
+  );
+  assert.ok(
+    configPatchSchema.properties.config.properties.models.properties.textToImage.enum.includes(
+      'black-forest-labs/flux-schnell'
+    )
+  );
+  assert.ok(
+    configPatchSchema.properties.config.properties.models.properties.textToImage.enum.includes(
+      'google/nano-banana-pro'
+    )
+  );
+  assert.ok(
+    configPatchSchema.properties.config.properties.models.properties.textToImage.enum.includes(
+      'bytedance/seedream-4'
+    )
+  );
+  assert.ok(
+    configPatchSchema.properties.config.properties.models.properties.imageTextToVideo.enum.includes(
+      'kwaivgi/kling-v3-video'
+    )
+  );
+  assert.ok(
+    configPatchSchema.properties.config.properties.models.properties.imageTextToVideo.enum.includes(
+      'pixverse/pixverse-v5.6'
+    )
+  );
+  assert.ok(
+    configPatchSchema.properties.config.properties.models.properties.imageTextToVideo.enum.includes(
+      'google/veo-3.1'
+    )
+  );
+  assert.ok(
+    configPatchSchema.properties.config.properties.models.properties.imageTextToVideo.enum.includes(
+      'google/veo-3.1-fast'
+    )
   );
   const subtitleSchema = configPatchSchema.properties.config.properties.subtitleOptions.properties;
   assert.ok(subtitleSchema.templateId.enum.includes('social_center_punch'));

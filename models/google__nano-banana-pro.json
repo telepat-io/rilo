@@ -1,0 +1,92 @@
+{
+  "modelId": "google/nano-banana-pro",
+  "provider": "replicate",
+  "displayName": "Nano Banana Pro",
+  "category": "image-generation",
+  "pricingSourceUrl": "https://replicate.com/google/nano-banana-pro",
+  "pricingNotes": "Replicate pricing by target resolution: 1K/2K=$0.15 per output image, 4K=$0.30 per output image, fallback tier=$0.035 per output image.",
+  "pricing": {
+    "usdPerSecond": null,
+    "usdPer1kInputTokens": null,
+    "usdPer1kOutputTokens": null
+  },
+  "pricingRules": {
+    "basis": "output_image_resolution",
+    "tiers": [
+      {
+        "resolution": "1K",
+        "usdPerImage": 0.15
+      },
+      {
+        "resolution": "2K",
+        "usdPerImage": 0.15
+      },
+      {
+        "resolution": "4K",
+        "usdPerImage": 0.3
+      },
+      {
+        "resolution": "fallback",
+        "usdPerImage": 0.035
+      }
+    ]
+  },
+  "inputOptions": {
+    "userConfigurable": [
+      "resolution",
+      "output_format",
+      "safety_filter_level",
+      "allow_fallback_model"
+    ],
+    "pipelineManaged": [
+      "prompt",
+      "aspect_ratio"
+    ],
+    "fields": {
+      "resolution": {
+        "type": "string",
+        "default": "2K",
+        "enum": [
+          "1K",
+          "2K",
+          "4K"
+        ]
+      },
+      "output_format": {
+        "type": "string",
+        "default": "jpg",
+        "enum": [
+          "jpg",
+          "png",
+          "webp"
+        ]
+      },
+      "safety_filter_level": {
+        "type": "string",
+        "default": "block_only_high",
+        "enum": [
+          "block_low_and_above",
+          "block_medium_and_above",
+          "block_only_high"
+        ]
+      },
+      "allow_fallback_model": {
+        "type": "boolean",
+        "default": false
+      },
+      "prompt": {
+        "type": "string",
+        "required": true
+      },
+      "aspect_ratio": {
+        "type": "string",
+        "required": true,
+        "enum": [
+          "1:1",
+          "16:9",
+          "9:16"
+        ]
+      }
+    }
+  }
+}

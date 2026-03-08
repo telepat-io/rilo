@@ -1,5 +1,4 @@
 import {
-  DEFAULT_VIDEO_CONFIG,
   ASPECT_RATIO_PRESETS,
   MODEL_CATEGORIES,
   resolveModelForCategory
@@ -7,10 +6,7 @@ import {
 import { runModel, extractOutputUri } from '../providers/predictions.js';
 import path from 'node:path';
 import { downloadToFile, ensureDir } from '../media/files.js';
-
-function secondsToFrames(seconds, fps) {
-  return Math.max(81, Math.round(seconds * fps));
-}
+import { resolveImageToVideoAdapter } from './imageToVideoAdapters.js';
 
 function asModelOptions(candidate) {
   if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) {
@@ -37,6 +33,7 @@ export async function generateVideoSegmentAtIndex(
   const durationSec = timeline[segmentIndex]?.durationSec || 5;
   const modelId = options.modelId || resolveModelForCategory(MODEL_CATEGORIES.imageTextToVideo);
   const modelOptions = asModelOptions(options.modelOptions);
+  const adapter = resolveImageToVideoAdapter(modelId);
 
   if (segmentIndex < 0 || segmentIndex >= totalKeyframes - 1) {
     throw new Error(`segment index ${segmentIndex} out of range for ${Math.max(0, totalKeyframes - 1)} segments`);
@@ -45,15 +42,15 @@ export async function generateVideoSegmentAtIndex(
   const prompt = shots[segmentIndex] || `Cinematic continuity shot ${segmentIndex + 1}`;
   const prediction = await runModelFn({
     model: modelId,
-    input: {
-      ...modelOptions,
+    input: adapter.buildInput({
       prompt,
-      image: keyframeUrls[segmentIndex],
-      last_image: keyframeUrls[segmentIndex + 1],
-      num_frames: secondsToFrames(durationSec, DEFAULT_VIDEO_CONFIG.fps),
-      frames_per_second: DEFAULT_VIDEO_CONFIG.fps,
-      resolution: preset.videoResolution
-    },
+      startImage: keyframeUrls[segmentIndex],
+      endImage: keyframeUrls[segmentIndex + 1],
+      durationSec,
+      videoResolution: preset.videoResolution,
+      aspectRatio,
+      modelOptions
+    }),
     trace: trace ? { ...trace, step: 'segment', index: segmentIndex } : null
   });
 

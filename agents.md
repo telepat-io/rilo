@@ -3,6 +3,8 @@
 ## Architecture (quick map)
 - `src/pipeline/orchestrator.js`: central workflow coordinator (script → voiceover → shot prompts → keyframes → segments → compose), checkpointing, resume logic, and run-state transitions.
 - `src/steps/*`: pure-ish stage modules for generation and media assembly.
+- `src/steps/textToImageAdapters.js`: model-specific keyframe request adapters (registry + per-model input mapping).
+- `src/steps/imageToVideoAdapters.js`: model-specific segment request adapters (registry + per-model input mapping).
 - `src/steps/alignSubtitles.js` + `src/steps/burnInSubtitles.js`: optional post-compose subtitle alignment (ffsubsync) and ASS burn-in stages.
 - `src/api/routes/*`: HTTP surface for jobs/projects/webhooks.
 - `src/api/routes/projectAssets.js`: local-backend asset file serving route for browser previews (`/projects/:project/assets/*`).

@@ -1,0 +1,95 @@
+{
+  "modelId": "black-forest-labs/flux-schnell",
+  "provider": "replicate",
+  "displayName": "FLUX Schnell",
+  "category": "image-generation",
+  "pricingSourceUrl": "https://replicate.com/black-forest-labs/flux-schnell",
+  "pricingNotes": "Replicate pricing: $3 per 1000 output images.",
+  "pricing": {
+    "usdPerSecond": null,
+    "usdPer1kInputTokens": null,
+    "usdPer1kOutputTokens": null
+  },
+  "pricingRules": {
+    "basis": "output_image_count",
+    "usdPerImage": 0.003
+  },
+  "inputOptions": {
+    "userConfigurable": [
+      "num_outputs",
+      "num_inference_steps",
+      "seed",
+      "output_format",
+      "output_quality",
+      "disable_safety_checker",
+      "go_fast",
+      "megapixels"
+    ],
+    "pipelineManaged": [
+      "prompt",
+      "aspect_ratio"
+    ],
+    "fields": {
+      "num_outputs": {
+        "type": "integer",
+        "default": 1,
+        "minimum": 1,
+        "maximum": 4
+      },
+      "num_inference_steps": {
+        "type": "integer",
+        "default": 4,
+        "minimum": 1,
+        "maximum": 4
+      },
+      "seed": {
+        "type": "integer",
+        "nullable": true
+      },
+      "output_format": {
+        "type": "string",
+        "default": "webp",
+        "enum": [
+          "webp",
+          "jpg",
+          "png"
+        ]
+      },
+      "output_quality": {
+        "type": "integer",
+        "default": 80,
+        "minimum": 0,
+        "maximum": 100
+      },
+      "disable_safety_checker": {
+        "type": "boolean",
+        "default": false
+      },
+      "go_fast": {
+        "type": "boolean",
+        "default": true
+      },
+      "megapixels": {
+        "type": "string",
+        "default": "1",
+        "allowAnyString": true,
+        "recommendedValues": [
+          "1"
+        ]
+      },
+      "prompt": {
+        "type": "string",
+        "required": true
+      },
+      "aspect_ratio": {
+        "type": "string",
+        "required": true,
+        "enum": [
+          "1:1",
+          "16:9",
+          "9:16"
+        ]
+      }
+    }
+  }
+}

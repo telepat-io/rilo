@@ -180,25 +180,39 @@
                     "type": "string",
                     "enum": [
                       "deepseek-ai/deepseek-v3"
-                    ]
+                    ],
+                    "default": "deepseek-ai/deepseek-v3"
                   },
                   "textToSpeech": {
                     "type": "string",
                     "enum": [
-                      "minimax/speech-02-turbo"
-                    ]
+                      "minimax/speech-02-turbo",
+                      "resemble-ai/chatterbox-turbo",
+                      "jaaari/kokoro-82m"
+                    ],
+                    "default": "minimax/speech-02-turbo"
                   },
                   "textToImage": {
                     "type": "string",
                     "enum": [
-                      "prunaai/z-image-turbo"
-                    ]
+                      "prunaai/z-image-turbo",
+                      "black-forest-labs/flux-2-pro",
+                      "black-forest-labs/flux-schnell",
+                      "google/nano-banana-pro",
+                      "bytedance/seedream-4"
+                    ],
+                    "default": "prunaai/z-image-turbo"
                   },
                   "imageTextToVideo": {
                     "type": "string",
                     "enum": [
-                      "wan-video/wan-2.2-i2v-fast"
-                    ]
+                      "wan-video/wan-2.2-i2v-fast",
+                      "kwaivgi/kling-v3-video",
+                      "pixverse/pixverse-v5.6",
+                      "google/veo-3.1",
+                      "google/veo-3.1-fast"
+                    ],
+                    "default": "wan-video/wan-2.2-i2v-fast"
                   }
                 },
                 "additionalProperties": false

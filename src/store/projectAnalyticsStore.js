@@ -57,11 +57,88 @@ function estimateCostFromPricingRules(modelId, input = {}, entry = {}) {
   const metadata = MODEL_METADATA[modelId] || {};
   const pricingRules = metadata.pricingRules || {};
   const tiers = Array.isArray(pricingRules.tiers) ? pricingRules.tiers : [];
+
+  if (pricingRules.basis === 'output_image_count') {
+    const usdPerImage = Number.parseFloat(pricingRules.usdPerImage);
+    if (!Number.isFinite(usdPerImage)) {
+      return null;
+    }
+
+    const outputCount = Array.isArray(entry.output) && entry.output.length > 0 ? entry.output.length : 1;
+    return usdPerImage * outputCount;
+  }
+
+  if (pricingRules.basis === 'output_image_resolution') {
+    const resolution = String(input.resolution || '').trim();
+    if (!resolution) {
+      return null;
+    }
+
+    const tier = tiers.find(
+      (candidate) => String(candidate.resolution || '').toLowerCase() === resolution.toLowerCase()
+    );
+    if (!tier) {
+      return null;
+    }
+
+    const usdPerImage = Number.parseFloat(tier.usdPerImage);
+    if (!Number.isFinite(usdPerImage)) {
+      return null;
+    }
+
+    const outputCount = Array.isArray(entry.output) && entry.output.length > 0 ? entry.output.length : 1;
+    return usdPerImage * outputCount;
+  }
+
   if (tiers.length === 0) {
     return null;
   }
 
   if (pricingRules.basis === 'output_video') {
+    const durationSecRaw = Number.parseFloat(input.duration);
+    const durationSec = Number.isFinite(durationSecRaw) ? durationSecRaw : 5;
+
+    const quality = String(input.quality || '').toLowerCase();
+    if (quality) {
+      const tier = tiers.find((candidate) => String(candidate.quality || '').toLowerCase() === quality);
+      if (tier) {
+        const usdPerSecond = Number.parseFloat(tier.usdPerSecond);
+        if (Number.isFinite(usdPerSecond) && Number.isFinite(durationSec)) {
+          return usdPerSecond * durationSec;
+        }
+      }
+    }
+
+    const mode = String(input.mode || '').toLowerCase();
+    if (mode) {
+      const generateAudio = Boolean(input.generate_audio);
+      let tier = tiers.find((candidate) =>
+        String(candidate.mode || '').toLowerCase() === mode
+        && Boolean(candidate.generateAudio) === generateAudio
+      );
+
+      if (!tier) {
+        tier = tiers.find((candidate) => String(candidate.mode || '').toLowerCase() === mode);
+      }
+
+      if (tier) {
+        const usdPerSecond = Number.parseFloat(tier.usdPerSecond);
+        if (Number.isFinite(usdPerSecond) && Number.isFinite(durationSec)) {
+          return usdPerSecond * durationSec;
+        }
+      }
+    }
+
+    const generateAudio = Boolean(input.generate_audio || input.generate_audio_switch);
+    const audioTier = tiers.find(
+      (candidate) => Object.prototype.hasOwnProperty.call(candidate, 'generateAudio')
+        && Boolean(candidate.generateAudio) === generateAudio
+        && Number.isFinite(Number.parseFloat(candidate.usdPerSecond))
+    );
+    if (audioTier) {
+      return Number.parseFloat(audioTier.usdPerSecond) * durationSec;
+    }
+
     const resolution = String(input.resolution || '').toLowerCase();
     const variant = input.interpolate_output ? 'interpolate' : 'base';
 

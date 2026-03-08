@@ -82,6 +82,16 @@ test('model selection helpers normalize defaults and validate category resolutio
 
 test('isKnownModelId accepts supported ids and rejects invalid inputs', () => {
   assert.equal(isKnownModelId('deepseek-ai/deepseek-v3'), true);
+  assert.equal(isKnownModelId('black-forest-labs/flux-2-pro'), true);
+  assert.equal(isKnownModelId('black-forest-labs/flux-schnell'), true);
+  assert.equal(isKnownModelId('google/nano-banana-pro'), true);
+  assert.equal(isKnownModelId('bytedance/seedream-4'), true);
+  assert.equal(isKnownModelId('kwaivgi/kling-v3-video'), true);
+  assert.equal(isKnownModelId('pixverse/pixverse-v5.6'), true);
+  assert.equal(isKnownModelId('google/veo-3.1'), true);
+  assert.equal(isKnownModelId('google/veo-3.1-fast'), true);
+  assert.equal(isKnownModelId('resemble-ai/chatterbox-turbo'), true);
+  assert.equal(isKnownModelId('jaaari/kokoro-82m'), true);
   assert.equal(isKnownModelId('unknown/model'), false);
   assert.equal(isKnownModelId(''), false);
   assert.equal(isKnownModelId(null), false);

@@ -1,0 +1,93 @@
+{
+  "modelId": "google/veo-3.1",
+  "provider": "replicate",
+  "displayName": "Veo 3.1",
+  "category": "video-generation",
+  "pricingSourceUrl": "https://replicate.com/google/veo-3.1",
+  "pricingNotes": "Replicate pricing depends on native audio. without_audio=$0.20/s, with_audio=$0.40/s. Current pipeline keeps audio disabled.",
+  "pricing": {
+    "usdPerSecond": null,
+    "usdPer1kInputTokens": null,
+    "usdPer1kOutputTokens": null
+  },
+  "pricingRules": {
+    "basis": "output_video",
+    "assumptions": {
+      "defaultDurationSec": 5
+    },
+    "tiers": [
+      {
+        "generateAudio": false,
+        "usdPerSecond": 0.2
+      },
+      {
+        "generateAudio": true,
+        "usdPerSecond": 0.4
+      }
+    ]
+  },
+  "inputOptions": {
+    "userConfigurable": [
+      "resolution",
+      "negative_prompt",
+      "seed"
+    ],
+    "pipelineManaged": [
+      "prompt",
+      "image",
+      "last_frame",
+      "duration",
+      "aspect_ratio",
+      "generate_audio"
+    ],
+    "fields": {
+      "resolution": {
+        "type": "string",
+        "default": "1080p",
+        "enum": [
+          "720p",
+          "1080p"
+        ]
+      },
+      "negative_prompt": {
+        "type": "string",
+        "nullable": true
+      },
+      "seed": {
+        "type": "integer",
+        "nullable": true
+      },
+      "prompt": {
+        "type": "string",
+        "required": true
+      },
+      "image": {
+        "type": "string",
+        "required": true
+      },
+      "last_frame": {
+        "type": "string",
+        "required": true
+      },
+      "duration": {
+        "type": "integer",
+        "required": true,
+        "default": 5,
+        "minimum": 4,
+        "maximum": 8
+      },
+      "aspect_ratio": {
+        "type": "string",
+        "required": true,
+        "enum": [
+          "16:9",
+          "9:16"
+        ]
+      },
+      "generate_audio": {
+        "type": "boolean",
+        "default": false
+      }
+    }
+  }
+}

@@ -176,3 +176,65 @@ test('writeAssFromSrt converts aligned srt into .ass karaoke file', async () => 
     await fs.rm(tempDir, { recursive: true, force: true });
   }
 });
+
+test('writeSeedSrtFromScript handles empty script by writing zero cues', async () => {
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'videogen-seed-empty-srt-'));
+  try {
+    const outputPath = path.join(tempDir, 'seed.srt');
+    const result = await writeSeedSrtFromScript({
+      script: '',
+      totalDurationSec: 5,
+      outputPath,
+      maxWordsPerLine: 4
+    });
+
+    assert.equal(result.cueCount, 0);
+    const raw = await fs.readFile(outputPath, 'utf8');
+    assert.equal(raw, '\n');
+  } finally {
+    await fs.rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+test('parseSrtCues skips malformed and invalid timing blocks', () => {
+  const cues = parseSrtCues([
+    '1',
+    '00:00:00,000 --> 00:00:00,000',
+    'invalid same-start-end',
+    '',
+    '2',
+    '00:00:00,000 --> 00:00:02,000',
+    '',
+    '',
+    '3',
+    'bad timeline',
+    'text',
+    '',
+    '4',
+    '00:00:01,000 --> 00:00:03,000',
+    'valid cue text'
+  ].join('\n'));
+
+  assert.equal(cues.length, 1);
+  assert.equal(cues[0].text, 'valid cue text');
+});
+
+test('writeAssFromSrt throws when aligned srt has no valid cues', async () => {
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'videogen-ass-empty-'));
+  try {
+    const srtPath = path.join(tempDir, 'aligned.srt');
+    const assPath = path.join(tempDir, 'aligned.ass');
+    await fs.writeFile(srtPath, '1\n00:00:00,000 --> 00:00:00,000\n\n', 'utf8');
+
+    await assert.rejects(
+      () => writeAssFromSrt({
+        sourceSrtPath: srtPath,
+        outputAssPath: assPath,
+        subtitleOptions: {}
+      }),
+      /has no cues/
+    );
+  } finally {
+    await fs.rm(tempDir, { recursive: true, force: true });
+  }
+});

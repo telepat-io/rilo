@@ -2,9 +2,9 @@
 
 JavaScript system to generate short vertical videos from a story using Replicate models:
 - Script + dynamic shot count (computed from target duration): `deepseek-ai/deepseek-v3`
-- Keyframes: `prunaai/z-image-turbo`
-- Video segments: `wan-video/wan-2.2-i2v-fast`
-- Narration: `minimax/speech-02-turbo`
+- Keyframes: `prunaai/z-image-turbo` (default), optional `black-forest-labs/flux-2-pro`, `black-forest-labs/flux-schnell`, `google/nano-banana-pro`, or `bytedance/seedream-4`
+- Video segments: `wan-video/wan-2.2-i2v-fast` (default), optional `kwaivgi/kling-v3-video`, `pixverse/pixverse-v5.6`, `google/veo-3.1`, or `google/veo-3.1-fast`
+- Narration: `minimax/speech-02-turbo` (default), optional `resemble-ai/chatterbox-turbo` or `jaaari/kokoro-82m`
 - Final composition: `ffmpeg`
 
 Project config supports selecting the model per generation category, defaulting to the model IDs above.
@@ -181,6 +181,82 @@ Missing model keys are filled with defaults.
 `modelOptions` is optional and validated strictly against metadata for the selected model in each category.
 Unknown option keys, invalid types, and out-of-range values are rejected.
 
+For `models.textToSpeech = "resemble-ai/chatterbox-turbo"`, supported `modelOptions.textToSpeech` keys are:
+- `voice` (`Aaron`, `Abigail`, `Anaya`, `Andy`, `Archer`, `Brian`, `Chloe`, `Dylan`, `Emmanuel`, `Ethan`, `Evelyn`, `Gavin`, `Gordon`, `Ivan`, `Laura`, `Lucy`, `Madison`, `Marisol`, `Meera`, `Walter`)
+- `temperature` (number `0.05` to `2`)
+- `top_p` (number `0.5` to `1`)
+- `top_k` (integer `1` to `2000`)
+- `repetition_penalty` (number `1` to `2`)
+- `seed` (nullable integer)
+
+Chatterbox voice cloning is documented in model metadata (`reference_audio`) but intentionally disabled in this app for now.
+
+For `models.textToSpeech = "jaaari/kokoro-82m"`, supported `modelOptions.textToSpeech` keys are:
+- `voice` (`af_alloy`, `af_aoede`, `af_bella`, `af_jessica`, `af_kore`, `af_nicole`, `af_nova`, `af_river`, `af_sarah`, `af_sky`, `am_adam`, `am_echo`, `am_eric`, `am_fenrir`, `am_liam`, `am_michael`, `am_onyx`, `am_puck`, `bf_alice`, `bf_emma`, `bf_isabella`, `bf_lily`, `bm_daniel`, `bm_fable`, `bm_george`, `bm_lewis`, `ff_siwis`, `hf_alpha`, `hf_beta`, `hm_omega`, `hm_psi`, `if_sara`, `im_nicola`, `jf_alpha`, `jf_gongitsune`, `jf_nezumi`, `jf_tebukuro`, `jm_kumo`, `zf_xiaobei`, `zf_xiaoni`, `zf_xiaoxiao`, `zf_xiaoyi`, `zm_yunjian`, `zm_yunxi`, `zm_yunxia`, `zm_yunyang`)
+- `speed` (number `0.1` to `5`)
+
+For `models.textToImage = "black-forest-labs/flux-2-pro"`, supported `modelOptions.textToImage` keys are:
+- `safety_tolerance` (integer `1` to `5`)
+- `seed` (nullable integer)
+- `output_format` (`webp`, `png`, `jpg`, `jpeg`)
+- `output_quality` (integer `0` to `100`)
+
+For `models.textToImage = "black-forest-labs/flux-schnell"`, supported `modelOptions.textToImage` keys are:
+- `num_outputs` (integer `1` to `4`)
+- `num_inference_steps` (integer `1` to `4`)
+- `seed` (nullable integer)
+- `output_format` (`webp`, `jpg`, `png`)
+- `output_quality` (integer `0` to `100`)
+- `disable_safety_checker` (boolean)
+- `go_fast` (boolean)
+- `megapixels` (string)
+
+For `models.textToImage = "google/nano-banana-pro"`, supported `modelOptions.textToImage` keys are:
+- `resolution` (`1K`, `2K`, `4K`)
+- `output_format` (`jpg`, `png`, `webp`)
+- `safety_filter_level` (`block_low_and_above`, `block_medium_and_above`, `block_only_high`)
+- `allow_fallback_model` (boolean)
+
+For `models.textToImage = "bytedance/seedream-4"`, supported `modelOptions.textToImage` keys are:
+- `size` (`1K`, `2K`, `4K`)
+- `sequential_image_generation` (`disabled`, `auto`)
+- `max_images` (integer `1` to `15`)
+- `enhance_prompt` (boolean)
+
+For `models.imageTextToVideo = "kwaivgi/kling-v3-video"`, supported `modelOptions.imageTextToVideo` keys are:
+- `negative_prompt` (string)
+- `mode` (`standard`, `pro`)
+- `generate_audio` (boolean, currently forced to `false` by the pipeline)
+
+Kling v3 keeps segment duration fixed at `5` seconds in the current pipeline and maps keyframes as `start_image`/`end_image`.
+Native audio generation remains disabled in the current pipeline.
+
+For `models.imageTextToVideo = "pixverse/pixverse-v5.6"`, supported `modelOptions.imageTextToVideo` keys are:
+- `quality` (`360p`, `540p`, `720p`, `1080p`)
+- `negative_prompt` (nullable string)
+- `seed` (nullable integer)
+- `generate_audio_switch` (boolean, currently forced to `false` by the pipeline)
+- `thinking_type` (string)
+
+PixVerse v5.6 keeps segment duration fixed at `5` seconds in the current pipeline and maps keyframes as `image`/`last_frame_image`.
+Native audio generation remains disabled in the current pipeline.
+
+For `models.imageTextToVideo = "google/veo-3.1-fast"`, supported `modelOptions.imageTextToVideo` keys are:
+- `resolution` (`720p`, `1080p`)
+- `negative_prompt` (nullable string)
+- `seed` (nullable integer)
+
+Veo 3.1 Fast keeps segment duration fixed at `5` seconds in the current pipeline and maps keyframes as `image`/`last_frame`.
+Native audio generation remains disabled in the current pipeline.
+
+For `models.imageTextToVideo = "google/veo-3.1"`, supported `modelOptions.imageTextToVideo` keys are:
+- `resolution` (`720p`, `1080p`)
+- `negative_prompt` (nullable string)
+- `seed` (nullable integer)
+
+Veo 3.1 keeps segment duration fixed at `5` seconds in the current pipeline and maps keyframes as `image`/`last_frame`.
+Native audio generation remains disabled in the current pipeline.
+
 When `aspectRatio` changes, visual assets (keyframes, segments, final video) are regenerated on the next run.
 
 When `targetDurationSec` changes, script/shots and all downstream assets are regenerated on the next run.
@@ -223,9 +299,9 @@ All supported `config.json` fields:
   - Keys: `textToText`, `textToSpeech`, `textToImage`, `imageTextToVideo`
   - Current allowed values:
     - `textToText`: `deepseek-ai/deepseek-v3`
-    - `textToSpeech`: `minimax/speech-02-turbo`
-    - `textToImage`: `prunaai/z-image-turbo`
-    - `imageTextToVideo`: `wan-video/wan-2.2-i2v-fast`
+    - `textToSpeech`: `minimax/speech-02-turbo`, `resemble-ai/chatterbox-turbo`, `jaaari/kokoro-82m`
+    - `textToImage`: `prunaai/z-image-turbo`, `black-forest-labs/flux-2-pro`, `black-forest-labs/flux-schnell`, `google/nano-banana-pro`, `bytedance/seedream-4`
+    - `imageTextToVideo`: `wan-video/wan-2.2-i2v-fast`, `kwaivgi/kling-v3-video`, `pixverse/pixverse-v5.6`, `google/veo-3.1`, `google/veo-3.1-fast`
   - Effect: controls which model implementation each generation stage uses.
 
 - `modelOptions` (optional object)
@@ -661,6 +737,22 @@ Current rule-based behavior:
   - Uses `pricingRules.basis = output_video`.
   - Selects tier by `resolution` and `interpolate_output` (`base` vs `interpolate`).
   - Applies `usdPerVideo` directly per prediction.
+- `kwaivgi/kling-v3-video`:
+  - Uses `pricingRules.basis = output_video`.
+  - Selects tier by `mode` and `generate_audio`.
+  - Applies `usdPerSecond * duration` (current pipeline duration is fixed at 5 seconds).
+- `pixverse/pixverse-v5.6`:
+  - Uses `pricingRules.basis = output_video`.
+  - Selects tier by `quality`.
+  - Applies `usdPerSecond * duration` (current pipeline duration is fixed at 5 seconds).
+- `google/veo-3.1-fast`:
+  - Uses `pricingRules.basis = output_video`.
+  - Selects tier by `generate_audio`.
+  - Applies `usdPerSecond * duration` (current pipeline duration is fixed at 5 seconds, audio disabled).
+- `google/veo-3.1`:
+  - Uses `pricingRules.basis = output_video`.
+  - Selects tier by `generate_audio`.
+  - Applies `usdPerSecond * duration` (current pipeline duration is fixed at 5 seconds, audio disabled).
 - `prunaai/z-image-turbo`:
   - Uses `pricingRules.basis = output_image_megapixels`.
   - Computes megapixels from input `width * height`.
@@ -689,8 +781,18 @@ Model metadata is stored in the top-level `models/` directory, with one JSON fil
 
 - `models/deepseek-ai__deepseek-v3.json`
 - `models/prunaai__z-image-turbo.json`
+- `models/black-forest-labs__flux-2-pro.json`
+- `models/black-forest-labs__flux-schnell.json`
+- `models/google__nano-banana-pro.json`
+- `models/bytedance__seedream-4.json`
 - `models/wan-video__wan-2.2-i2v-fast.json`
+- `models/kwaivgi__kling-v3-video.json`
+- `models/pixverse__pixverse-v5.6.json`
+- `models/google__veo-3.1.json`
+- `models/google__veo-3.1-fast.json`
 - `models/minimax__speech-02-turbo.json`
+- `models/resemble-ai__chatterbox-turbo.json`
+- `models/jaaari__kokoro-82m.json`
 
 Each file currently includes:
 - `modelId`

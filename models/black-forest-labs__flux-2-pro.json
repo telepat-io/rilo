@@ -1,0 +1,78 @@
+{
+  "modelId": "black-forest-labs/flux-2-pro",
+  "provider": "replicate",
+  "displayName": "FLUX 2 Pro",
+  "category": "image-generation",
+  "pricingSourceUrl": "https://replicate.com/black-forest-labs/flux-2-pro",
+  "pricingNotes": "Replicate lists multi-property pricing for run and input/output megapixels; this model currently uses best-effort cost fallback when exact rule mapping is unavailable.",
+  "pricing": {
+    "usdPerSecond": null,
+    "usdPer1kInputTokens": null,
+    "usdPer1kOutputTokens": null
+  },
+  "inputOptions": {
+    "userConfigurable": [
+      "safety_tolerance",
+      "seed",
+      "output_format",
+      "output_quality"
+    ],
+    "pipelineManaged": [
+      "prompt",
+      "aspect_ratio",
+      "width",
+      "height"
+    ],
+    "fields": {
+      "safety_tolerance": {
+        "type": "integer",
+        "default": 2,
+        "minimum": 1,
+        "maximum": 5
+      },
+      "seed": {
+        "type": "integer",
+        "nullable": true
+      },
+      "output_format": {
+        "type": "string",
+        "default": "webp",
+        "enum": [
+          "webp",
+          "png",
+          "jpg",
+          "jpeg"
+        ]
+      },
+      "output_quality": {
+        "type": "integer",
+        "default": 80,
+        "minimum": 0,
+        "maximum": 100
+      },
+      "prompt": {
+        "type": "string",
+        "required": true
+      },
+      "aspect_ratio": {
+        "type": "string",
+        "required": true,
+        "enum": [
+          "custom"
+        ]
+      },
+      "width": {
+        "type": "integer",
+        "required": true,
+        "minimum": 256,
+        "maximum": 2048
+      },
+      "height": {
+        "type": "integer",
+        "required": true,
+        "minimum": 256,
+        "maximum": 2048
+      }
+    }
+  }
+}

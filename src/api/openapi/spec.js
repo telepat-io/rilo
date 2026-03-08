@@ -1,4 +1,8 @@
-import { DEFAULT_MODEL_SELECTIONS, MODEL_SELECTION_KEYS } from '../../config/models.js';
+import {
+  DEFAULT_MODEL_SELECTIONS,
+  MODEL_SELECTION_KEYS,
+  getSupportedModelIdsForCategory
+} from '../../config/models.js';
 
 function jsonContent(schema) {
   return {
@@ -13,7 +17,8 @@ const modelSelectionProperties = Object.fromEntries(
     category,
     {
       type: 'string',
-      enum: [DEFAULT_MODEL_SELECTIONS[category]]
+      enum: getSupportedModelIdsForCategory(category),
+      default: DEFAULT_MODEL_SELECTIONS[category]
     }
   ])
 );

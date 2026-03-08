@@ -1,0 +1,101 @@
+{
+  "modelId": "kwaivgi/kling-v3-video",
+  "provider": "replicate",
+  "displayName": "Kling Video 3.0",
+  "category": "video-generation",
+  "pricingSourceUrl": "https://replicate.com/kwaivgi/kling-v3-video",
+  "pricingNotes": "Replicate pricing depends on mode and native audio. standard=$0.168/s, standard+audio=$0.252/s, pro=$0.224/s, pro+audio=$0.336/s.",
+  "pricing": {
+    "usdPerSecond": null,
+    "usdPer1kInputTokens": null,
+    "usdPer1kOutputTokens": null
+  },
+  "pricingRules": {
+    "basis": "output_video",
+    "assumptions": {
+      "defaultDurationSec": 5
+    },
+    "tiers": [
+      {
+        "mode": "standard",
+        "generateAudio": false,
+        "usdPerSecond": 0.168
+      },
+      {
+        "mode": "standard",
+        "generateAudio": true,
+        "usdPerSecond": 0.252
+      },
+      {
+        "mode": "pro",
+        "generateAudio": false,
+        "usdPerSecond": 0.224
+      },
+      {
+        "mode": "pro",
+        "generateAudio": true,
+        "usdPerSecond": 0.336
+      }
+    ]
+  },
+  "inputOptions": {
+    "userConfigurable": [
+      "negative_prompt",
+      "mode",
+      "generate_audio"
+    ],
+    "pipelineManaged": [
+      "prompt",
+      "start_image",
+      "end_image",
+      "duration",
+      "aspect_ratio"
+    ],
+    "fields": {
+      "negative_prompt": {
+        "type": "string",
+        "nullable": true
+      },
+      "mode": {
+        "type": "string",
+        "default": "pro",
+        "enum": [
+          "standard",
+          "pro"
+        ]
+      },
+      "generate_audio": {
+        "type": "boolean",
+        "default": false
+      },
+      "prompt": {
+        "type": "string",
+        "required": true
+      },
+      "start_image": {
+        "type": "string",
+        "required": true
+      },
+      "end_image": {
+        "type": "string",
+        "required": true
+      },
+      "duration": {
+        "type": "integer",
+        "required": true,
+        "default": 5,
+        "minimum": 3,
+        "maximum": 15
+      },
+      "aspect_ratio": {
+        "type": "string",
+        "required": true,
+        "enum": [
+          "1:1",
+          "16:9",
+          "9:16"
+        ]
+      }
+    }
+  }
+}

@@ -1,4 +1,4 @@
-import { DEFAULT_VIDEO_CONFIG, MODEL_CATEGORIES, resolveModelForCategory } from '../config/models.js';
+import { DEFAULT_VIDEO_CONFIG, MODEL_CATEGORIES, getModelInputOptions, resolveModelForCategory } from '../config/models.js';
 import { runModel, extractOutputUri } from '../providers/predictions.js';
 import path from 'node:path';
 import { downloadToFile, ensureDir } from '../media/files.js';
@@ -83,15 +83,25 @@ export async function generateVoiceover(script, options = {}, trace = null) {
   const ttsPlan = resolveTtsSpeed(script, targetDurationSec);
   const modelId = options.modelId || resolveModelForCategory(MODEL_CATEGORIES.textToSpeech);
   const modelOptions = asModelOptions(options.modelOptions);
+  const inputOptions = getModelInputOptions(modelId);
+  const allowedFields = new Set(inputOptions.userConfigurable || []);
+
+  const input = {
+    ...modelOptions,
+    text: script
+  };
+
+  if (allowedFields.has('speed') && !Object.prototype.hasOwnProperty.call(modelOptions, 'speed')) {
+    input.speed = ttsPlan.speed;
+  }
+
+  if (allowedFields.has('subtitle_enable') && !Object.prototype.hasOwnProperty.call(modelOptions, 'subtitle_enable')) {
+    input.subtitle_enable = false;
+  }
 
   const prediction = await runModelFn({
     model: modelId,
-    input: {
-      speed: ttsPlan.speed,
-      subtitle_enable: false,
-      ...modelOptions,
-      text: script
-    },
+    input,
     trace: trace ? { ...trace, step: 'voiceover' } : null
   });
 

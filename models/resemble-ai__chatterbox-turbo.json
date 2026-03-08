@@ -1,0 +1,102 @@
+{
+  "modelId": "resemble-ai/chatterbox-turbo",
+  "provider": "replicate",
+  "displayName": "Chatterbox Turbo",
+  "category": "text-to-speech",
+  "pricingSourceUrl": "https://replicate.com/resemble-ai/chatterbox-turbo",
+  "pricingNotes": "Replicate bills this model at $0.025 per thousand input characters.",
+  "pricing": {
+    "usdPerSecond": null,
+    "usdPer1kInputTokens": null,
+    "usdPer1kOutputTokens": null,
+    "usdPer1kInputCharacters": 0.025
+  },
+  "capabilities": {
+    "voiceCloning": {
+      "supported": true,
+      "enabled": false,
+      "inputField": "reference_audio",
+      "notes": "Voice cloning is intentionally disabled in this app for now."
+    }
+  },
+  "inputOptions": {
+    "userConfigurable": [
+      "voice",
+      "temperature",
+      "top_p",
+      "top_k",
+      "repetition_penalty",
+      "seed"
+    ],
+    "pipelineManaged": [
+      "text",
+      "reference_audio"
+    ],
+    "fields": {
+      "voice": {
+        "type": "string",
+        "default": "Andy",
+        "enum": [
+          "Aaron",
+          "Abigail",
+          "Anaya",
+          "Andy",
+          "Archer",
+          "Brian",
+          "Chloe",
+          "Dylan",
+          "Emmanuel",
+          "Ethan",
+          "Evelyn",
+          "Gavin",
+          "Gordon",
+          "Ivan",
+          "Laura",
+          "Lucy",
+          "Madison",
+          "Marisol",
+          "Meera",
+          "Walter"
+        ]
+      },
+      "temperature": {
+        "type": "number",
+        "default": 0.8,
+        "minimum": 0.05,
+        "maximum": 2
+      },
+      "top_p": {
+        "type": "number",
+        "default": 0.95,
+        "minimum": 0.5,
+        "maximum": 1
+      },
+      "top_k": {
+        "type": "integer",
+        "default": 1000,
+        "minimum": 1,
+        "maximum": 2000
+      },
+      "repetition_penalty": {
+        "type": "number",
+        "default": 1.2,
+        "minimum": 1,
+        "maximum": 2
+      },
+      "seed": {
+        "type": "integer",
+        "nullable": true
+      },
+      "reference_audio": {
+        "type": "string",
+        "nullable": true,
+        "format": "uri"
+      },
+      "text": {
+        "type": "string",
+        "required": true,
+        "maxLength": 500
+      }
+    }
+  }
+}

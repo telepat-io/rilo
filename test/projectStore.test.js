@@ -100,6 +100,54 @@ test('normalizeAndValidateProjectConfig applies defaults and validates fields', 
     () => normalizeAndValidateProjectConfig({ subtitleOptions: { makeUppercase: 'yes' } }),
     /subtitleOptions\.makeUppercase must be a boolean/
   );
+  assert.throws(
+    () => normalizeAndValidateProjectConfig({ subtitleOptions: { enabled: 'yes' } }),
+    /subtitleOptions\.enabled must be a boolean/
+  );
+  assert.throws(
+    () => normalizeAndValidateProjectConfig({ subtitleOptions: { position: 'left' } }),
+    /subtitleOptions\.position must be one of/
+  );
+  assert.throws(
+    () => normalizeAndValidateProjectConfig({ subtitleOptions: { fontName: '' } }),
+    /subtitleOptions\.fontName must be a non-empty string/
+  );
+  assert.throws(
+    () => normalizeAndValidateProjectConfig({ subtitleOptions: { bold: 'true' } }),
+    /subtitleOptions\.bold must be a boolean/
+  );
+  assert.throws(
+    () => normalizeAndValidateProjectConfig({ subtitleOptions: { italic: 'true' } }),
+    /subtitleOptions\.italic must be a boolean/
+  );
+  assert.throws(
+    () => normalizeAndValidateProjectConfig({ subtitleOptions: { fontSize: 12 } }),
+    /subtitleOptions\.fontSize must be an integer between 16 and 120/
+  );
+  assert.throws(
+    () => normalizeAndValidateProjectConfig({ subtitleOptions: { backgroundEnabled: 'yes' } }),
+    /subtitleOptions\.backgroundEnabled must be a boolean/
+  );
+  assert.throws(
+    () => normalizeAndValidateProjectConfig({ subtitleOptions: { outline: 20 } }),
+    /subtitleOptions\.outline must be an integer between 0 and 12/
+  );
+  assert.throws(
+    () => normalizeAndValidateProjectConfig({ subtitleOptions: { shadow: 20 } }),
+    /subtitleOptions\.shadow must be an integer between 0 and 12/
+  );
+  assert.throws(
+    () => normalizeAndValidateProjectConfig({ subtitleOptions: { marginV: 401 } }),
+    /subtitleOptions\.marginV must be an integer between 0 and 400/
+  );
+  assert.throws(
+    () => normalizeAndValidateProjectConfig({ subtitleOptions: { maxWordsPerLine: 0 } }),
+    /subtitleOptions\.maxWordsPerLine must be an integer between 1 and 20/
+  );
+  assert.throws(
+    () => normalizeAndValidateProjectConfig({ subtitleOptions: { maxLines: 4 } }),
+    /subtitleOptions\.maxLines must be an integer between 1 and 3/
+  );
 });
 
 test('normalizeAndValidateProjectConfig supports partial model overrides', () => {
@@ -169,6 +217,319 @@ test('normalizeAndValidateProjectConfig validates modelOptions per selected mode
   assert.throws(
     () => normalizeAndValidateProjectConfig({ modelOptions: { textToImage: { output_format: 'gif' } } }),
     /must be one of/
+  );
+
+  const fluxConfig = normalizeAndValidateProjectConfig({
+    models: {
+      textToImage: 'black-forest-labs/flux-2-pro'
+    },
+    modelOptions: {
+      textToImage: {
+        safety_tolerance: 3,
+        output_format: 'webp'
+      }
+    }
+  });
+
+  assert.equal(fluxConfig.models.textToImage, 'black-forest-labs/flux-2-pro');
+  assert.equal(fluxConfig.modelOptions.textToImage.safety_tolerance, 3);
+  assert.equal(fluxConfig.modelOptions.textToImage.output_format, 'webp');
+
+  assert.throws(
+    () => normalizeAndValidateProjectConfig({
+      models: {
+        textToImage: 'black-forest-labs/flux-2-pro'
+      },
+      modelOptions: {
+        textToImage: {
+          go_fast: true
+        }
+      }
+    }),
+    /is not supported for selected model/
+  );
+
+  const fluxSchnellConfig = normalizeAndValidateProjectConfig({
+    models: {
+      textToImage: 'black-forest-labs/flux-schnell'
+    },
+    modelOptions: {
+      textToImage: {
+        num_outputs: 2,
+        num_inference_steps: 3,
+        output_format: 'webp',
+        go_fast: true
+      }
+    }
+  });
+
+  assert.equal(fluxSchnellConfig.models.textToImage, 'black-forest-labs/flux-schnell');
+  assert.equal(fluxSchnellConfig.modelOptions.textToImage.num_outputs, 2);
+  assert.equal(fluxSchnellConfig.modelOptions.textToImage.num_inference_steps, 3);
+
+  assert.throws(
+    () => normalizeAndValidateProjectConfig({
+      models: {
+        textToImage: 'black-forest-labs/flux-schnell'
+      },
+      modelOptions: {
+        textToImage: {
+          safety_tolerance: 3
+        }
+      }
+    }),
+    /is not supported for selected model/
+  );
+
+  const nanoConfig = normalizeAndValidateProjectConfig({
+    models: {
+      textToImage: 'google/nano-banana-pro'
+    },
+    modelOptions: {
+      textToImage: {
+        resolution: '4K',
+        output_format: 'png',
+        safety_filter_level: 'block_only_high',
+        allow_fallback_model: true
+      }
+    }
+  });
+
+  assert.equal(nanoConfig.models.textToImage, 'google/nano-banana-pro');
+  assert.equal(nanoConfig.modelOptions.textToImage.resolution, '4K');
+  assert.equal(nanoConfig.modelOptions.textToImage.output_format, 'png');
+
+  assert.throws(
+    () => normalizeAndValidateProjectConfig({
+      models: {
+        textToImage: 'google/nano-banana-pro'
+      },
+      modelOptions: {
+        textToImage: {
+          num_outputs: 2
+        }
+      }
+    }),
+    /is not supported for selected model/
+  );
+
+  const seedreamConfig = normalizeAndValidateProjectConfig({
+    models: {
+      textToImage: 'bytedance/seedream-4'
+    },
+    modelOptions: {
+      textToImage: {
+        size: '4K',
+        sequential_image_generation: 'auto',
+        max_images: 3,
+        enhance_prompt: true
+      }
+    }
+  });
+
+  assert.equal(seedreamConfig.models.textToImage, 'bytedance/seedream-4');
+  assert.equal(seedreamConfig.modelOptions.textToImage.size, '4K');
+  assert.equal(seedreamConfig.modelOptions.textToImage.max_images, 3);
+
+  assert.throws(
+    () => normalizeAndValidateProjectConfig({
+      models: {
+        textToImage: 'bytedance/seedream-4'
+      },
+      modelOptions: {
+        textToImage: {
+          output_quality: 90
+        }
+      }
+    }),
+    /is not supported for selected model/
+  );
+
+  const klingConfig = normalizeAndValidateProjectConfig({
+    models: {
+      imageTextToVideo: 'kwaivgi/kling-v3-video'
+    },
+    modelOptions: {
+      imageTextToVideo: {
+        negative_prompt: 'blurry, watermark',
+        mode: 'pro',
+        generate_audio: false
+      }
+    }
+  });
+
+  assert.equal(klingConfig.models.imageTextToVideo, 'kwaivgi/kling-v3-video');
+  assert.equal(klingConfig.modelOptions.imageTextToVideo.mode, 'pro');
+  assert.equal(klingConfig.modelOptions.imageTextToVideo.generate_audio, false);
+
+  assert.throws(
+    () => normalizeAndValidateProjectConfig({
+      models: {
+        imageTextToVideo: 'kwaivgi/kling-v3-video'
+      },
+      modelOptions: {
+        imageTextToVideo: {
+          sample_shift: 12
+        }
+      }
+    }),
+    /is not supported for selected model/
+  );
+
+  const pixverseConfig = normalizeAndValidateProjectConfig({
+    models: {
+      imageTextToVideo: 'pixverse/pixverse-v5.6'
+    },
+    modelOptions: {
+      imageTextToVideo: {
+        quality: '1080p',
+        negative_prompt: 'blur, low quality',
+        seed: 42,
+        generate_audio_switch: true,
+        thinking_type: 'auto'
+      }
+    }
+  });
+
+  assert.equal(pixverseConfig.models.imageTextToVideo, 'pixverse/pixverse-v5.6');
+  assert.equal(pixverseConfig.modelOptions.imageTextToVideo.quality, '1080p');
+  assert.equal(pixverseConfig.modelOptions.imageTextToVideo.generate_audio_switch, true);
+
+  assert.throws(
+    () => normalizeAndValidateProjectConfig({
+      models: {
+        imageTextToVideo: 'pixverse/pixverse-v5.6'
+      },
+      modelOptions: {
+        imageTextToVideo: {
+          interpolate_output: true
+        }
+      }
+    }),
+    /is not supported for selected model/
+  );
+
+  const veoConfig = normalizeAndValidateProjectConfig({
+    models: {
+      imageTextToVideo: 'google/veo-3.1-fast'
+    },
+    modelOptions: {
+      imageTextToVideo: {
+        resolution: '720p',
+        negative_prompt: 'flicker, watermark',
+        seed: 11
+      }
+    }
+  });
+
+  assert.equal(veoConfig.models.imageTextToVideo, 'google/veo-3.1-fast');
+  assert.equal(veoConfig.modelOptions.imageTextToVideo.resolution, '720p');
+
+  assert.throws(
+    () => normalizeAndValidateProjectConfig({
+      models: {
+        imageTextToVideo: 'google/veo-3.1-fast'
+      },
+      modelOptions: {
+        imageTextToVideo: {
+          mode: 'pro'
+        }
+      }
+    }),
+    /is not supported for selected model/
+  );
+
+  const veo31Config = normalizeAndValidateProjectConfig({
+    models: {
+      imageTextToVideo: 'google/veo-3.1'
+    },
+    modelOptions: {
+      imageTextToVideo: {
+        resolution: '1080p',
+        negative_prompt: 'noise, blur',
+        seed: 17
+      }
+    }
+  });
+
+  assert.equal(veo31Config.models.imageTextToVideo, 'google/veo-3.1');
+  assert.equal(veo31Config.modelOptions.imageTextToVideo.resolution, '1080p');
+
+  const chatterboxConfig = normalizeAndValidateProjectConfig({
+    models: {
+      textToSpeech: 'resemble-ai/chatterbox-turbo'
+    },
+    modelOptions: {
+      textToSpeech: {
+        voice: 'Andy',
+        temperature: 0.9,
+        top_p: 0.95,
+        top_k: 1000,
+        repetition_penalty: 1.2,
+        seed: null
+      }
+    }
+  });
+
+  assert.equal(chatterboxConfig.models.textToSpeech, 'resemble-ai/chatterbox-turbo');
+  assert.equal(chatterboxConfig.modelOptions.textToSpeech.voice, 'Andy');
+
+  const kokoroConfig = normalizeAndValidateProjectConfig({
+    models: {
+      textToSpeech: 'jaaari/kokoro-82m'
+    },
+    modelOptions: {
+      textToSpeech: {
+        voice: 'af_bella',
+        speed: 1.2
+      }
+    }
+  });
+
+  assert.equal(kokoroConfig.models.textToSpeech, 'jaaari/kokoro-82m');
+  assert.equal(kokoroConfig.modelOptions.textToSpeech.voice, 'af_bella');
+  assert.equal(kokoroConfig.modelOptions.textToSpeech.speed, 1.2);
+
+  assert.throws(
+    () => normalizeAndValidateProjectConfig({
+      models: {
+        textToSpeech: 'jaaari/kokoro-82m'
+      },
+      modelOptions: {
+        textToSpeech: {
+          voice_id: 'Wise_Woman'
+        }
+      }
+    }),
+    /is not supported for selected model/
+  );
+
+  assert.throws(
+    () => normalizeAndValidateProjectConfig({
+      models: {
+        textToSpeech: 'resemble-ai/chatterbox-turbo'
+      },
+      modelOptions: {
+        textToSpeech: {
+          reference_audio: 'https://example.com/reference.wav'
+        }
+      }
+    }),
+    /is not supported for selected model/
+  );
+
+  assert.throws(
+    () => normalizeAndValidateProjectConfig({
+      models: {
+        imageTextToVideo: 'google/veo-3.1'
+      },
+      modelOptions: {
+        imageTextToVideo: {
+          quality: '720p'
+        }
+      }
+    }),
+    /is not supported for selected model/
   );
 });
 

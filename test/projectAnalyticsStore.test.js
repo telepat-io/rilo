@@ -529,3 +529,369 @@ test('collectRunPredictions skips malformed JSON lines', async () => {
 
   await cleanupProject(project);
 });
+
+test('analytics pricing supports output_image_count pricing basis', async () => {
+  const project = uniqueProject('ut-analytics-flux-schnell');
+  const projectDir = getProjectDir(project);
+  const runId = 'run-flux-schnell-cost';
+  const traceDir = path.join(projectDir, 'assets', 'debug');
+  await ensureDir(traceDir);
+
+  const modelId = 'black-forest-labs/flux-schnell';
+  const originalMetadata = MODEL_METADATA[modelId];
+  MODEL_METADATA[modelId] = {
+    ...(originalMetadata || {}),
+    pricingRules: {
+      basis: 'output_image_count',
+      usdPerImage: 0.003
+    }
+  };
+
+  try {
+    await fs.writeFile(
+      path.join(traceDir, 'api-requests.jsonl'),
+      `${JSON.stringify({
+        type: 'request_succeeded',
+        model: modelId,
+        trace: { runId, step: 'keyframe' },
+        prediction: {
+          id: 'pred-flux-schnell',
+          status: 'succeeded',
+          metrics: {}
+        },
+        output: ['a.webp', 'b.webp', 'c.webp'],
+        input: {}
+      })}\n`,
+      'utf8'
+    );
+
+    const predictions = await collectRunPredictions(projectDir, runId);
+    assert.equal(predictions.length, 1);
+
+    const run = createRunRecord({
+      runId,
+      project,
+      jobId: 'job-flux-schnell-cost',
+      forceRestart: false
+    });
+
+    const finalized = finalizeRunRecord(run, predictions, { status: 'completed' });
+
+    assert.equal(Number(finalized.totals.costUsd.toFixed(3)), 0.009);
+    assert.equal(Number(finalized.stages.keyframes.costUsd.toFixed(3)), 0.009);
+    assert.equal(predictions[0].costSource, 'pricing_rules');
+  } finally {
+    MODEL_METADATA[modelId] = originalMetadata;
+    await cleanupProject(project);
+  }
+});
+
+test('analytics pricing supports output_image_resolution pricing basis', async () => {
+  const project = uniqueProject('ut-analytics-nano-resolution');
+  const projectDir = getProjectDir(project);
+  const runId = 'run-nano-resolution-cost';
+  const traceDir = path.join(projectDir, 'assets', 'debug');
+  await ensureDir(traceDir);
+
+  const modelId = 'google/nano-banana-pro';
+  const originalMetadata = MODEL_METADATA[modelId];
+  MODEL_METADATA[modelId] = {
+    ...(originalMetadata || {}),
+    pricingRules: {
+      basis: 'output_image_resolution',
+      tiers: [
+        { resolution: '1K', usdPerImage: 0.15 },
+        { resolution: '2K', usdPerImage: 0.15 },
+        { resolution: '4K', usdPerImage: 0.3 }
+      ]
+    }
+  };
+
+  try {
+    await fs.writeFile(
+      path.join(traceDir, 'api-requests.jsonl'),
+      `${JSON.stringify({
+        type: 'request_succeeded',
+        model: modelId,
+        trace: { runId, step: 'keyframe' },
+        prediction: {
+          id: 'pred-nano',
+          status: 'succeeded',
+          metrics: {}
+        },
+        output: ['a.png', 'b.png'],
+        input: {
+          resolution: '4K'
+        }
+      })}\n`,
+      'utf8'
+    );
+
+    const predictions = await collectRunPredictions(projectDir, runId);
+    assert.equal(predictions.length, 1);
+
+    const run = createRunRecord({
+      runId,
+      project,
+      jobId: 'job-nano-resolution-cost',
+      forceRestart: false
+    });
+
+    const finalized = finalizeRunRecord(run, predictions, { status: 'completed' });
+    assert.equal(Number(finalized.totals.costUsd.toFixed(3)), 0.6);
+    assert.equal(Number(finalized.stages.keyframes.costUsd.toFixed(3)), 0.6);
+    assert.equal(predictions[0].costSource, 'pricing_rules');
+  } finally {
+    MODEL_METADATA[modelId] = originalMetadata;
+    await cleanupProject(project);
+  }
+});
+
+test('analytics pricing supports output_video mode/audio per-second tiers', async () => {
+  const project = uniqueProject('ut-analytics-kling-mode-audio');
+  const projectDir = getProjectDir(project);
+  const runId = 'run-kling-mode-audio-cost';
+  const traceDir = path.join(projectDir, 'assets', 'debug');
+  await ensureDir(traceDir);
+
+  const modelId = 'kwaivgi/kling-v3-video';
+  const originalMetadata = MODEL_METADATA[modelId];
+  MODEL_METADATA[modelId] = {
+    ...(originalMetadata || {}),
+    pricingRules: {
+      basis: 'output_video',
+      tiers: [
+        { mode: 'standard', generateAudio: false, usdPerSecond: 0.168 },
+        { mode: 'standard', generateAudio: true, usdPerSecond: 0.252 },
+        { mode: 'pro', generateAudio: false, usdPerSecond: 0.224 },
+        { mode: 'pro', generateAudio: true, usdPerSecond: 0.336 }
+      ]
+    }
+  };
+
+  try {
+    await fs.writeFile(
+      path.join(traceDir, 'api-requests.jsonl'),
+      `${JSON.stringify({
+        type: 'request_succeeded',
+        model: modelId,
+        trace: { runId, step: 'segment' },
+        prediction: {
+          id: 'pred-kling',
+          status: 'succeeded',
+          metrics: {}
+        },
+        output: 'segment.mp4',
+        input: {
+          mode: 'pro',
+          generate_audio: true,
+          duration: 5
+        }
+      })}\n`,
+      'utf8'
+    );
+
+    const predictions = await collectRunPredictions(projectDir, runId);
+    assert.equal(predictions.length, 1);
+
+    const run = createRunRecord({
+      runId,
+      project,
+      jobId: 'job-kling-mode-audio',
+      forceRestart: false
+    });
+
+    const finalized = finalizeRunRecord(run, predictions, { status: 'completed' });
+    assert.equal(Number(finalized.totals.costUsd.toFixed(3)), 1.68);
+    assert.equal(Number(finalized.stages.segments.costUsd.toFixed(3)), 1.68);
+    assert.equal(predictions[0].costSource, 'pricing_rules');
+  } finally {
+    MODEL_METADATA[modelId] = originalMetadata;
+    await cleanupProject(project);
+  }
+});
+
+test('analytics pricing supports output_video quality per-second tiers', async () => {
+  const project = uniqueProject('ut-analytics-pixverse-quality');
+  const projectDir = getProjectDir(project);
+  const runId = 'run-pixverse-quality-cost';
+  const traceDir = path.join(projectDir, 'assets', 'debug');
+  await ensureDir(traceDir);
+
+  const modelId = 'pixverse/pixverse-v5.6';
+  const originalMetadata = MODEL_METADATA[modelId];
+  MODEL_METADATA[modelId] = {
+    ...(originalMetadata || {}),
+    pricingRules: {
+      basis: 'output_video',
+      tiers: [
+        { quality: '360p', usdPerSecond: 0.07 },
+        { quality: '540p', usdPerSecond: 0.07 },
+        { quality: '720p', usdPerSecond: 0.09 },
+        { quality: '1080p', usdPerSecond: 0.15 }
+      ]
+    }
+  };
+
+  try {
+    await fs.writeFile(
+      path.join(traceDir, 'api-requests.jsonl'),
+      `${JSON.stringify({
+        type: 'request_succeeded',
+        model: modelId,
+        trace: { runId, step: 'segment' },
+        prediction: {
+          id: 'pred-pixverse',
+          status: 'succeeded',
+          metrics: {}
+        },
+        output: 'segment.mp4',
+        input: {
+          quality: '720p',
+          duration: 5
+        }
+      })}\n`,
+      'utf8'
+    );
+
+    const predictions = await collectRunPredictions(projectDir, runId);
+    assert.equal(predictions.length, 1);
+
+    const run = createRunRecord({
+      runId,
+      project,
+      jobId: 'job-pixverse-quality',
+      forceRestart: false
+    });
+
+    const finalized = finalizeRunRecord(run, predictions, { status: 'completed' });
+    assert.equal(Number(finalized.totals.costUsd.toFixed(2)), 0.45);
+    assert.equal(Number(finalized.stages.segments.costUsd.toFixed(2)), 0.45);
+    assert.equal(predictions[0].costSource, 'pricing_rules');
+  } finally {
+    MODEL_METADATA[modelId] = originalMetadata;
+    await cleanupProject(project);
+  }
+});
+
+test('analytics pricing supports output_video generateAudio per-second tiers', async () => {
+  const project = uniqueProject('ut-analytics-veo-audio-tier');
+  const projectDir = getProjectDir(project);
+  const runId = 'run-veo-audio-tier-cost';
+  const traceDir = path.join(projectDir, 'assets', 'debug');
+  await ensureDir(traceDir);
+
+  const modelId = 'google/veo-3.1-fast';
+  const originalMetadata = MODEL_METADATA[modelId];
+  MODEL_METADATA[modelId] = {
+    ...(originalMetadata || {}),
+    pricingRules: {
+      basis: 'output_video',
+      tiers: [
+        { generateAudio: false, usdPerSecond: 0.1 },
+        { generateAudio: true, usdPerSecond: 0.15 }
+      ]
+    }
+  };
+
+  try {
+    await fs.writeFile(
+      path.join(traceDir, 'api-requests.jsonl'),
+      `${JSON.stringify({
+        type: 'request_succeeded',
+        model: modelId,
+        trace: { runId, step: 'segment' },
+        prediction: {
+          id: 'pred-veo',
+          status: 'succeeded',
+          metrics: {}
+        },
+        output: 'segment.mp4',
+        input: {
+          generate_audio: false,
+          duration: 5
+        }
+      })}\n`,
+      'utf8'
+    );
+
+    const predictions = await collectRunPredictions(projectDir, runId);
+    assert.equal(predictions.length, 1);
+
+    const run = createRunRecord({
+      runId,
+      project,
+      jobId: 'job-veo-audio-tier',
+      forceRestart: false
+    });
+
+    const finalized = finalizeRunRecord(run, predictions, { status: 'completed' });
+    assert.equal(Number(finalized.totals.costUsd.toFixed(2)), 0.5);
+    assert.equal(Number(finalized.stages.segments.costUsd.toFixed(2)), 0.5);
+    assert.equal(predictions[0].costSource, 'pricing_rules');
+  } finally {
+    MODEL_METADATA[modelId] = originalMetadata;
+    await cleanupProject(project);
+  }
+});
+
+test('analytics pricing supports output_video generateAudio per-second tiers for Veo 3.1', async () => {
+  const project = uniqueProject('ut-analytics-veo31-audio-tier');
+  const projectDir = getProjectDir(project);
+  const runId = 'run-veo31-audio-tier-cost';
+  const traceDir = path.join(projectDir, 'assets', 'debug');
+  await ensureDir(traceDir);
+
+  const modelId = 'google/veo-3.1';
+  const originalMetadata = MODEL_METADATA[modelId];
+  MODEL_METADATA[modelId] = {
+    ...(originalMetadata || {}),
+    pricingRules: {
+      basis: 'output_video',
+      tiers: [
+        { generateAudio: false, usdPerSecond: 0.2 },
+        { generateAudio: true, usdPerSecond: 0.4 }
+      ]
+    }
+  };
+
+  try {
+    await fs.writeFile(
+      path.join(traceDir, 'api-requests.jsonl'),
+      `${JSON.stringify({
+        type: 'request_succeeded',
+        model: modelId,
+        trace: { runId, step: 'segment' },
+        prediction: {
+          id: 'pred-veo31',
+          status: 'succeeded',
+          metrics: {}
+        },
+        output: 'segment.mp4',
+        input: {
+          generate_audio: false,
+          duration: 5
+        }
+      })}\n`,
+      'utf8'
+    );
+
+    const predictions = await collectRunPredictions(projectDir, runId);
+    assert.equal(predictions.length, 1);
+
+    const run = createRunRecord({
+      runId,
+      project,
+      jobId: 'job-veo31-audio-tier',
+      forceRestart: false
+    });
+
+    const finalized = finalizeRunRecord(run, predictions, { status: 'completed' });
+    assert.equal(Number(finalized.totals.costUsd.toFixed(2)), 1.0);
+    assert.equal(Number(finalized.stages.segments.costUsd.toFixed(2)), 1.0);
+    assert.equal(predictions[0].costSource, 'pricing_rules');
+  } finally {
+    MODEL_METADATA[modelId] = originalMetadata;
+    await cleanupProject(project);
+  }
+});

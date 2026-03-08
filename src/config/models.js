@@ -4,8 +4,18 @@ import path from 'node:path';
 export const MODELS = {
   deepseek: 'deepseek-ai/deepseek-v3',
   keyframe: 'prunaai/z-image-turbo',
+  flux: 'black-forest-labs/flux-2-pro',
+  fluxSchnell: 'black-forest-labs/flux-schnell',
+  nanoBananaPro: 'google/nano-banana-pro',
+  seedream4: 'bytedance/seedream-4',
   video: 'wan-video/wan-2.2-i2v-fast',
-  tts: 'minimax/speech-02-turbo'
+  klingVideo3: 'kwaivgi/kling-v3-video',
+  pixverseV56: 'pixverse/pixverse-v5.6',
+  veo31: 'google/veo-3.1',
+  veo31Fast: 'google/veo-3.1-fast',
+  tts: 'minimax/speech-02-turbo',
+  chatterboxTurbo: 'resemble-ai/chatterbox-turbo',
+  kokoro82m: 'jaaari/kokoro-82m'
 };
 
 export const MODEL_CATEGORIES = {
@@ -28,8 +38,25 @@ export const MODEL_OPTION_KEYS = [...MODEL_SELECTION_KEYS];
 const MODEL_METADATA_FILES = {
   [MODELS.deepseek]: 'deepseek-ai__deepseek-v3.json',
   [MODELS.keyframe]: 'prunaai__z-image-turbo.json',
+  [MODELS.flux]: 'black-forest-labs__flux-2-pro.json',
+  [MODELS.fluxSchnell]: 'black-forest-labs__flux-schnell.json',
+  [MODELS.nanoBananaPro]: 'google__nano-banana-pro.json',
+  [MODELS.seedream4]: 'bytedance__seedream-4.json',
   [MODELS.video]: 'wan-video__wan-2.2-i2v-fast.json',
-  [MODELS.tts]: 'minimax__speech-02-turbo.json'
+  [MODELS.klingVideo3]: 'kwaivgi__kling-v3-video.json',
+  [MODELS.pixverseV56]: 'pixverse__pixverse-v5.6.json',
+  [MODELS.veo31]: 'google__veo-3.1.json',
+  [MODELS.veo31Fast]: 'google__veo-3.1-fast.json',
+  [MODELS.tts]: 'minimax__speech-02-turbo.json',
+  [MODELS.chatterboxTurbo]: 'resemble-ai__chatterbox-turbo.json',
+  [MODELS.kokoro82m]: 'jaaari__kokoro-82m.json'
+};
+
+export const MODEL_IDS_BY_CATEGORY = {
+  [MODEL_CATEGORIES.textToText]: [MODELS.deepseek],
+  [MODEL_CATEGORIES.textToSpeech]: [MODELS.tts, MODELS.chatterboxTurbo, MODELS.kokoro82m],
+  [MODEL_CATEGORIES.textToImage]: [MODELS.keyframe, MODELS.flux, MODELS.fluxSchnell, MODELS.nanoBananaPro, MODELS.seedream4],
+  [MODEL_CATEGORIES.imageTextToVideo]: [MODELS.video, MODELS.klingVideo3, MODELS.pixverseV56, MODELS.veo31, MODELS.veo31Fast]
 };
 
 export function toNullableNumber(value) {
@@ -179,6 +206,14 @@ export function resolveModelForCategory(category, modelSelections = {}) {
     throw new Error(`Unknown model category: ${category}`);
   }
   return resolveProjectModelSelections(modelSelections)[category];
+}
+
+export function getSupportedModelIdsForCategory(category) {
+  if (!MODEL_SELECTION_KEYS.includes(category)) {
+    throw new Error(`Unknown model category: ${category}`);
+  }
+
+  return [...(MODEL_IDS_BY_CATEGORY[category] || [])];
 }
 
 export const DEFAULT_VIDEO_CONFIG = {

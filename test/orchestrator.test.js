@@ -182,6 +182,76 @@ test('regenerateProjectAsset supports targeted align and burnin', async () => {
   assert.ok(runStateWrites.length >= 2);
 });
 
+test('regenerateProjectAsset validates align and burnin prerequisites', async () => {
+  const baseDeps = {
+    resolveProjectName: (project) => project,
+    ensureProject: async () => {},
+    readProjectConfig: async () => ({
+      aspectRatio: '9:16',
+      targetDurationSec: 30,
+      finalDurationMode: 'match_audio',
+      subtitleOptions: { enabled: true }
+    }),
+    getProjectDir: () => '/tmp/project-dir'
+  };
+
+  await assert.rejects(
+    () => regenerateProjectAsset('test-project', { targetType: 'align' }, {
+      deps: {
+        ...baseDeps,
+        readProjectRunState: async () => ({
+          status: 'completed',
+          error: null,
+          steps: allStepsTrue(),
+          artifacts: {
+            ...emptyPipelineArtifacts(),
+            script: 'valid script body'
+          }
+        })
+      }
+    }),
+    /no composed video/
+  );
+
+  await assert.rejects(
+    () => regenerateProjectAsset('test-project', { targetType: 'align' }, {
+      deps: {
+        ...baseDeps,
+        readProjectRunState: async () => ({
+          status: 'completed',
+          error: null,
+          steps: allStepsTrue(),
+          artifacts: {
+            ...emptyPipelineArtifacts(),
+            finalBaseVideoPath: '/tmp/final-base.mp4',
+            script: '   '
+          }
+        })
+      }
+    }),
+    /no script to align subtitles/
+  );
+
+  await assert.rejects(
+    () => regenerateProjectAsset('test-project', { targetType: 'burnin' }, {
+      deps: {
+        ...baseDeps,
+        readProjectRunState: async () => ({
+          status: 'completed',
+          error: null,
+          steps: allStepsTrue(),
+          artifacts: {
+            ...emptyPipelineArtifacts(),
+            finalBaseVideoPath: '/tmp/final-base.mp4',
+            subtitleAssPath: ''
+          }
+        })
+      }
+    }),
+    /run align first/
+  );
+});
+
 test('runPipeline executes all stages with injected deps and completes offline', async () => {
   const project = uniqueProject('ut-orch-mocked');
 

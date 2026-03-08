@@ -1,0 +1,113 @@
+{
+  "modelId": "pixverse/pixverse-v5.6",
+  "provider": "replicate",
+  "displayName": "PixVerse v5.6",
+  "category": "video-generation",
+  "pricingSourceUrl": "https://replicate.com/pixverse/pixverse-v5.6",
+  "pricingNotes": "Replicate pricing by target quality: 360p=$0.07/s, 540p=$0.07/s, 720p=$0.09/s, 1080p=$0.15/s.",
+  "pricing": {
+    "usdPerSecond": null,
+    "usdPer1kInputTokens": null,
+    "usdPer1kOutputTokens": null
+  },
+  "pricingRules": {
+    "basis": "output_video",
+    "assumptions": {
+      "defaultDurationSec": 5
+    },
+    "tiers": [
+      {
+        "quality": "360p",
+        "usdPerSecond": 0.07
+      },
+      {
+        "quality": "540p",
+        "usdPerSecond": 0.07
+      },
+      {
+        "quality": "720p",
+        "usdPerSecond": 0.09
+      },
+      {
+        "quality": "1080p",
+        "usdPerSecond": 0.15
+      }
+    ]
+  },
+  "inputOptions": {
+    "userConfigurable": [
+      "quality",
+      "negative_prompt",
+      "seed",
+      "generate_audio_switch",
+      "thinking_type"
+    ],
+    "pipelineManaged": [
+      "prompt",
+      "image",
+      "last_frame_image",
+      "duration",
+      "aspect_ratio"
+    ],
+    "fields": {
+      "quality": {
+        "type": "string",
+        "default": "540p",
+        "enum": [
+          "360p",
+          "540p",
+          "720p",
+          "1080p"
+        ]
+      },
+      "negative_prompt": {
+        "type": "string",
+        "nullable": true
+      },
+      "seed": {
+        "type": "integer",
+        "nullable": true
+      },
+      "generate_audio_switch": {
+        "type": "boolean",
+        "default": false
+      },
+      "thinking_type": {
+        "type": "string",
+        "default": "auto",
+        "allowAnyString": true,
+        "recommendedValues": [
+          "auto"
+        ]
+      },
+      "prompt": {
+        "type": "string",
+        "required": true
+      },
+      "image": {
+        "type": "string",
+        "required": true
+      },
+      "last_frame_image": {
+        "type": "string",
+        "required": true
+      },
+      "duration": {
+        "type": "integer",
+        "required": true,
+        "default": 5,
+        "minimum": 5,
+        "maximum": 5
+      },
+      "aspect_ratio": {
+        "type": "string",
+        "required": true,
+        "enum": [
+          "1:1",
+          "16:9",
+          "9:16"
+        ]
+      }
+    }
+  }
+}
