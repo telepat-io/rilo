@@ -1,7 +1,7 @@
 {
   "functions": {
     "source": ".",
-    "codebase": "videogen-api",
+    "codebase": "talefire-api",
     "ignore": [
       "node_modules",
       ".git",

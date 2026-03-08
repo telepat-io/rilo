@@ -38,12 +38,14 @@ export function parseAllowedHosts(value, fallback = 'replicate.delivery,replicat
 export const env = {
   replicateApiToken: parseEnvString(
     process.env.SECRET_REPLICATE_API_TOKEN
+      || process.env.TALEFIRE_REPLICATE_API_TOKEN
       || process.env.VIDEOGEN_REPLICATE_API_TOKEN
       || process.env.REPLICATE_API_TOKEN,
     ''
   ),
   apiBearerToken: parseEnvString(
     process.env.SECRET_API_BEARER_TOKEN
+      || process.env.TALEFIRE_API_BEARER_TOKEN
       || process.env.VIDEOGEN_API_BEARER_TOKEN
       || process.env.API_BEARER_TOKEN,
     ''
@@ -54,28 +56,35 @@ export const env = {
   projectsDir: parseEnvString(process.env.PROJECTS_DIR, './projects'),
   outputBackend: parseEnvString(
     process.env.SECRET_OUTPUT_BACKEND
+      || process.env.TALEFIRE_OUTPUT_BACKEND
       || process.env.VIDEOGEN_OUTPUT_BACKEND
       || process.env.OUTPUT_BACKEND,
     'local'
   ),
   firebaseProjectId: parseEnvString(
     process.env.SECRET_FIREBASE_PROJECT_ID
+      || process.env.TALEFIRE_FIREBASE_PROJECT_ID
       || process.env.VIDEOGEN_FIREBASE_PROJECT_ID
       || process.env.FIREBASE_PROJECT_ID,
     ''
   ),
   firebaseStorageBucket: parseEnvString(
     process.env.SECRET_FIREBASE_STORAGE_BUCKET
+      || process.env.TALEFIRE_FIREBASE_STORAGE_BUCKET
       || process.env.VIDEOGEN_FIREBASE_STORAGE_BUCKET
       || process.env.FIREBASE_STORAGE_BUCKET,
     ''
   ),
   firebaseClientEmail: parseEnvString(
-    process.env.VIDEOGEN_FIREBASE_CLIENT_EMAIL || process.env.FIREBASE_CLIENT_EMAIL,
+    process.env.TALEFIRE_FIREBASE_CLIENT_EMAIL
+      || process.env.VIDEOGEN_FIREBASE_CLIENT_EMAIL
+      || process.env.FIREBASE_CLIENT_EMAIL,
     ''
   ),
   firebasePrivateKey: parseEnvString(
-    process.env.VIDEOGEN_FIREBASE_PRIVATE_KEY || process.env.FIREBASE_PRIVATE_KEY,
+    process.env.TALEFIRE_FIREBASE_PRIVATE_KEY
+      || process.env.VIDEOGEN_FIREBASE_PRIVATE_KEY
+      || process.env.FIREBASE_PRIVATE_KEY,
     ''
   ),
   useWebhooks: parseEnvBoolean(process.env.USE_WEBHOOKS, false),

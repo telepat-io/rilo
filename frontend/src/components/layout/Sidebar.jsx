@@ -11,7 +11,7 @@ export function Sidebar({
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
-        <span className="logo">VIDEOGEN</span>
+        <img src="/talefire-logo-dark.svg" alt="Talefire" className="logo-img" />
         {!hasToken && <span className="badge badge-fail">No token</span>}
       </div>
 

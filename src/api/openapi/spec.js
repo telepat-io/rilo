@@ -201,9 +201,9 @@ export function buildOpenApiSpec({ baseUrl = 'http://localhost:3000' } = {}) {
   return {
     openapi: '3.1.0',
     info: {
-      title: 'VIDEOGEN API',
+      title: 'Talefire API',
       version: '0.1.0',
-      description: 'API for VIDEOGEN jobs, projects metadata, and operational endpoints.'
+      description: 'API for Talefire jobs, projects metadata, and operational endpoints.'
     },
     servers: [{ url: baseUrl }],
     security: [{ bearerAuth: [] }],

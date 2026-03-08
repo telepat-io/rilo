@@ -109,8 +109,9 @@ export function App() {
       <div className="main-area">
         {!selectedProject ? (
           <div className="empty-state">
-            <p className="empty-state-title">Select a project</p>
-            <p className="muted">Or create a new one to get started.</p>
+            <img src="/talefire-logo-dark.svg" alt="Talefire" className="empty-state-logo" />
+            <p className="empty-state-title">Select a project to get started</p>
+            <p className="muted size-sm">Pick an existing project from the sidebar, or create a new one.</p>
             <button type="button" className="btn btn-primary" onClick={() => setShowCreateModal(true)}>+ New project</button>
           </div>
         ) : (

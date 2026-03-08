@@ -1,4 +1,6 @@
-# VIDEOGEN
+# Talefire
+
+![Talefire](logo/talefire-logo-light.svg)
 
 JavaScript system to generate short vertical videos from a story using Replicate models:
 - Script + dynamic shot count (computed from target duration): `deepseek-ai/deepseek-v3`
@@ -23,11 +25,12 @@ cp .env.example .env
 npm install
 ```
 
-Set `VIDEOGEN_REPLICATE_API_TOKEN` in `.env`.
+Set `TALEFIRE_REPLICATE_API_TOKEN` in `.env`.
 
-Set `VIDEOGEN_API_BEARER_TOKEN` in `.env` to protect API routes.
+Set `TALEFIRE_API_BEARER_TOKEN` in `.env` to protect API routes.
 
-Legacy `REPLICATE_API_TOKEN` and `API_BEARER_TOKEN` are still accepted as fallbacks.
+`VIDEOGEN_REPLICATE_API_TOKEN` and `VIDEOGEN_API_BEARER_TOKEN` are still accepted as fallbacks for existing `.env` files.
+Legacy `REPLICATE_API_TOKEN` and `API_BEARER_TOKEN` are also accepted.
 
 ## Testing
 
@@ -87,21 +90,21 @@ The project supports multiple backends for data + asset output:
 Set in `.env`:
 
 ```bash
-VIDEOGEN_OUTPUT_BACKEND=local
+TALEFIRE_OUTPUT_BACKEND=local
 ```
 
 For Firebase backend:
 
 ```bash
-VIDEOGEN_OUTPUT_BACKEND=firebase
+TALEFIRE_OUTPUT_BACKEND=firebase
 OUTPUT_BACKEND=firebase
-VIDEOGEN_FIREBASE_PROJECT_ID=your-project-id
-VIDEOGEN_FIREBASE_STORAGE_BUCKET=your-project-id.appspot.com
-VIDEOGEN_FIREBASE_CLIENT_EMAIL=service-account@your-project-id.iam.gserviceaccount.com
-VIDEOGEN_FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+TALEFIRE_FIREBASE_PROJECT_ID=your-project-id
+TALEFIRE_FIREBASE_STORAGE_BUCKET=your-project-id.appspot.com
+TALEFIRE_FIREBASE_CLIENT_EMAIL=service-account@your-project-id.iam.gserviceaccount.com
+TALEFIRE_FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
 ```
 
-When `VIDEOGEN_OUTPUT_BACKEND=firebase`, every checkpoint sync uploads project files to Cloud Storage at `projects/<project>/...` and writes project data docs in Firestore under `projects/<project>/documents/*`.
+When `TALEFIRE_OUTPUT_BACKEND=firebase`, every checkpoint sync uploads project files to Cloud Storage at `projects/<project>/...` and writes project data docs in Firestore under `projects/<project>/documents/*`.
 
 ## CLI usage
 
@@ -539,14 +542,14 @@ firebase functions:secrets:set SECRET_FIREBASE_STORAGE_BUCKET
 ```
 
 Use these values for backend integration:
-- `VIDEOGEN_OUTPUT_BACKEND=firebase`
-- `VIDEOGEN_API_BEARER_TOKEN=<your-api-bearer-token>`
-- `VIDEOGEN_REPLICATE_API_TOKEN=<your-replicate-token>`
-- `VIDEOGEN_FIREBASE_PROJECT_ID=<your-project-id>`
-- `VIDEOGEN_FIREBASE_STORAGE_BUCKET=<your-project-id>.appspot.com` (or your configured bucket)
+- `TALEFIRE_OUTPUT_BACKEND=firebase`
+- `TALEFIRE_API_BEARER_TOKEN=<your-api-bearer-token>`
+- `TALEFIRE_REPLICATE_API_TOKEN=<your-replicate-token>`
+- `TALEFIRE_FIREBASE_PROJECT_ID=<your-project-id>`
+- `TALEFIRE_FIREBASE_STORAGE_BUCKET=<your-project-id>.appspot.com` (or your configured bucket)
 
 Secret naming note:
-- local/dev `.env` should use `VIDEOGEN_*` keys.
+- local/dev `.env` should use `TALEFIRE_*` keys (`VIDEOGEN_*` is still accepted as a fallback for existing environments).
 - Firebase Secret Manager should use `SECRET_*` keys.
 - This prevents secret/env collisions during deploy while runtime still supports legacy non-prefixed keys as fallback.
 

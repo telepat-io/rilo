@@ -13,7 +13,7 @@ const swaggerUiHtml = `<!doctype html>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>VIDEOGEN API Docs</title>
+    <title>Talefire API Docs</title>
     <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" />
   </head>
   <body>
@@ -50,7 +50,7 @@ export function createApiApp({ baseUrl } = {}) {
   app.use(express.json({ limit: '2mb' }));
 
   app.get('/health', (_req, res) => {
-    res.json({ ok: true, service: 'videogen' });
+    res.json({ ok: true, service: 'talefire' });
   });
 
   app.get('/openapi.json', (req, res) => {
@@ -78,7 +78,7 @@ export function createApiApp({ baseUrl } = {}) {
 export function startApiServer({ port = env.port, baseUrl } = {}) {
   const app = createApiApp({ baseUrl });
   return app.listen(port, () => {
-    console.log(`videogen api listening on :${port}`);
+    console.log(`talefire api listening on :${port}`);
   });
 }
 
