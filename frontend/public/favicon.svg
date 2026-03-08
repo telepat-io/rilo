@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <defs>
+    <linearGradient id="flameGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#ff3d00"/>
+      <stop offset="60%" stop-color="#ff7a00"/>
+      <stop offset="100%" stop-color="#ffcc00"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Rounded square background -->
+  <rect width="32" height="32" rx="7" fill="#111111"/>
+
+  <!-- Flame: main triangle, centered in 32x32, with ~4px padding -->
+  <!-- Points: tip at top-center, base spanning bottom -->
+  <polygon points="16,5 26,27 6,27" fill="#ff4e00"/>
+  <!-- Inner lighter triangle -->
+  <polygon points="16,12 22,27 10,27" fill="#ff7a00"/>
+
+</svg>
