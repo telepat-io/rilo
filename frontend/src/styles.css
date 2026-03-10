@@ -472,6 +472,37 @@ textarea:focus, input:focus {
   gap: 2rem;
 }
 
+/* ── inner (secondary) tab bar used inside settings panels ─────────────── */
+.config-inner-tab-bar {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+}
+
+.config-inner-tab {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+  margin-bottom: -1px;
+}
+
+.config-inner-tab:hover { color: var(--text); }
+
+.config-inner-tab-active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+
 /* ── buttons ────────────────────────────────────────────────────────────── */
 .btn {
   background: var(--bg-elevated);
