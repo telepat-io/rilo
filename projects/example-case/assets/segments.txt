@@ -1,5 +1,0 @@
-file '/Users/user/projects/VIDEOGEN/projects/example-case/assets/segments/segment_01.mp4'
-file '/Users/user/projects/VIDEOGEN/projects/example-case/assets/segments/segment_02.mp4'
-file '/Users/user/projects/VIDEOGEN/projects/example-case/assets/segments/segment_03.mp4'
-file '/Users/user/projects/VIDEOGEN/projects/example-case/assets/segments/segment_04.mp4'
-file '/Users/user/projects/VIDEOGEN/projects/example-case/assets/segments/segment_05.mp4'

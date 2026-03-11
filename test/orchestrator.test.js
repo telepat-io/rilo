@@ -893,6 +893,202 @@ test('regenerateProjectAsset regenerates voiceover and rebakes output when durat
   assert.equal(result.artifacts.finalVideoPath, '/tmp/new-final.mp4');
 });
 
+test('regenerateProjectAsset voiceover backfills missing shots from script asset', async () => {
+  const tmpProjectDir = await fs.mkdtemp(path.join(os.tmpdir(), 'talefire-orch-voiceover-shots-'));
+  await fs.mkdir(path.join(tmpProjectDir, 'assets', 'text'), { recursive: true });
+  await fs.writeFile(
+    path.join(tmpProjectDir, 'assets', 'text', 'script.json'),
+    JSON.stringify({
+      script: 'Script body for voice regeneration.',
+      shots: ['Shot A', 'Shot B'],
+      tone: 'neutral'
+    }),
+    'utf8'
+  );
+
+  const runState = {
+    status: 'completed',
+    error: null,
+    steps: allStepsTrue(),
+    artifacts: {
+      ...emptyPipelineArtifacts(),
+      aspectRatio: '9:16',
+      script: 'Script body for voice regeneration.',
+      tone: 'neutral',
+      shots: [],
+      timeline: [
+        { index: 0, startSec: 0, endSec: 5 }
+      ],
+      audioDurationSec: 5,
+      voiceoverUrl: 'https://old/voice.mp3',
+      voiceoverPath: '/tmp/old-voice.mp3',
+      keyframeUrls: ['https://old/k0.png', 'https://old/k1.png'],
+      keyframePaths: ['/tmp/k0.png', '/tmp/k1.png'],
+      segmentUrls: ['https://old/s0.mp4'],
+      segmentPaths: ['/tmp/s0.mp4'],
+      finalVideoPath: '/tmp/final.mp4'
+    }
+  };
+
+  const result = await regenerateProjectAsset('test-project-voiceover-backfill-shots', { targetType: 'voiceover' }, {
+    deps: {
+      resolveProjectName: (project) => project,
+      ensureProject: async () => {},
+      readProjectConfig: async () => ({
+        aspectRatio: '9:16',
+        targetDurationSec: 60,
+        finalDurationMode: 'match_audio'
+      }),
+      getProjectDir: () => tmpProjectDir,
+      readProjectRunState: async () => runState,
+      generateVoiceover: async () => ({
+        voiceoverUrl: 'https://new/voice.mp3',
+        ttsPlan: { speed: 1.0 }
+      }),
+      persistVoiceover: async () => '/tmp/new-voice.mp3',
+      probeMediaDurationSeconds: async () => 5,
+      resolveSegmentCountFromAudioDuration: () => 1,
+      buildFixedTimeline: () => [{ index: 0, startSec: 0, endSec: 5 }],
+      composeFinalVideo: async () => ({
+        finalVideoPath: '/tmp/new-final.mp4',
+        voiceoverPath: '/tmp/new-voice.mp3',
+        keyframePaths: ['/tmp/k0.png', '/tmp/k1.png'],
+        segmentPaths: ['/tmp/s0.mp4']
+      }),
+      persistArtifacts: async () => {},
+      writeProjectRunState: async () => {},
+      syncProjectSnapshot: async () => {}
+    }
+  });
+
+  assert.deepEqual(result.artifacts.shots, ['Shot A', 'Shot B']);
+  assert.equal(result.steps[JobStep.VOICE], true);
+  assert.equal(result.steps[JobStep.COMPOSE], true);
+  assert.equal(result.artifacts.finalVideoPath, '/tmp/new-final.mp4');
+
+  await fs.rm(tmpProjectDir, { recursive: true, force: true });
+});
+
+test('regenerateProjectAsset voiceover regenerates when shots are missing but timeline/media exist', async () => {
+  const runState = {
+    status: 'completed',
+    error: null,
+    steps: allStepsTrue(),
+    artifacts: {
+      ...emptyPipelineArtifacts(),
+      aspectRatio: '9:16',
+      script: 'Script body for voice regeneration.',
+      tone: 'neutral',
+      shots: [],
+      timeline: [
+        { index: 0, startSec: 0, endSec: 5 },
+        { index: 1, startSec: 5, endSec: 10 }
+      ],
+      audioDurationSec: 10,
+      keyframeUrls: ['https://old/k0.png', 'https://old/k1.png', 'https://old/k2.png'],
+      keyframePaths: ['/tmp/k0.png', '/tmp/k1.png', '/tmp/k2.png'],
+      segmentUrls: ['https://old/s0.mp4', 'https://old/s1.mp4'],
+      segmentPaths: ['/tmp/s0.mp4', '/tmp/s1.mp4'],
+      finalVideoPath: '/tmp/final.mp4'
+    }
+  };
+
+  let generatedShotsCount = 0;
+  const result = await regenerateProjectAsset('test-project-voiceover-fallback-shots', { targetType: 'voiceover' }, {
+    deps: {
+      resolveProjectName: (project) => project,
+      ensureProject: async () => {},
+      readProjectConfig: async () => ({
+        aspectRatio: '9:16',
+        targetDurationSec: 60,
+        finalDurationMode: 'match_audio'
+      }),
+      getProjectDir: () => '/tmp/project-dir',
+      readProjectRunState: async () => runState,
+      generateVoiceover: async () => ({
+        voiceoverUrl: 'https://new/voice.mp3',
+        ttsPlan: { speed: 1.0 }
+      }),
+      persistVoiceover: async () => '/tmp/new-voice.mp3',
+      probeMediaDurationSeconds: async () => 10,
+      resolveSegmentCountFromAudioDuration: () => 2,
+      buildFixedTimeline: () => [
+        { index: 0, startSec: 0, endSec: 5 },
+        { index: 1, startSec: 5, endSec: 10 }
+      ],
+      generateShots: async (_script, { shotCount }) => {
+        generatedShotsCount = shotCount;
+        return {
+          shots: Array.from({ length: shotCount }, (_value, idx) => `Shot ${idx + 1}`)
+        };
+      },
+      composeFinalVideo: async () => ({
+        finalVideoPath: '/tmp/new-final.mp4',
+        voiceoverPath: '/tmp/new-voice.mp3',
+        keyframePaths: ['/tmp/k0.png', '/tmp/k1.png', '/tmp/k2.png'],
+        segmentPaths: ['/tmp/s0.mp4', '/tmp/s1.mp4']
+      }),
+      persistArtifacts: async () => {},
+      writeProjectRunState: async () => {},
+      syncProjectSnapshot: async () => {}
+    }
+  });
+
+  assert.equal(generatedShotsCount, 3);
+  assert.equal(result.artifacts.shots.length, 3);
+  assert.equal(result.steps[JobStep.VOICE], true);
+  assert.equal(result.steps[JobStep.KEYFRAMES], false);
+  assert.equal(result.steps[JobStep.SEGMENTS], false);
+  assert.equal(result.steps[JobStep.COMPOSE], false);
+  assert.equal(result.artifacts.finalVideoPath, '');
+});
+
+test('regenerateProjectAsset script uses default readProjectStory dependency', async () => {
+  const project = uniqueProject('ut-orch-targeted-script-default-read-story');
+  await ensureProject(project);
+  await ensureProjectConfig(project);
+  await writeProjectStory(project, 'This is a sufficiently long project story used to verify default readProjectStory dependency wiring for targeted regeneration.');
+
+  const runState = {
+    status: 'completed',
+    error: null,
+    steps: allStepsTrue(),
+    artifacts: {
+      ...emptyPipelineArtifacts(),
+      script: 'Old script',
+      shots: ['Old shot A', 'Old shot B'],
+      timeline: [{ index: 0, startSec: 0, endSec: 5 }],
+      keyframeUrls: ['https://old/k0.png', 'https://old/k1.png'],
+      segmentUrls: ['https://old/s0.mp4']
+    }
+  };
+
+  const result = await regenerateProjectAsset(project, { targetType: 'script' }, {
+    deps: {
+      readProjectRunState: async () => runState,
+      readProjectConfig: async () => ({
+        aspectRatio: '9:16',
+        targetDurationSec: 60,
+        finalDurationMode: 'match_audio'
+      }),
+      generateScript: async () => ({
+        script: 'Regenerated script from default story read.',
+        tone: 'neutral',
+        scriptWordCount: 8,
+        targetWordCount: 40
+      }),
+      persistArtifacts: async () => {},
+      writeProjectRunState: async () => {},
+      syncProjectSnapshot: async () => {}
+    }
+  });
+
+  assert.equal(result.targetType, 'script');
+  assert.equal(result.artifacts.script, 'Regenerated script from default story read.');
+  assert.equal(result.steps[JobStep.SCRIPT], true);
+  assert.equal(result.steps[JobStep.VOICE], false);
+});
+
 test('regenerateProjectAsset regenerates script and invalidates downstream stages', async () => {
   const runState = {
     status: 'completed',

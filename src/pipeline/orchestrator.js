@@ -42,6 +42,7 @@ import { probeMediaDurationSeconds } from '../media/ffmpeg.js';
 import {
   ensureProject,
   readProjectConfig,
+  readProjectStory,
   getProjectDir,
   readProjectRunState,
   resolveProjectName,
@@ -81,6 +82,7 @@ const DEFAULT_ORCHESTRATOR_DEPS = {
   probeMediaDurationSeconds,
   ensureProject,
   readProjectConfig,
+  readProjectStory,
   getProjectDir,
   readProjectRunState,
   resolveProjectName,
@@ -244,6 +246,18 @@ export async function regenerateProjectAsset(projectName, target, options = {}) 
     segmentUrls: [...(runState.artifacts.segmentUrls || [])],
     segmentPaths: [...(runState.artifacts.segmentPaths || [])]
   };
+
+  if (
+    ['voiceover', 'keyframe', 'segment'].includes(targetType)
+    && (!Array.isArray(artifacts.shots) || artifacts.shots.length === 0)
+  ) {
+    const scriptAsset = await readScriptAsset(projectDir);
+    if (Array.isArray(scriptAsset?.shots) && scriptAsset.shots.length > 0) {
+      artifacts.shots = [...scriptAsset.shots];
+      artifacts.shotHashes = hashShots(artifacts.shots);
+    }
+  }
+
   const steps = {
     ...emptyStepState(),
     ...(runState.steps || {})
@@ -251,7 +265,7 @@ export async function regenerateProjectAsset(projectName, target, options = {}) 
   const keyframeCount = Array.isArray(artifacts.shots) ? artifacts.shots.length : 0;
   const segmentCount = Math.max(0, keyframeCount - 1);
 
-  if (['voiceover', 'keyframe', 'segment'].includes(targetType)) {
+  if (['keyframe', 'segment'].includes(targetType)) {
     if (!Array.isArray(artifacts.shots) || artifacts.shots.length === 0) {
       throw new Error('project has no shots to regenerate');
     }
@@ -321,17 +335,28 @@ export async function regenerateProjectAsset(projectName, target, options = {}) 
       throw new Error('project has no script to regenerate voiceover from');
     }
 
+    const fallbackSegmentCount = Array.isArray(artifacts.timeline)
+      ? artifacts.timeline.length
+      : Math.max(
+        0,
+        (Array.isArray(artifacts.keyframeUrls) ? artifacts.keyframeUrls.length : 0) - 1,
+        Array.isArray(artifacts.segmentUrls) ? artifacts.segmentUrls.length : 0
+      );
+    const estimatedShotsCount = Array.isArray(artifacts.shots) && artifacts.shots.length > 0
+      ? artifacts.shots.length
+      : Math.max(2, fallbackSegmentCount + 1);
+
     const previousAudioDurationSec = Number.isFinite(artifacts.audioDurationSec)
       ? artifacts.audioDurationSec
       : null;
     const previousSegmentCount = Array.isArray(artifacts.timeline)
       ? artifacts.timeline.length
-      : Math.max(0, artifacts.shots.length - 1);
+      : Math.max(0, estimatedShotsCount - 1);
 
     const voiceResult = await deps.generateVoiceover(
       artifacts.script,
       {
-        shotsCount: Math.max(1, artifacts.shots.length - 1),
+        shotsCount: Math.max(1, estimatedShotsCount - 1),
         segmentDurationSec: DEFAULT_VIDEO_CONFIG.segmentDurationSec,
         targetDurationSec: resolveTargetDurationSec(projectConfig),
         modelId: modelSelections[MODEL_CATEGORIES.textToSpeech],

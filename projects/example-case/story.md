@@ -1,5 +1,0 @@
-Let's make an animated video of the following Bible story:
-
-During the night, Jesus's disciples were crossing the Sea of Galilee by boat when a fierce storm arose, tossing the vessel with strong winds and waves. Jesus, who had stayed behind to pray, came to them by walking across the surface of the water. The disciples were terrified, thinking they were seeing a ghost, but Jesus called out to reassure them.
-Peter, ever bold, asked Jesus to invite him out onto the water as well. Jesus did, and Peter actually stepped out of the boat and began walking toward him — until he took his eyes off Jesus, noticed the storm around him, and began to sink in fear. He cried out for help, and Jesus immediately caught him, gently rebuking him for his lack of faith.
-When the two climbed back into the boat, the storm ceased at once. The disciples were awestruck and worshipped Jesus, declaring him to be the Son of God.
