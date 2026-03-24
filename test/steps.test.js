@@ -784,6 +784,24 @@ test('generateShots returns valid shot prompts for exact count', async () => {
   assert.match(capturedPrompt, /do not rely on context from other shots/i);
 });
 
+test('generateShots accepts shot objects with description', async () => {
+  const result = await generateShots('Narration body', {
+    shotCount: 2,
+    deps: {
+      runModel: async () => ({
+        output: JSON.stringify({
+          shots: [
+            { description: 'First described shot.' },
+            { description: ' Second described shot. ' }
+          ]
+        })
+      })
+    }
+  });
+
+  assert.deepEqual(result.shots, ['First described shot.', 'Second described shot.']);
+});
+
 test('generateShots retries and throws when shape is invalid', async () => {
   await assert.rejects(
     generateShots('Narration body', {

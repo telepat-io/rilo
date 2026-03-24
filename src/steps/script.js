@@ -56,6 +56,20 @@ function asModelOptions(candidate) {
   return candidate;
 }
 
+function normalizeShotDescription(shot) {
+  if (typeof shot === 'string') {
+    const value = shot.trim();
+    return value.length > 0 ? value : null;
+  }
+
+  if (shot && typeof shot === 'object' && !Array.isArray(shot) && typeof shot.description === 'string') {
+    const value = shot.description.trim();
+    return value.length > 0 ? value : null;
+  }
+
+  return null;
+}
+
 export async function generateScript(story, options = {}, trace = null) {
   const deps = options.deps || {};
   const runModelFn = deps.runModel || runModel;
@@ -144,14 +158,17 @@ export async function generateShots(script, options = {}, trace = null) {
     const text = extractOutputTextFn(prediction.output);
     const parsed = JSON.parse(extractJsonBlock(text));
     const candidateShots = parsed?.shots;
+    const normalizedShots = Array.isArray(candidateShots)
+      ? candidateShots.map((shot) => normalizeShotDescription(shot))
+      : null;
     const hasValidShape =
-      Array.isArray(candidateShots) &&
-      candidateShots.length === shotCount &&
-      candidateShots.every((shot) => typeof shot === 'string' && shot.trim().length > 0);
+      Array.isArray(normalizedShots) &&
+      normalizedShots.length === shotCount &&
+      normalizedShots.every((shot) => typeof shot === 'string' && shot.length > 0);
 
     if (hasValidShape) {
       return {
-        shots: candidateShots.map((shot) => shot.trim())
+        shots: normalizedShots
       };
     }
   }
