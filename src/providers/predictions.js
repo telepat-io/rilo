@@ -77,13 +77,14 @@ export async function runModel({ model, input, trace = null, deps = {} }) {
   const sleepFn = deps.sleep || sleep;
   const nowFn = deps.now || (() => Date.now());
   const logErrorFn = deps.logError || logError;
-  const replicate = getReplicateClientFn();
 
   if (env.useWebhooks) {
     const error = new Error('USE_WEBHOOKS=true is currently disabled until webhook verification and queue reconciliation are implemented');
     error.nonRetryable = true;
     throw error;
   }
+
+  const replicate = getReplicateClientFn();
 
   return withRetries(async () => {
     const startedAt = new Date().toISOString();
