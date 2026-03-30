@@ -1,6 +1,9 @@
-# Talefire
+# Rilo
 
-![Talefire](logo/talefire-logo-light.svg)
+Story-first vertical video generation platform.
+
+- Repository: https://github.com/telepat-io/rilo
+- Homepage: https://docs.telepat.io/rilo/
 
 JavaScript system to generate short vertical videos from a story using Replicate models:
 - Script + dynamic shot count (computed from target duration): `deepseek-ai/deepseek-v3`
@@ -14,7 +17,7 @@ Project config also supports per-category model input overrides via `modelOption
 
 ## Requirements
 
-- Node.js 20+
+- Node.js 22+
 - `ffmpeg` available in PATH
 - Replicate API token
 
@@ -25,12 +28,27 @@ cp .env.example .env
 npm install
 ```
 
-Set `TALEFIRE_REPLICATE_API_TOKEN` in `.env`.
+Set `RILO_REPLICATE_API_TOKEN` in `.env`.
 
-Set `TALEFIRE_API_BEARER_TOKEN` in `.env` to protect API routes.
+Set `RILO_API_BEARER_TOKEN` in `.env` to protect API routes.
 
-`VIDEOGEN_REPLICATE_API_TOKEN` and `VIDEOGEN_API_BEARER_TOKEN` are still accepted as fallbacks for existing `.env` files.
-Legacy `REPLICATE_API_TOKEN` and `API_BEARER_TOKEN` are also accepted.
+When `OUTPUT_DIR` and `PROJECTS_DIR` are not set, Rilo defaults to:
+- `~/.rilo/output`
+- `~/.rilo/projects`
+
+## Documentation site
+
+Rilo docs are powered by Docusaurus in `docs-site/`.
+
+Local docs commands:
+
+```bash
+npm run docs:start
+npm run docs:build
+npm run docs:serve
+```
+
+GitHub Pages deployment uses `.github/workflows/docs-pages.yml` and publishes `docs-site/build`.
 
 ## Testing
 
@@ -65,6 +83,20 @@ Frontend React lint (separate ruleset):
 npm run frontend:lint
 ```
 
+## Releases
+
+Versioning and changelogs are managed automatically by [release-please](https://github.com/googleapis/release-please).
+
+How it works:
+1. Merge commits to `main` following [Conventional Commits](https://www.conventionalcommits.org/) (`fix:`, `feat:`, `feat!:`, etc.).
+2. release-please maintains an open "Release PR" that accumulates version bumps and CHANGELOG entries.
+3. Merge the Release PR to cut a release: `package.json` version is bumped, changelog entries are updated, a git tag is created, and the package publish workflow can run with matching tag/version checks.
+
+Commit types and semver mapping (while version < 1.0.0):
+- `fix:` -> patch bump
+- `feat:` -> patch bump (minor bump is suppressed pre-1.0)
+- `feat!:` or `fix!:` (breaking change) -> minor bump (major bump is suppressed pre-1.0)
+
 Additional runtime hardening env knobs:
 
 ```bash
@@ -90,26 +122,39 @@ The project supports multiple backends for data + asset output:
 Set in `.env`:
 
 ```bash
-TALEFIRE_OUTPUT_BACKEND=local
+RILO_OUTPUT_BACKEND=local
 ```
 
 For Firebase backend:
 
 ```bash
-TALEFIRE_OUTPUT_BACKEND=firebase
+RILO_OUTPUT_BACKEND=firebase
 OUTPUT_BACKEND=firebase
-TALEFIRE_FIREBASE_PROJECT_ID=your-project-id
-TALEFIRE_FIREBASE_STORAGE_BUCKET=your-project-id.appspot.com
-TALEFIRE_FIREBASE_CLIENT_EMAIL=service-account@your-project-id.iam.gserviceaccount.com
-TALEFIRE_FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+RILO_FIREBASE_PROJECT_ID=your-project-id
+RILO_FIREBASE_STORAGE_BUCKET=your-project-id.appspot.com
+RILO_FIREBASE_CLIENT_EMAIL=service-account@your-project-id.iam.gserviceaccount.com
+RILO_FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
 ```
 
-When `TALEFIRE_OUTPUT_BACKEND=firebase`, every checkpoint sync uploads project files to Cloud Storage at `projects/<project>/...` and writes project data docs in Firestore under `projects/<project>/documents/*`.
+When `RILO_OUTPUT_BACKEND=firebase`, every checkpoint sync uploads project files to Cloud Storage at `projects/<project>/...` and writes project data docs in Firestore under `projects/<project>/documents/*`.
 
 ## CLI usage
 
+From npm (global):
+
 ```bash
-node src/cli/index.js --project housing-case --story-file ./examples/story.txt
+npm install -g @telepat/rilo
+rilo --help
+```
+
+From npm (without global install):
+
+```bash
+npx @telepat/rilo --help
+```
+
+```bash
+rilo --project housing-case --story-file ./examples/story.txt
 ```
 
 After first run, the project is stored in `./projects/housing-case/` with:
@@ -542,14 +587,14 @@ firebase functions:secrets:set SECRET_FIREBASE_STORAGE_BUCKET
 ```
 
 Use these values for backend integration:
-- `TALEFIRE_OUTPUT_BACKEND=firebase`
-- `TALEFIRE_API_BEARER_TOKEN=<your-api-bearer-token>`
-- `TALEFIRE_REPLICATE_API_TOKEN=<your-replicate-token>`
-- `TALEFIRE_FIREBASE_PROJECT_ID=<your-project-id>`
-- `TALEFIRE_FIREBASE_STORAGE_BUCKET=<your-project-id>.appspot.com` (or your configured bucket)
+- `RILO_OUTPUT_BACKEND=firebase`
+- `RILO_API_BEARER_TOKEN=<your-api-bearer-token>`
+- `RILO_REPLICATE_API_TOKEN=<your-replicate-token>`
+- `RILO_FIREBASE_PROJECT_ID=<your-project-id>`
+- `RILO_FIREBASE_STORAGE_BUCKET=<your-project-id>.appspot.com` (or your configured bucket)
 
 Secret naming note:
-- local/dev `.env` should use `TALEFIRE_*` keys (`VIDEOGEN_*` is still accepted as a fallback for existing environments).
+- local/dev `.env` should use `RILO_*` keys.
 - Firebase Secret Manager should use `SECRET_*` keys.
 - This prevents secret/env collisions during deploy while runtime still supports legacy non-prefixed keys as fallback.
 

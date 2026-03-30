@@ -11,7 +11,7 @@ export function Sidebar({
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
-        <img src="/talefire-logo-dark.svg" alt="Talefire" className="logo-img" />
+        <span className="brand-wordmark" aria-label="Rilo">Rilo</span>
         {!hasToken && <span className="badge badge-fail">No token</span>}
       </div>
 

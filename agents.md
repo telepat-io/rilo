@@ -10,6 +10,7 @@
 - `src/api/routes/projectAssets.js`: local-backend asset file serving route for browser previews (`/projects/:project/assets/*`).
 - `src/api/middleware/auth.js`: Bearer token auth middleware (`Authorization: Bearer <API_BEARER_TOKEN>`) + optional `access_token` query support for media requests.
 - `src/api/openapi/spec.js`: OpenAPI 3.1 spec builder shared by runtime API docs and file generation.
+- `docs-site/*`: Docusaurus documentation site (GitHub Pages build target at `docs-site/build`, workflow in `.github/workflows/docs-pages.yml`).
 - `frontend/*`: Vite + React app for project CRUD/editing, polling status, targeted regeneration, and media preview.
 - `src/api/firebaseFunction.js`: Firebase Functions HTTP adapter for serverless API hosting.
 - `src/api/openapi/generateOpenApi.js`: generator script for writing `openapi/openapi.json`.

@@ -1,0 +1,26 @@
+<svg width="64" height="64" viewBox="0 0 64 64"
+  xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="riloLogoTitle riloLogoDesc">
+  <title id="riloLogoTitle">Rilo Logo</title>
+  <desc id="riloLogoDesc">Rounded gradient tile with a stylized letter R and spark accent.</desc>
+  <defs>
+    <linearGradient id="ideonBg" x1="8" y1="6" x2="56" y2="58" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0B2A4A"/>
+      <stop offset="0.52" stop-color="#165DAA"/>
+      <stop offset="1" stop-color="#36A7E6"/>
+    </linearGradient>
+    <linearGradient id="ideonStroke" x1="22" y1="15" x2="42" y2="49" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#D8EEFF"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="4" y="4" width="56" height="56" rx="16" fill="url(#ideonBg)"/>
+  <path d="M22 15v34" stroke="url(#ideonStroke)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M22 15h14" stroke="url(#ideonStroke)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M36 15v17" stroke="url(#ideonStroke)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M22 32h14" stroke="url(#ideonStroke)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M32 32l10 17" stroke="url(#ideonStroke)" stroke-width="6" stroke-linecap="round"/>
+
+  <circle cx="48" cy="16" r="5" fill="#A7E8FF" fill-opacity="0.9"/>
+  <path d="M48 9v14M41 16h14" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,11 @@
+{
+  "name": "rilo-docs-placeholder",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "build": "mkdir -p build && printf '<!doctype html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>Rilo Docs</title></head><body><main><h1>Rilo docs infrastructure is ready</h1><p>Docs site content will be added in a later update.</p></main></body></html>' > build/index.html",
+    "start": "echo 'Docs start is not configured yet.'",
+    "serve": "echo 'Docs serve is not configured yet.'",
+    "deploy": "echo 'Docs deploy is handled by GitHub Actions pages workflow.'"
+  }
+}

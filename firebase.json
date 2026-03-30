@@ -1,7 +1,7 @@
 {
   "functions": {
     "source": ".",
-    "codebase": "talefire-api",
+    "codebase": "rilo-api",
     "ignore": [
       "node_modules",
       ".git",

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createJob } from '../store/jobStore.js';
 import { runPipeline } from '../pipeline/orchestrator.js';
 import {
@@ -22,9 +23,27 @@ function hasFlag(flag) {
   return process.argv.includes(flag);
 }
 
+async function readCliVersion() {
+  try {
+    const cliDir = path.dirname(fileURLToPath(import.meta.url));
+    const packagePath = path.resolve(cliDir, '../../package.json');
+    const raw = await fs.readFile(packagePath, 'utf8');
+    const parsed = JSON.parse(raw);
+    return typeof parsed.version === 'string' ? parsed.version : 'unknown';
+  } catch {
+    return 'unknown';
+  }
+}
+
 async function main() {
+  if (process.argv.includes('--version')) {
+    console.log(await readCliVersion());
+    return;
+  }
+
   if (process.argv.includes('--help')) {
-    console.log('Usage: node src/cli/index.js --project <name> [--story-file <path>] [--force]');
+    console.log('Usage: rilo --project <name> [--story-file <path>] [--force]');
+    console.log('Example: npx @telepat/rilo --project housing-case --story-file ./story.txt');
     return;
   }
 

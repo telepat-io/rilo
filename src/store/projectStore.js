@@ -23,6 +23,7 @@ export const SUPPORTED_SUBTITLE_TEMPLATE_IDS = [
   'social_center_story'
 ];
 const PROJECT_NAME_PATTERN = /^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$/;
+export const PROJECT_CONFIG_SCHEMA_VERSION = 1;
 
 export const DEFAULT_SUBTITLE_OPTIONS = {
   enabled: false,
@@ -48,6 +49,7 @@ export const DEFAULT_SUBTITLE_OPTIONS = {
 };
 
 export const DEFAULT_PROJECT_CONFIG = {
+  schemaVersion: PROJECT_CONFIG_SCHEMA_VERSION,
   aspectRatio: '9:16',
   targetDurationSec: DEFAULT_VIDEO_CONFIG.durationSec,
   finalDurationMode: 'match_audio',
@@ -385,6 +387,18 @@ function validateProjectModelOptions(modelOptions, modelSelections) {
 
 export function normalizeProjectConfig(config) {
   const nextConfig = config || {};
+
+  if (nextConfig.schemaVersion !== undefined) {
+    if (!Number.isInteger(nextConfig.schemaVersion) || nextConfig.schemaVersion < 1) {
+      throw new Error('Invalid project config: schemaVersion must be a positive integer');
+    }
+    if (nextConfig.schemaVersion > PROJECT_CONFIG_SCHEMA_VERSION) {
+      throw new Error(
+        `Invalid project config: schemaVersion ${nextConfig.schemaVersion} is newer than supported version ${PROJECT_CONFIG_SCHEMA_VERSION}`
+      );
+    }
+  }
+
   const mergedModels = nextConfig.models === undefined
     ? { ...DEFAULT_MODEL_SELECTIONS }
     : {
@@ -396,6 +410,7 @@ export function normalizeProjectConfig(config) {
   return {
     ...DEFAULT_PROJECT_CONFIG,
     ...nextConfig,
+    schemaVersion: PROJECT_CONFIG_SCHEMA_VERSION,
     subtitleOptions: normalizeSubtitleOptions(nextConfig.subtitleOptions),
     models: mergedModels,
     modelOptions: mergedModelOptions
@@ -472,6 +487,10 @@ export function getProjectScriptAssetPath(projectName) {
 export function validateProjectConfig(config) {
   if (!config || typeof config !== 'object') {
     throw new Error('Invalid project config: expected object');
+  }
+
+  if (!Number.isInteger(config.schemaVersion) || config.schemaVersion < 1) {
+    throw new Error('Invalid project config: schemaVersion must be a positive integer');
   }
 
   if (!SUPPORTED_ASPECT_RATIOS.includes(config.aspectRatio)) {

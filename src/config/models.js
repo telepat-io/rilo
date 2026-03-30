@@ -1,5 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const CONFIG_DIR = path.dirname(fileURLToPath(import.meta.url));
+const MODELS_DIR = path.resolve(CONFIG_DIR, '../../models');
 
 export const MODELS = {
   deepseek: 'deepseek-ai/deepseek-v3',
@@ -84,7 +88,7 @@ export function readModelMetadata(modelId) {
     };
   }
 
-  const filePath = path.join(process.cwd(), 'models', fileName);
+  const filePath = path.join(MODELS_DIR, fileName);
   try {
     const raw = fs.readFileSync(filePath, 'utf8');
     const parsed = JSON.parse(raw);

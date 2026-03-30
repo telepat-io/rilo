@@ -1,7 +1,20 @@
 {
-  "name": "talefire",
+  "name": "@telepat/rilo",
   "version": "0.1.0",
-  "private": true,
+  "bin": {
+    "rilo": "src/cli/index.js"
+  },
+  "files": [
+    "src/",
+    "models/",
+    "index.js",
+    "README.md"
+  ],
+  "homepage": "https://docs.telepat.io/rilo/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/telepat-io/rilo"
+  },
   "type": "module",
   "engines": {
     "node": "22"
@@ -9,11 +22,16 @@
   "scripts": {
     "start": "node src/cli/index.js",
     "api": "node src/api/server.js",
+    "build": "npm run frontend:build",
     "frontend:install": "npm --prefix frontend install",
     "frontend:dev": "npm --prefix frontend run dev",
     "frontend:lint": "npm --prefix frontend run lint",
     "frontend:build": "npm --prefix frontend run build",
     "frontend:preview": "npm --prefix frontend run preview",
+    "docs:start": "npm --prefix docs-site run start",
+    "docs:build": "npm --prefix docs-site run build",
+    "docs:serve": "npm --prefix docs-site run serve",
+    "docs:deploy": "npm --prefix docs-site run deploy",
     "dev:all": "concurrently -k -n API,WORKER,FRONTEND -c cyan,magenta,green \"npm run api\" \"npm run worker\" \"npm run frontend:dev\"",
     "api:firebase:serve": "firebase emulators:start --only functions",
     "api:firebase:deploy": "firebase deploy --only functions",

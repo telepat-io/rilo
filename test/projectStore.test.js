@@ -41,6 +41,7 @@ test('resolveProjectName normalizes valid names and rejects invalid names', () =
 
 test('normalizeAndValidateProjectConfig applies defaults and validates fields', () => {
   const normalized = normalizeAndValidateProjectConfig({ targetDurationSec: 30 });
+  assert.equal(normalized.schemaVersion, 1);
   assert.equal(normalized.aspectRatio, '9:16');
   assert.equal(normalized.targetDurationSec, 30);
   assert.equal(normalized.finalDurationMode, 'match_audio');
@@ -56,6 +57,14 @@ test('normalizeAndValidateProjectConfig applies defaults and validates fields', 
   assert.equal(normalized.subtitleOptions.highlightMode, 'spoken_upcoming');
   assert.deepEqual(normalized.models, DEFAULT_MODEL_SELECTIONS);
 
+  assert.throws(
+    () => normalizeAndValidateProjectConfig({ schemaVersion: '1' }),
+    /schemaVersion must be a positive integer/
+  );
+  assert.throws(
+    () => normalizeAndValidateProjectConfig({ schemaVersion: 999 }),
+    /schemaVersion 999 is newer than supported version 1/
+  );
   assert.throws(
     () => normalizeAndValidateProjectConfig({ targetDurationSec: '30' }),
     /targetDurationSec must be an integer/
@@ -161,6 +170,16 @@ test('normalizeAndValidateProjectConfig supports partial model overrides', () =>
   assert.equal(normalized.models.textToSpeech, DEFAULT_MODEL_SELECTIONS.textToSpeech);
   assert.equal(normalized.models.textToImage, DEFAULT_MODEL_SELECTIONS.textToImage);
   assert.equal(normalized.models.imageTextToVideo, DEFAULT_MODEL_SELECTIONS.imageTextToVideo);
+});
+
+test('normalizeAndValidateProjectConfig migrates legacy configs without schemaVersion', () => {
+  const normalized = normalizeAndValidateProjectConfig({
+    aspectRatio: '9:16',
+    targetDurationSec: 45,
+    finalDurationMode: 'match_audio'
+  });
+
+  assert.equal(normalized.schemaVersion, 1);
 });
 
 test('normalizeAndValidateProjectConfig remaps legacy subtitle template ids', () => {

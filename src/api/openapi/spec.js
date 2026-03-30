@@ -201,9 +201,9 @@ export function buildOpenApiSpec({ baseUrl = 'http://localhost:3000' } = {}) {
   return {
     openapi: '3.1.0',
     info: {
-      title: 'Talefire API',
+      title: 'Rilo API',
       version: '0.1.0',
-      description: 'API for Talefire jobs, projects metadata, and operational endpoints.'
+      description: 'API for Rilo jobs, projects metadata, and operational endpoints.'
     },
     servers: [{ url: baseUrl }],
     security: [{ bearerAuth: [] }],
