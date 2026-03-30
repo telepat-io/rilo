@@ -114,7 +114,7 @@ test('jobs routes handle missing story, accepted creation, and missing job looku
     const createdJob = await fetch(`${baseUrl}/jobs/${acceptedBody.jobId}`);
     assert.equal(createdJob.status, 200);
 
-    const projectsRoot = path.resolve('projects');
+    const projectsRoot = env.projectsDir;
     const listApiProjects = async () => {
       try {
         const entries = await fs.readdir(projectsRoot, { withFileTypes: true });

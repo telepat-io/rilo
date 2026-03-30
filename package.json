@@ -1,6 +1,7 @@
 {
   "name": "@telepat/rilo",
   "version": "0.1.0",
+  "license": "MIT",
   "bin": {
     "rilo": "src/cli/index.js"
   },
@@ -40,6 +41,7 @@
     "lint": "eslint .",
     "test": "node --test",
     "test:coverage": "node --test --experimental-test-coverage",
+    "test:coverage:lcov": "c8 --reporter=lcov --reporter=text-summary --report-dir coverage node --test",
     "smoke": "node src/cli/index.js --help"
   },
   "dependencies": {
@@ -52,6 +54,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "c8": "^10.1.3",
     "concurrently": "^9.2.1",
     "eslint": "^10.0.2",
     "globals": "^17.3.0"
