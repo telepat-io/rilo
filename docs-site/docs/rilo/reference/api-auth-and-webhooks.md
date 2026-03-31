@@ -38,4 +38,6 @@ Docs and webhooks:
 
 Use WEBHOOK_SECRET for webhook verification where configured.
 
+For local developer setup, configure `RILO_API_BEARER_TOKEN` using `rilo settings` (or `npm run dev -- settings`) or via `.env`. Webhook and Firebase configuration remain environment-variable only.
+
 For interactive schemas and examples, use `/docs` while the API server is running.

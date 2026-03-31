@@ -12,6 +12,8 @@ import {
   resolveProjectName,
   writeProjectStory
 } from '../store/projectStore.js';
+import { openSettings } from './commands/settingsFlow.js';
+import { applyStoredSettings } from '../config/env.js';
 
 function getArg(flag) {
   const idx = process.argv.indexOf(flag);
@@ -43,9 +45,19 @@ async function main() {
 
   if (process.argv.includes('--help')) {
     console.log('Usage: rilo --project <name> [--story-file <path>] [--force]');
+    console.log('       rilo settings');
     console.log('Example: npx @telepat/rilo --project housing-case --story-file ./story.txt');
     return;
   }
+
+  // `rilo settings` subcommand
+  if (process.argv[2] === 'settings') {
+    await openSettings();
+    return;
+  }
+
+  // Merge stored settings (config.json + keystore) into env before running
+  await applyStoredSettings();
 
   const projectArg = getArg('--project');
   if (!projectArg) {

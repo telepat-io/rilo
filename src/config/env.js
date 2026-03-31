@@ -99,6 +99,52 @@ export const env = {
   ffsubsyncBin: parseEnvString(process.env.FFSUBSYNC_BIN, 'ffsubsync')
 };
 
+/**
+ * Merge stored settings (config.json + keystore) into the `env` object.
+ * Call this once at CLI/server startup, after env vars have been loaded.
+ *
+ * Precedence (highest → lowest):
+ *   1. Environment variables (already in `env` above — never overwritten)
+ *   2. ~/.rilo/config.json  (public settings)
+ *   3. OS keystore / encrypted file  (secure tokens)
+ *   4. Schema defaults (already reflected in `env` above)
+ */
+export async function applyStoredSettings() {
+  // Lazy imports to avoid circular deps and to keep env.js testable without FS
+  const { readPublicConfig } = await import('../store/settingsStore.js');
+  const { getSecret } = await import('./keystore.js');
+  const { PUBLIC_SETTINGS, SECURE_SETTINGS } = await import('./settingsSchema.js');
+
+  const storedConfig = await readPublicConfig();
+
+  // Apply public settings (only when no env var is set)
+  for (const setting of PUBLIC_SETTINGS) {
+    const hasEnvVar = setting.envNames.some((n) => process.env[n] !== undefined && process.env[n] !== '');
+    if (hasEnvVar) continue;
+
+    const stored = storedConfig[setting.configKey];
+    if (stored === undefined) continue;
+
+    // Map configKey → env property name (camelCase matches env object keys)
+    if (setting.id in env) {
+      env[setting.id] = setting.type === 'number' ? Number(stored) : stored;
+    }
+  }
+
+  // Apply secure tokens (only when no env var is set)
+  for (const setting of SECURE_SETTINGS) {
+    const hasEnvVar = setting.envNames.some((n) => process.env[n] !== undefined && process.env[n] !== '');
+    if (hasEnvVar) continue;
+
+    if (env[setting.id]) continue; // already has a value
+
+    const stored = await getSecret(setting.keystoreKey);
+    if (stored) {
+      env[setting.id] = stored;
+    }
+  }
+}
+
 export function assertRequiredEnv() {
   if (!env.replicateApiToken) {
     throw new Error('Missing REPLICATE_API_TOKEN in environment');

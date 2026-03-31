@@ -10,6 +10,11 @@
 - `src/api/routes/projectAssets.js`: local-backend asset file serving route for browser previews (`/projects/:project/assets/*`).
 - `src/api/middleware/auth.js`: Bearer token auth middleware (`Authorization: Bearer <API_BEARER_TOKEN>`) + optional `access_token` query support for media requests.
 - `src/api/openapi/spec.js`: OpenAPI 3.1 spec builder shared by runtime API docs and file generation.
+- `src/config/keystore.js`: secure token storage via OS keystore (keytar) with AES-256 encrypted file fallback.
+- `src/config/settingsSchema.js`: declarative schema for editable settings (secure tokens, timeouts, binary paths, etc.).
+- `src/store/settingsStore.js`: read/write orchestration for `~/.rilo/config.json` (public settings) and keystore (tokens).
+- `src/cli/commands/settingsFlow.js`: interactive `@inquirer/prompts` UI for `rilo settings` command.
+- `src/config/env.js`: exports both static `env` object and async `applyStoredSettings()` to merge config.json + keystore.
 - `docs-site/*`: Docusaurus documentation site (GitHub Pages build target at `docs-site/build`, workflow in `.github/workflows/docs-pages.yml`).
 - `frontend/*`: Vite + React app for project CRUD/editing, polling status, targeted regeneration, and media preview.
 - `src/api/firebaseFunction.js`: Firebase Functions HTTP adapter for serverless API hosting.
@@ -30,4 +35,5 @@
 - Update the API specs and docs if any API changes were made.
 - Keep coverage high; do not regress branch/line coverage for touched core files.
 - Update README.md with any relevant changes to architecture, configuration, or usage.
+- If it makes sense, also update docs-site with any relevant changes to architecture, configuration, or usage - but keep docs-site focused on user-facing documentation and guides, and avoid deep architectural details.
 - If it makes sense, also update agents.md with notes for future agent work - but keep agents.md really concise and high-level.

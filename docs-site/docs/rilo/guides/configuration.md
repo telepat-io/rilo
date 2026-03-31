@@ -4,6 +4,10 @@ sidebar_position: 1
 title: Configuration
 ---
 
+Rilo has two configuration scopes:
+- **Project config** (`projects/<project>/config.json`): generation options like duration, aspect ratio, model selections, and model options.
+- **App/runtime config** (`~/.rilo/config.json` + secure keystore): API tokens, retries, timeouts, binary paths, and related runtime settings managed by `rilo settings`.
+
 Rilo project configuration lives in `config.json`.
 
 Example:
@@ -48,3 +52,4 @@ Defaults are loaded from model catalog metadata in models/.
 See also:
 - [Model Adapters and Options](/guides/model-adapters-and-options)
 - [Environment Variables](/reference/environment-variables)
+- [CLI Reference](/reference/cli-reference)

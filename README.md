@@ -40,7 +40,7 @@ npm install
 cp .env.example .env
 ```
 
-Set required environment variables in .env:
+Set required environment variables in .env, **or use the interactive settings command** (see below):
 
 ```bash
 RILO_REPLICATE_API_TOKEN=your-token
@@ -58,6 +58,35 @@ Run a CLI generation:
 ```bash
 rilo --project demo --story-file ./story.txt
 ```
+
+## Settings
+
+Configure rilo interactively without editing files:
+
+```bash
+rilo settings
+```
+
+For local development in this repository:
+
+```bash
+npm run dev -- settings
+npm run dev -- --project demo --story-file ./story.txt
+```
+
+This opens a menu where you can edit all non-sensitive settings and manage API tokens securely. Navigate with arrow keys, select with Enter, and use "Done" or "Cancel" to exit. You can also press Ctrl+C at any time to quit.
+
+**What gets stored where:**
+
+| Setting type | Storage |
+|---|---|
+| Replicate API Token, API Bearer Token | OS keystore (macOS Keychain, Windows Credential Manager, Linux Secret Service) — or an AES-256 encrypted file at `~/.rilo/.secrets` if no native keystore is available |
+| All other settings (timeouts, limits, binary paths, etc.) | `~/.rilo/config.json` |
+
+**Precedence** (highest → lowest): environment variable > `~/.rilo/config.json` > schema default.  
+If an env var is set, the settings command shows it as read-only and any stored value is ignored while the env var is present.
+
+**Hidden from settings UI** (env-only): Firebase credentials, webhook settings, output backend, API port, custom output/projects directories.
 
 ## Install from npm
 

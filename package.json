@@ -22,6 +22,7 @@
   },
   "scripts": {
     "start": "node src/cli/index.js",
+    "dev": "node src/cli/index.js",
     "api": "node src/api/server.js",
     "build": "npm run frontend:build",
     "frontend:install": "npm --prefix frontend install",
@@ -45,6 +46,7 @@
     "smoke": "node src/cli/index.js --help"
   },
   "dependencies": {
+    "@inquirer/prompts": "^8.3.2",
     "dotenv": "^16.5.0",
     "express": "^4.21.2",
     "firebase-admin": "^13.4.0",
@@ -58,5 +60,8 @@
     "concurrently": "^9.2.1",
     "eslint": "^10.0.2",
     "globals": "^17.3.0"
+  },
+  "optionalDependencies": {
+    "keytar": "^7.9.0"
   }
 }

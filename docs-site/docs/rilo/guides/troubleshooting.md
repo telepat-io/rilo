@@ -10,6 +10,8 @@ Common checks:
 - model IDs and modelOptions valid for selected adapters
 - API bearer token sent for protected endpoints
 
+Tip: for local setup, run `rilo settings` (or `npm run dev -- settings`) to confirm tokens, retries/timeouts, and binary paths in one place.
+
 For debugging, inspect project logs plus run-state and artifact files.
 
 ## Frequent failures
@@ -17,7 +19,7 @@ For debugging, inspect project logs plus run-state and artifact files.
 - `story is required` or short story validation errors:
 	provide a longer, clearer story input.
 - unauthorized API responses:
-	send `Authorization: Bearer <RILO_API_BEARER_TOKEN>`.
+	send `Authorization: Bearer <RILO_API_BEARER_TOKEN>` and verify token source precedence (env vars override values saved by `rilo settings`).
 - long-running predictions timing out:
 	increase `PREDICTION_MAX_WAIT_MS` and confirm provider quotas.
 - download failures:
@@ -32,4 +34,5 @@ For debugging, inspect project logs plus run-state and artifact files.
 
 See:
 - [Environment Variables](/reference/environment-variables)
+- [CLI Reference](/reference/cli-reference)
 - [Regeneration and Invalidation](/guides/regeneration-and-invalidation)

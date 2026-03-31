@@ -19,6 +19,12 @@ cp .env.example .env
 npm run dev:all
 ```
 
+Set credentials either in `.env` or interactively:
+
+```bash
+npm run dev -- settings
+```
+
 ```bash
 rilo --project demo --story-file ./story.txt
 ```
