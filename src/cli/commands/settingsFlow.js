@@ -120,25 +120,22 @@ export async function openSettings() {
   while (true) {
     // Build menu choices
     const choices = [
-      { name: '─── Secure credentials ───', value: '__header_secure__', disabled: true },
       ...SECURE_SETTINGS.map((s) => {
         const { source } = stateMap[s.id];
         return {
-          name: `${s.label}`,
+          name: `Secure: ${s.label}`,
           value: s.id,
           description: formatCurrentValue(s, null, source)
         };
       }),
-      { name: '─── General settings ───', value: '__header_public__', disabled: true },
       ...PUBLIC_SETTINGS.map((s) => {
         const { value, source } = stateMap[s.id];
         return {
-          name: `${s.label}`,
+          name: `General: ${s.label}`,
           value: s.id,
           description: formatCurrentValue(s, value, source)
         };
       }),
-      { name: '──────────────────────────', value: '__sep__', disabled: true },
       ...(pendingChanges.length > 0
         ? [{ name: `✓ Save ${pendingChanges.length} change(s) and exit`, value: DONE_CHOICE }]
         : [{ name: '✓ Done (no changes)', value: DONE_CHOICE }]),
@@ -146,7 +143,7 @@ export async function openSettings() {
     ];
 
     const selected = await select({
-      message: 'Select a setting to edit:',
+      message: 'Select a setting to edit (secure first, then general):',
       choices,
       pageSize: 20
     });

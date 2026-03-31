@@ -44,9 +44,85 @@ async function main() {
   }
 
   if (process.argv.includes('--help')) {
-    console.log('Usage: rilo --project <name> [--story-file <path>] [--force]');
-    console.log('       rilo settings');
-    console.log('Example: npx @telepat/rilo --project housing-case --story-file ./story.txt');
+    const helpText = `
+Rilo — Story-first vertical video generation
+
+USAGE
+  rilo --project <name> [--story-file <path>] [--force]
+  rilo settings
+  rilo --help
+  rilo --version
+
+COMMANDS
+  rilo --project <name> [--story-file <path>] [--force]
+    Generate a complete video from a story
+    
+    --project <name>         Project identifier (required); creates projects/<name>/
+    --story-file <path>      Path to story text file (required on first run)
+    --force                  Force restart from earlier stages (use after config changes)
+
+  rilo settings
+    Configure API tokens, timeouts, and binary paths interactively
+
+FLAGS
+  --help                     Show this help message
+  --version                  Show version information
+
+EXAMPLES
+  # First run: create project and generate
+  rilo --project wedding-case --story-file ./story.txt
+
+  # Subsequent runs: reuse saved story
+  rilo --project wedding-case
+
+  # Update config and regenerate
+  rilo --project wedding-case --force
+
+  # Configure settings
+  rilo settings
+
+  # Using npx (no installation needed)
+  npx @telepat/rilo --project wedding-case --story-file ./story.txt
+
+DOCUMENTATION
+  Quick start:          https://docs.telepat.io/rilo/getting-started/quickstart
+  CLI reference:        https://docs.telepat.io/rilo/reference/cli-reference
+  Configuration:        https://docs.telepat.io/rilo/guides/configuration
+  Troubleshooting:      https://docs.telepat.io/rilo/guides/troubleshooting
+  All docs:             https://docs.telepat.io/rilo/
+
+PROJECT OUTPUT
+  Generated files are stored in:
+  projects/<name>/
+  ├── config.json          Project settings (models, aspect ratio, duration, etc.)
+  ├── story.md             Formatted story
+  ├── final.mp4            Final video
+  ├── artifacts.json       Generation metadata (paths, durations, etc.)
+  ├── run-state.json       Checkpoint for resume/invalidation
+  ├── assets/              Keyframes, audio, video segments
+  └── logs/                Detailed generation logs
+
+SETTINGS
+  Configure via interactive menu:
+    rilo settings
+
+  Or with environment variables:
+    export RILO_REPLICATE_API_TOKEN=r8_xxxxx
+    export RILO_MAX_RETRIES=5
+    export PREDICTION_MAX_WAIT_MS=900000
+    rilo --project my-project --story-file ./story.txt
+
+  Settings precedence (highest to lowest):
+    1. Environment variable
+    2. ~/.rilo/config.json (saved via 'rilo settings')
+    3. Schema default
+
+INVOCATION METHODS
+  Global install:        rilo --project <name> --story-file <path>
+  No install (npx):      npx @telepat/rilo --project <name> --story-file <path>
+  Local development:     npm run dev -- --project <name> --story-file <path>
+`;
+    console.log(helpText);
     return;
   }
 
