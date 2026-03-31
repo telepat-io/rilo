@@ -101,6 +101,89 @@ Or without global install:
 npx @telepat/rilo --help
 ```
 
+## CLI Quick Reference
+
+### Generate a video from a story
+
+```bash
+rilo --project <name> --story-file <path>
+```
+
+Examples:
+```bash
+# First run: create project and start generation
+rilo --project wedding-case --story-file ./story.txt
+
+# On subsequent runs: reuse story
+rilo --project wedding-case
+
+# Force restart from earlier stages (after config change)
+rilo --project wedding-case --force
+```
+
+### Configure settings
+
+```bash
+rilo settings
+```
+
+Opens an interactive menu to set API tokens, timeouts, and binary paths.
+
+### Help and version
+
+```bash
+rilo --help                    # Show usage
+rilo --version                 # Show version
+```
+
+### Invocation methods
+
+| Method | Command |
+|--------|---------|
+| **Global install** | `rilo --project <name> --story-file <path>` |
+| **No install (npx)** | `npx @telepat/rilo --project <name> --story-file <path>` |
+| **Local dev** | `npm run dev -- --project <name> --story-file <path>` |
+
+### Key flags
+
+| Flag | Type | Notes |
+|------|------|-------|
+| `--project` | `<name>` | **Required.** Project identifier; creates `projects/<name>/` |
+| `--story-file` | `<path>` | Path to story text file (required on first run) |
+| `--force` | flag | Restart from earlier stages; used after config changes |
+
+### Common tasks
+
+**Update project config and regenerate:**
+```bash
+# Edit projects/wedding-case/config.json (aspect ratio, models, etc.)
+rilo --project wedding-case --force
+```
+
+**Change app settings (tokens, timeouts, binary paths):**
+```bash
+rilo settings
+# Arrow keys to navigate, Enter to edit, "Done" to save
+```
+
+**Check where generated files are stored:**
+```bash
+ls projects/wedding-case/
+# Outputs: config.json, story.md, final.mp4, artifacts.json, run-state.json, assets/, logs/
+```
+
+---
+
+## CLI Documentation
+
+For comprehensive CLI documentation, see:
+- **[Quickstart](/docs.telepat.io/rilo/getting-started/quickstart)** — Step-by-step guide to your first generation
+- **[CLI Reference](/docs.telepat.io/rilo/reference/cli-reference)** — All commands, flags, and invocation methods
+- **[Complete Config Schema](/docs.telepat.io/rilo/reference/config-schema)** — Every config key with types and defaults
+- **[Configuration Guide](/docs.telepat.io/rilo/guides/configuration)** — Project and app settings with examples
+- **[Troubleshooting](/docs.telepat.io/rilo/guides/troubleshooting)** — Common errors and solutions
+- **[Environment Variables](/docs.telepat.io/rilo/reference/environment-variables)** — Setting precedence and env var reference
+
 ## Full Documentation
 
 Guides, API reference, architecture notes, and advanced configuration:

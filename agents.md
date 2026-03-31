@@ -14,6 +14,7 @@
 - `src/config/settingsSchema.js`: declarative schema for editable settings (secure tokens, timeouts, binary paths, etc.).
 - `src/store/settingsStore.js`: read/write orchestration for `~/.rilo/config.json` (public settings) and keystore (tokens).
 - `src/cli/commands/settingsFlow.js`: interactive `@inquirer/prompts` UI for `rilo settings` command.
+- `src/cli/index.js`: CLI entry point, argument parsing, and help text.
 - `src/config/env.js`: exports both static `env` object and async `applyStoredSettings()` to merge config.json + keystore.
 - `docs-site/*`: Docusaurus documentation site (GitHub Pages build target at `docs-site/build`, workflow in `.github/workflows/docs-pages.yml`).
 - `frontend/*`: Vite + React app for project CRUD/editing, polling status, targeted regeneration, and media preview.
@@ -27,6 +28,17 @@
 - Keep changes minimal and targeted; preserve existing DI/test seams.
 - Prefer adding tests near affected modules in `test/*.test.js`.
 - Avoid introducing live network/inference in tests; mock/stub dependencies.
+
+## CLI & Documentation (2026-03-31)
+- **Comprehensive CLI docs** added across docs-site:
+  - [docs/rilo/getting-started/quickstart.md](docs-site/docs/rilo/getting-started/quickstart.md) — Step-by-step: first generation, workflow examples (re-run, update config, settings)
+  - [docs/rilo/reference/cli-reference.md](docs-site/docs/rilo/reference/cli-reference.md) — All commands, flags (tables), invocation methods (local/npx/global), help and version
+  - [docs/rilo/reference/config-schema.md](docs-site/docs/rilo/reference/config-schema.md) **[NEW]** — Exhaustive project & app config schema: every key, type, default, validation rules, examples, precedence
+  - [docs/rilo/guides/configuration.md](docs-site/docs/rilo/guides/configuration.md) — Enhanced with detailed field docs, subtitle options, app settings, precedence rules
+  - [docs/rilo/guides/troubleshooting.md](docs-site/docs/rilo/guides/troubleshooting.md) — Enhanced with CLI-specific errors (missing --project, invalid model, bad tokens, ffmpeg not found, prediction timeout, download failures, stage failures, logging/debug tips)
+- **README.md** — Added "CLI Quick Reference" discovery section (commands, flags, invocation methods, common tasks, links to full docs)
+- **[src/cli/index.js](src/cli/index.js) help text** — Expanded `--help` output: full usage, commands, flags, examples (with real project names), documentation links, project output structure, settings guidance, invocation methods
+- **Docs build** — All changes verified: eslint ✓, 214 tests ✓, docs-site build ✓
 
 ## Required checks before finishing
 - Run `npm run lint` in both root and `frontend/` to ensure no lint errors.
