@@ -146,6 +146,36 @@ When resolving a setting's value, rilo checks in this order (first match wins):
 
 **Note:** If an environment variable is set, the `rilo settings` menu shows that setting as "read-only (via environment variable)" and ignores any saved config.json value while the env var is present.
 
+## Home command
+
+Open the default Rilo app directory in your system file manager:
+
+```bash
+rilo home
+```
+
+This opens `~/.rilo`, which stores Rilo's default local data, including:
+
+- `config.json` for saved public settings
+- `projects/` for local project directories
+- `output/` for generated output when defaults are in use
+
+### Examples
+
+```bash
+rilo home
+npx @telepat/rilo home
+npm run dev -- home
+```
+
+### Platform behavior
+
+- macOS uses `open`
+- Linux uses `xdg-open`
+- Windows uses `cmd /c start`
+
+If the required opener is unavailable, rilo exits with code `1` and prints a clear error.
+
 ## Invocation Methods
 
 Choose the invocation pattern that fits your environment:
@@ -156,6 +186,7 @@ Use `npm run dev` as a wrapper:
 
 ```bash
 npm run dev -- settings
+npm run dev -- home
 npm run dev -- --project demo --story-file ./story.txt
 npm run dev -- --project demo --force
 ```
@@ -170,6 +201,7 @@ Install globally from npm:
 npm install -g @telepat/rilo
 rilo --help
 rilo settings
+rilo home
 rilo --project demo --story-file ./story.txt
 ```
 
@@ -180,6 +212,7 @@ Run directly without any installation:
 ```bash
 npx @telepat/rilo --help
 npx @telepat/rilo settings
+npx @telepat/rilo home
 npx @telepat/rilo --project demo --story-file ./story.txt
 ```
 
@@ -197,6 +230,7 @@ Output:
 ```
 Usage: rilo --project <name> [--story-file <path>] [--force]
        rilo settings
+   rilo home
 Example: rilo --project housing-case --story-file ./story.txt
 ```
 

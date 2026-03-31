@@ -13,6 +13,7 @@ import {
   writeProjectStory
 } from '../store/projectStore.js';
 import { openSettings } from './commands/settingsFlow.js';
+import { openHome } from './commands/openHome.js';
 import { applyStoredSettings } from '../config/env.js';
 
 function getArg(flag) {
@@ -50,6 +51,7 @@ Rilo — Story-first vertical video generation
 USAGE
   rilo --project <name> [--story-file <path>] [--force]
   rilo settings
+  rilo home
   rilo --help
   rilo --version
 
@@ -63,6 +65,9 @@ COMMANDS
 
   rilo settings
     Configure API tokens, timeouts, and binary paths interactively
+
+  rilo home
+    Open ~/.rilo, the default home for projects and output files
 
 FLAGS
   --help                     Show this help message
@@ -81,8 +86,12 @@ EXAMPLES
   # Configure settings
   rilo settings
 
+  # Open the default Rilo home folder
+  rilo home
+
   # Using npx (no installation needed)
   npx @telepat/rilo --project wedding-case --story-file ./story.txt
+  npx @telepat/rilo home
 
 DOCUMENTATION
   Quick start:          https://docs.telepat.io/rilo/getting-started/quickstart
@@ -129,6 +138,11 @@ INVOCATION METHODS
   // `rilo settings` subcommand
   if (process.argv[2] === 'settings') {
     await openSettings();
+    return;
+  }
+
+  if (process.argv[2] === 'home') {
+    await openHome();
     return;
   }
 

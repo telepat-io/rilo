@@ -129,6 +129,14 @@ rilo settings
 
 Opens an interactive menu to set API tokens, timeouts, and binary paths.
 
+### Open the Rilo home folder
+
+```bash
+rilo home
+```
+
+Opens `~/.rilo`, the default location for saved settings, projects, and generated output.
+
 ### Help and version
 
 ```bash
@@ -164,6 +172,12 @@ rilo --project wedding-case --force
 ```bash
 rilo settings
 # Arrow keys to navigate, Enter to edit, "Done" to save
+```
+
+**Open the default app folder for projects/output:**
+```bash
+rilo home
+# Opens ~/.rilo in your system file manager
 ```
 
 **Check where generated files are stored:**
