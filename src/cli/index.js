@@ -115,6 +115,9 @@ SETTINGS
   Configure via interactive menu:
     rilo settings
 
+  Recommended install:
+    npm install -g @telepat/rilo
+
   Or with environment variables:
     export RILO_REPLICATE_API_TOKEN=r8_xxxxx
     export RILO_MAX_RETRIES=5
@@ -129,7 +132,7 @@ SETTINGS
 INVOCATION METHODS
   Global install:        rilo --project <name> --story-file <path>
   No install (npx):      npx @telepat/rilo --project <name> --story-file <path>
-  Local development:     npm run dev -- --project <name> --story-file <path>
+  Contributor workflow:  npm run dev -- --project <name> --story-file <path>
 `;
     console.log(helpText);
     return;

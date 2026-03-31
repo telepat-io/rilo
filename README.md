@@ -33,30 +33,29 @@ Requirements:
 - ffmpeg in PATH
 - Replicate API token
 
-Setup:
+Install from npm and configure settings:
+
+```bash
+npm install -g @telepat/rilo
+rilo settings
+rilo --project demo --story-file ./story.txt
+```
+
+If you prefer environment variables instead of the interactive settings menu:
+
+```bash
+export RILO_REPLICATE_API_TOKEN=your-token
+export RILO_API_BEARER_TOKEN=your-api-bearer-token
+```
+
+## Contributor Workflow
+
+For development in this repository:
 
 ```bash
 npm install
 cp .env.example .env
-```
-
-Set required environment variables in .env, **or use the interactive settings command** (see below):
-
-```bash
-RILO_REPLICATE_API_TOKEN=your-token
-RILO_API_BEARER_TOKEN=your-api-bearer-token
-```
-
-Run the full local stack:
-
-```bash
 npm run dev:all
-```
-
-Run a CLI generation:
-
-```bash
-rilo --project demo --story-file ./story.txt
 ```
 
 ## Settings
@@ -67,7 +66,7 @@ Configure rilo interactively without editing files:
 rilo settings
 ```
 
-For local development in this repository:
+If you're working from a checked-out repository instead of an installed package:
 
 ```bash
 npm run dev -- settings
@@ -95,7 +94,7 @@ npm install -g @telepat/rilo
 rilo --help
 ```
 
-Or without global install:
+If you prefer not to install globally:
 
 ```bash
 npx @telepat/rilo --help
@@ -150,7 +149,7 @@ rilo --version                 # Show version
 |--------|---------|
 | **Global install** | `rilo --project <name> --story-file <path>` |
 | **No install (npx)** | `npx @telepat/rilo --project <name> --story-file <path>` |
-| **Local dev** | `npm run dev -- --project <name> --story-file <path>` |
+| **Contributor dev** | `npm run dev -- --project <name> --story-file <path>` |
 
 ### Key flags
 

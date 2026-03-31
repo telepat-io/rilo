@@ -9,24 +9,31 @@ Requirements:
 - ffmpeg in PATH
 - Replicate API token
 
-Setup:
+Recommended installation:
 
 ```bash
-npm install
-cp .env.example .env
+npm install -g @telepat/rilo
 ```
 
-Set credentials in `.env`:
+Then configure credentials interactively:
+
+```bash
+rilo settings
+```
+
+Or set credentials with environment variables:
 
 ```bash
 RILO_REPLICATE_API_TOKEN=...
 RILO_API_BEARER_TOKEN=...
 ```
 
-Or set them interactively with the local dev CLI entrypoint:
+If you prefer not to install globally, use `npx`:
 
 ```bash
-npm run dev -- settings
+npx @telepat/rilo settings
 ```
 
 `rilo settings` stores secure tokens in your OS keystore (or encrypted local fallback), and stores non-sensitive runtime settings in `~/.rilo/config.json`.
+
+If you're contributing from a checked-out repository, see [/contributing/development](/contributing/development) for the `npm run dev` workflow.

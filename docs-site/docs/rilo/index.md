@@ -14,22 +14,21 @@ It turns a story into script, narration, keyframes, segments, and a final compos
 ## Quickstart
 
 ```bash
-npm install
-cp .env.example .env
-npm run dev:all
-```
-
-Set credentials either in `.env` or interactively:
-
-```bash
-npm run dev -- settings
-```
-
-```bash
+npm install -g @telepat/rilo
+rilo settings
 rilo --project demo --story-file ./story.txt
 ```
 
-If you prefer API-driven runs, start the HTTP server with `npm run api` and check:
+If you prefer environment variables, export them before running:
+
+```bash
+export RILO_REPLICATE_API_TOKEN=...
+export RILO_API_BEARER_TOKEN=...
+```
+
+If you're running Rilo from source for development, see [/contributing/development](/contributing/development) for `npm run dev` and `npm run dev:all` workflows.
+
+If you prefer API-driven runs from a checked-out repository, start the HTTP server with `npm run api` and check:
 - Swagger UI at `/docs`
 - OpenAPI JSON at `/openapi.json`
 

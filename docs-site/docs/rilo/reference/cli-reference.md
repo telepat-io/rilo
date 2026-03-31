@@ -165,7 +165,6 @@ This opens `~/.rilo`, which stores Rilo's default local data, including:
 ```bash
 rilo home
 npx @telepat/rilo home
-npm run dev -- home
 ```
 
 ### Platform behavior
@@ -179,19 +178,6 @@ If the required opener is unavailable, rilo exits with code `1` and prints a cle
 ## Invocation Methods
 
 Choose the invocation pattern that fits your environment:
-
-### Local Development (in this repository)
-
-Use `npm run dev` as a wrapper:
-
-```bash
-npm run dev -- settings
-npm run dev -- home
-npm run dev -- --project demo --story-file ./story.txt
-npm run dev -- --project demo --force
-```
-
-This ensures the correct Node.js environment and local code is used.
 
 ### Global Installation
 
@@ -217,6 +203,19 @@ npx @telepat/rilo --project demo --story-file ./story.txt
 ```
 
 This downloads and runs the latest version from npm in one command. Useful for CI/CD and one-off runs.
+
+### Contributor Workflow (checked-out repository)
+
+Use `npm run dev` as a wrapper:
+
+```bash
+npm run dev -- settings
+npm run dev -- home
+npm run dev -- --project demo --story-file ./story.txt
+npm run dev -- --project demo --force
+```
+
+This ensures the correct Node.js environment and local code is used.
 
 ## Help Text
 

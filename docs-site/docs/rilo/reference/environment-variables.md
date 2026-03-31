@@ -76,7 +76,7 @@ When you save a setting via `rilo settings`, it is stored in `~/.rilo/config.jso
 2. **Stored setting** (`~/.rilo/config.json` or OS keystore)
 3. **Schema default** (lowest priority)
 
-This means if you set an environment variable, any value stored by `rilo settings` is ignored for that variable. Environment variables are ideal for deployments and CI/CD, while the settings command is convenient for local development.
+This means if you set an environment variable, any value stored by `rilo settings` is ignored for that variable. Environment variables are ideal for deployments and CI/CD, while the settings command is convenient for interactive workstation setup.
 
 ## Hidden Settings
 

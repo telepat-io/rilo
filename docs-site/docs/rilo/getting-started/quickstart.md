@@ -6,16 +6,7 @@ title: Quickstart
 
 ## Installation and Setup
 
-Local development workflow:
-
-```bash
-npm install
-cp .env.example .env
-npm run dev -- settings
-npm run dev -- --project housing-case --story-file ./examples/story.txt
-```
-
-Using a global install:
+Recommended workflow:
 
 ```bash
 npm install -g @telepat/rilo
@@ -23,12 +14,14 @@ rilo settings
 rilo --project housing-case --story-file ./examples/story.txt
 ```
 
-Or run via npx (no installation):
+Or run via npx without a global install:
 
 ```bash
 npx @telepat/rilo settings
 npx @telepat/rilo --project housing-case --story-file ./examples/story.txt
 ```
+
+If you're contributing from source in this repository, see [/contributing/development](/contributing/development) for the `npm run dev` workflow.
 
 ## Your First Generation
 
@@ -46,12 +39,6 @@ This opens a menu where you can securely enter your Replicate API token and conf
 **Option B: Environment variable**
 ```bash
 export RILO_REPLICATE_API_TOKEN=r8_xxxxxxxxxxxxx
-```
-
-**Option C: Global installation with .env**
-```bash
-# Create ~/.rilo/config.json manually (optional; or use `rilo settings`)
-mkdir -p ~/.rilo
 ```
 
 ### Step 2: Create a new project with a story
@@ -176,9 +163,9 @@ Choose the invocation method that fits your workflow:
 
 | Method | Command | Best for |
 |--------|---------|----------|
-| **Local dev** | `npm run dev -- --project <name> --story-file <path>` | Development in this repo |
 | **Global install** | `rilo --project <name> --story-file <path>` | After `npm install -g @telepat/rilo` |
 | **npx** | `npx @telepat/rilo --project <name> --story-file <path>` | No installation required; CI/CD |
+| **Contributor dev** | `npm run dev -- --project <name> --story-file <path>` | Working from a checked-out repo |
 
 ## Next Steps
 
