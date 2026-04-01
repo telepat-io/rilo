@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/telepat-io/rilo/compare/rilo-v0.1.1...rilo-v0.1.2) (2026-04-01)
+
+
+### Bug Fixes
+
+* add installation step for documentation dependencies in npm publish workflow ([7d88d0c](https://github.com/telepat-io/rilo/commit/7d88d0c292c054d67427609e53b32565a6236e16))
+
 ## [0.1.1](https://github.com/telepat-io/rilo/compare/rilo-v0.1.0...rilo-v0.1.1) (2026-04-01)
 
 
