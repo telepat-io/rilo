@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.5](https://github.com/telepat-io/rilo/compare/rilo-v0.1.4...rilo-v0.1.5) (2026-04-01)
+
+
+### Bug Fixes
+
+* downgrade Node version to 20 and ensure NODE_AUTH_TOKEN is set for npm publish ([47d38ce](https://github.com/telepat-io/rilo/commit/47d38ce074e51f5d7ec99a6dcc95b9d98f5c0ec5))
+
 ## [0.1.4](https://github.com/telepat-io/rilo/compare/rilo-v0.1.3...rilo-v0.1.4) (2026-04-01)
 
 
