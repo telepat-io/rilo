@@ -1,11 +1,13 @@
-const DEFAULT_API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5173';
-const API_BEARER_TOKEN = import.meta.env.VITE_API_BEARER_TOKEN || '';
+const runtimeConfig = typeof window !== 'undefined' && window.__RILO_CONFIG__
+  ? window.__RILO_CONFIG__
+  : {};
 
-function assertToken() {
-  if (!API_BEARER_TOKEN) {
-    throw new Error('Missing VITE_API_BEARER_TOKEN in frontend env');
-  }
-}
+const defaultBrowserOrigin = typeof window !== 'undefined' && window.location
+  ? window.location.origin
+  : 'http://localhost:5173';
+
+const DEFAULT_API_BASE_URL = runtimeConfig.apiBaseUrl || import.meta.env.VITE_API_BASE_URL || defaultBrowserOrigin;
+const API_BEARER_TOKEN = runtimeConfig.apiBearerToken || import.meta.env.VITE_API_BEARER_TOKEN || '';
 
 function buildUrl(pathname, searchParams) {
   const url = new URL(pathname, DEFAULT_API_BASE_URL.endsWith('/') ? DEFAULT_API_BASE_URL : `${DEFAULT_API_BASE_URL}/`);
@@ -20,11 +22,10 @@ function buildUrl(pathname, searchParams) {
 }
 
 async function request(pathname, { method = 'GET', body, searchParams } = {}) {
-  assertToken();
   const response = await fetch(buildUrl(pathname, searchParams), {
     method,
     headers: {
-      authorization: `Bearer ${API_BEARER_TOKEN}`,
+      ...(API_BEARER_TOKEN ? { authorization: `Bearer ${API_BEARER_TOKEN}` } : {}),
       ...(body ? { 'content-type': 'application/json' } : {})
     },
     ...(body ? { body: JSON.stringify(body) } : {})
@@ -119,7 +120,7 @@ export function toDisplayAssetUrl(project, asset, cacheKey = '') {
   }
 
   const url = buildUrl(toAssetRoute(project, asset.path), {
-    access_token: API_BEARER_TOKEN,
+    ...(API_BEARER_TOKEN ? { access_token: API_BEARER_TOKEN } : {}),
     ...(cacheKey ? { v: cacheKey } : {})
   });
   return url.toString();

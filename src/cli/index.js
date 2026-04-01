@@ -14,6 +14,7 @@ import {
 } from '../store/projectStore.js';
 import { openSettings } from './commands/settingsFlow.js';
 import { openHome } from './commands/openHome.js';
+import { startPreview } from './commands/preview.js';
 import { applyStoredSettings } from '../config/env.js';
 
 function getArg(flag) {
@@ -50,6 +51,7 @@ Rilo — Story-first vertical video generation
 
 USAGE
   rilo --project <name> [--story-file <path>] [--force]
+  rilo preview [--port <n>] [--host <host>] [--no-open] [--expose --unsafe-no-auth]
   rilo settings
   rilo home
   rilo --help
@@ -68,6 +70,15 @@ COMMANDS
 
   rilo home
     Open ~/.rilo, the default home for projects and output files
+
+  rilo preview [--port <n>] [--host <host>] [--no-open] [--expose --unsafe-no-auth]
+    Start API, worker, and dashboard preview for local use
+
+    --port <n>               API/dashboard port (default: 3000)
+    --host <host>            Host bind address (default: 127.0.0.1)
+    --no-open                Do not auto-open browser
+    --expose                 Bind preview for external/container access
+    --unsafe-no-auth         Allow unauthenticated exposed preview (required with --expose)
 
 FLAGS
   --help                     Show this help message
@@ -88,6 +99,12 @@ EXAMPLES
 
   # Open the default Rilo home folder
   rilo home
+
+  # Run local dashboard/API preview
+  rilo preview
+
+  # Expose preview over container or tunnel (unsafe)
+  rilo preview --expose --unsafe-no-auth --host 0.0.0.0 --port 3000
 
   # Using npx (no installation needed)
   npx @telepat/rilo --project wedding-case --story-file ./story.txt
@@ -146,6 +163,12 @@ INVOCATION METHODS
 
   if (process.argv[2] === 'home') {
     await openHome();
+    return;
+  }
+
+  if (process.argv[2] === 'preview') {
+    await applyStoredSettings();
+    await startPreview();
     return;
   }
 

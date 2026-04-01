@@ -5,6 +5,32 @@ function unauthorized(res) {
   res.status(401).json({ error: 'Unauthorized' });
 }
 
+function isLoopbackAddress(address) {
+  if (!address || typeof address !== 'string') {
+    return false;
+  }
+
+  const normalized = address.toLowerCase();
+  return normalized === '127.0.0.1'
+    || normalized === '::1'
+    || normalized === '::ffff:127.0.0.1';
+}
+
+function shouldBypassAuth(req, options) {
+  if (!options.previewMode) {
+    return false;
+  }
+
+  if (options.allowUnauthenticatedExposedPreview) {
+    return true;
+  }
+
+  const socketAddress = typeof req?.socket?.remoteAddress === 'string'
+    ? req.socket.remoteAddress
+    : '';
+  return isLoopbackAddress(socketAddress);
+}
+
 function getTokenFromAuthorizationHeader(req) {
   const authHeader = req.get('authorization');
   if (!authHeader) {
@@ -51,20 +77,50 @@ export function isAuthorizedApiRequest(req, { allowQueryAccessToken = false } = 
   return isMatchingToken(queryToken);
 }
 
-export function requireBearerToken(req, res, next) {
-  if (!isAuthorizedApiRequest(req)) {
-    unauthorized(res);
-    return;
+export function createAuthGuards(options = {}) {
+  const authOptions = {
+    previewMode: Boolean(options.previewMode),
+    allowUnauthenticatedExposedPreview: Boolean(options.allowUnauthenticatedExposedPreview)
+  };
+
+  function requireBearerTokenWithOptions(req, res, next) {
+    if (shouldBypassAuth(req, authOptions)) {
+      next();
+      return;
+    }
+
+    if (!isAuthorizedApiRequest(req)) {
+      unauthorized(res);
+      return;
+    }
+
+    next();
   }
 
-  next();
+  function requireBearerTokenOrAccessTokenWithOptions(req, res, next) {
+    if (shouldBypassAuth(req, authOptions)) {
+      next();
+      return;
+    }
+
+    if (!isAuthorizedApiRequest(req, { allowQueryAccessToken: true })) {
+      unauthorized(res);
+      return;
+    }
+
+    next();
+  }
+
+  return {
+    requireBearerToken: requireBearerTokenWithOptions,
+    requireBearerTokenOrAccessToken: requireBearerTokenOrAccessTokenWithOptions
+  };
+}
+
+export function requireBearerToken(req, res, next) {
+  return createAuthGuards().requireBearerToken(req, res, next);
 }
 
 export function requireBearerTokenOrAccessToken(req, res, next) {
-  if (!isAuthorizedApiRequest(req, { allowQueryAccessToken: true })) {
-    unauthorized(res);
-    return;
-  }
-
-  next();
+  return createAuthGuards().requireBearerTokenOrAccessToken(req, res, next);
 }

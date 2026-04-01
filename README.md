@@ -102,6 +102,22 @@ npx @telepat/rilo --help
 
 ## CLI Quick Reference
 
+### Launch dashboard preview
+
+```bash
+rilo preview
+```
+
+Starts local API + worker + dashboard on `127.0.0.1:3000` and opens the browser.
+
+For container/tunnel scenarios (unsafe unauthenticated access):
+
+```bash
+rilo preview --expose --unsafe-no-auth --host 0.0.0.0 --port 3000
+```
+
+Use exposed mode only on trusted networks or isolated environments.
+
 ### Generate a video from a story
 
 ```bash

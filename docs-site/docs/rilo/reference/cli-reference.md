@@ -175,6 +175,42 @@ npx @telepat/rilo home
 
 If the required opener is unavailable, rilo exits with code `1` and prints a clear error.
 
+## Preview command
+
+Start the local dashboard, API, and worker in one command:
+
+```bash
+rilo preview [--port <n>] [--host <host>] [--no-open] [--expose --unsafe-no-auth]
+```
+
+### Flags
+
+| Flag | Type | Description |
+|------|------|-------------|
+| `--port` | `<n>` | Port for the preview API/dashboard (default: `3000`). |
+| `--host` | `<host>` | Host bind address (default: `127.0.0.1`; default with `--expose` is `0.0.0.0`). |
+| `--no-open` | flag | Skip automatic browser open. |
+| `--expose` | flag | Allow external/container access to preview. |
+| `--unsafe-no-auth` | flag | Required with `--expose`; runs preview without API auth. |
+
+### Examples
+
+**Local preview (recommended default):**
+
+```bash
+rilo preview
+```
+
+This starts preview on loopback only and opens the dashboard.
+
+**Exposed preview for containers/tunnels (unsafe):**
+
+```bash
+rilo preview --expose --unsafe-no-auth --host 0.0.0.0 --port 3000
+```
+
+Use exposed mode only on trusted networks or isolated environments.
+
 ## Invocation Methods
 
 Choose the invocation pattern that fits your environment:

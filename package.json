@@ -7,6 +7,7 @@
   },
   "files": [
     "src/",
+    "frontend/dist/",
     "models/",
     "index.js",
     "README.md"
@@ -30,6 +31,7 @@
     "frontend:lint": "npm --prefix frontend run lint",
     "frontend:build": "npm --prefix frontend run build",
     "frontend:preview": "npm --prefix frontend run preview",
+    "prepack": "npm run frontend:build",
     "docs:start": "npm --prefix docs-site run start",
     "docs:build": "npm --prefix docs-site run build",
     "docs:serve": "npm --prefix docs-site run serve",

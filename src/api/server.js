@@ -1,11 +1,13 @@
 import express from 'express';
+import fs from 'node:fs';
+import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { assertRequiredApiEnv, env } from '../config/env.js';
 import { createJobsRouter } from './routes/jobs.js';
 import { createProjectAssetsRouter } from './routes/projectAssets.js';
 import { createProjectsRouter } from './routes/projects.js';
 import { createWebhookRouter } from './routes/webhooks.js';
-import { requireBearerToken, requireBearerTokenOrAccessToken } from './middleware/auth.js';
+import { createAuthGuards } from './middleware/auth.js';
 import { buildOpenApiSpec } from './openapi/spec.js';
 
 const swaggerUiHtml = `<!doctype html>
@@ -42,11 +44,29 @@ function getRequestBaseUrl(req, { fallbackPort = 3000 } = {}) {
   return `http://localhost:${fallbackPort}`;
 }
 
-export function createApiApp({ baseUrl } = {}) {
-  assertRequiredApiEnv();
+function hasDashboardBundle(dashboardDir) {
+  if (!dashboardDir || typeof dashboardDir !== 'string') {
+    return false;
+  }
+
+  return fs.existsSync(path.join(dashboardDir, 'index.html'));
+}
+
+export function createApiApp({ baseUrl, dashboardDir, auth } = {}) {
+  const authOptions = {
+    previewMode: Boolean(auth?.previewMode),
+    allowUnauthenticatedExposedPreview: Boolean(auth?.allowUnauthenticatedExposedPreview)
+  };
+  const shouldRequireApiToken = !authOptions.previewMode;
+  if (shouldRequireApiToken) {
+    assertRequiredApiEnv();
+  }
+
+  const guards = createAuthGuards(authOptions);
+  const dashboardEnabled = hasDashboardBundle(dashboardDir);
 
   const app = express();
-  app.set('trust proxy', true);
+  app.set('trust proxy', !authOptions.previewMode);
   app.use(express.json({ limit: '2mb' }));
 
   app.get('/health', (_req, res) => {
@@ -67,16 +87,30 @@ export function createApiApp({ baseUrl } = {}) {
   });
 
   app.use('/webhooks', createWebhookRouter());
-  app.use('/projects', requireBearerTokenOrAccessToken, createProjectAssetsRouter());
-  app.use(requireBearerToken);
+  app.use('/projects', guards.requireBearerTokenOrAccessToken, createProjectAssetsRouter());
+  app.use(guards.requireBearerToken);
   app.use('/jobs', createJobsRouter());
   app.use('/projects', createProjectsRouter());
+
+  if (dashboardEnabled) {
+    app.use(express.static(dashboardDir));
+    app.get('/', (_req, res) => {
+      res.sendFile(path.join(dashboardDir, 'index.html'));
+    });
+  }
 
   return app;
 }
 
-export function startApiServer({ port = env.port, baseUrl } = {}) {
-  const app = createApiApp({ baseUrl });
+export function startApiServer({ port = env.port, host, baseUrl, dashboardDir, auth } = {}) {
+  const app = createApiApp({ baseUrl, dashboardDir, auth });
+
+  if (host) {
+    return app.listen(port, host, () => {
+      console.log(`rilo api listening on ${host}:${port}`);
+    });
+  }
+
   return app.listen(port, () => {
     console.log(`rilo api listening on :${port}`);
   });

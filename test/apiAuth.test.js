@@ -6,7 +6,7 @@ import { env } from '../src/config/env.js';
 import { createJobsRouter } from '../src/api/routes/jobs.js';
 import { createProjectsRouter } from '../src/api/routes/projects.js';
 import { createWebhookRouter } from '../src/api/routes/webhooks.js';
-import { requireBearerToken } from '../src/api/middleware/auth.js';
+import { createAuthGuards, requireBearerToken } from '../src/api/middleware/auth.js';
 
 async function withServer(app, callback) {
   const server = await new Promise((resolve) => {
@@ -106,4 +106,95 @@ test('health and webhook routes remain unauthenticated', async () => {
   } finally {
     env.apiBearerToken = previousToken;
   }
+});
+
+test('preview loopback bypass allows unauthenticated localhost request', async () => {
+  const previousToken = env.apiBearerToken;
+  env.apiBearerToken = '';
+
+  const { requireBearerToken: previewAuth } = createAuthGuards({
+    previewMode: true,
+    allowUnauthenticatedExposedPreview: false
+  });
+
+  const app = express();
+  app.use(previewAuth);
+  app.get('/projects', (_req, res) => {
+    res.status(200).json({ ok: true });
+  });
+
+  try {
+    await withServer(app, async (baseUrl) => {
+      const response = await fetch(`${baseUrl}/projects`);
+      assert.equal(response.status, 200);
+      assert.deepEqual(await response.json(), { ok: true });
+    });
+  } finally {
+    env.apiBearerToken = previousToken;
+  }
+});
+
+test('preview loopback bypass still blocks remote addresses without token', () => {
+  const { requireBearerToken: previewAuth } = createAuthGuards({
+    previewMode: true,
+    allowUnauthenticatedExposedPreview: false
+  });
+
+  let statusCode = 0;
+  let payload;
+  let nextCalled = false;
+
+  const req = {
+    socket: { remoteAddress: '10.0.0.2' },
+    get() {
+      return undefined;
+    },
+    query: {}
+  };
+  const res = {
+    status(code) {
+      statusCode = code;
+      return this;
+    },
+    json(body) {
+      payload = body;
+    }
+  };
+
+  previewAuth(req, res, () => {
+    nextCalled = true;
+  });
+
+  assert.equal(nextCalled, false);
+  assert.equal(statusCode, 401);
+  assert.deepEqual(payload, { error: 'Unauthorized' });
+});
+
+test('exposed unsafe preview bypass allows unauthenticated non-loopback request', () => {
+  const { requireBearerToken: previewAuth } = createAuthGuards({
+    previewMode: true,
+    allowUnauthenticatedExposedPreview: true
+  });
+
+  let nextCalled = false;
+
+  const req = {
+    socket: { remoteAddress: '10.0.0.2' },
+    get() {
+      return undefined;
+    },
+    query: {}
+  };
+  const res = {
+    status() {
+      return this;
+    },
+    json() {}
+  };
+
+  previewAuth(req, res, () => {
+    nextCalled = true;
+  });
+
+  assert.equal(nextCalled, true);
 });
