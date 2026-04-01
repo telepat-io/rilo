@@ -571,9 +571,10 @@ export async function regenerateProjectAsset(projectName, target, options = {}) 
   }
 
   const updatedAt = new Date().toISOString();
+  const nextStatus = targetType === 'keyframe' ? JobStatus.PAUSED : (runState.status || JobStatus.COMPLETED);
   await deps.persistArtifacts(project, artifacts);
   await deps.writeProjectRunState(project, {
-    status: runState.status || JobStatus.COMPLETED,
+    status: nextStatus,
     error: runState.error || null,
     steps,
     artifacts,
@@ -629,6 +630,9 @@ export async function runPipeline(jobId, options = {}) {
     const projectDir = deps.getProjectDir(project);
     const targetDurationSec = resolveTargetDurationSec(projectConfig);
     const plannedShots = resolveShotCount(projectConfig);
+    const shouldPause = options.pauseAfterKeyframes !== undefined
+      ? Boolean(options.pauseAfterKeyframes)
+      : Boolean(projectConfig.pauseAfterKeyframes);
     const safeStory = deps.preprocessStory(job.payload.story);
     analyticsProjectDir = projectDir;
     const analyticsRunId = deps.createRunId();
@@ -1326,6 +1330,12 @@ export async function runPipeline(jobId, options = {}) {
       await finishStageAnalytics(JobStep.KEYFRAMES, { executed: true, status: 'succeeded', details: { mode: 'partial_regen', changedShots: changed } });
       await finishStageAnalytics(JobStep.SEGMENTS, { executed: true, status: 'succeeded', details: { mode: 'partial_regen' } });
       currentJob = getJob(jobId);
+
+      if (shouldPause) {
+        const paused = updateJob(jobId, { status: JobStatus.PAUSED });
+        await persistCheckpoint(paused, null, deps);
+        return paused;
+      }
     }
 
     if (!currentJob.steps[JobStep.KEYFRAMES]) {
@@ -1387,6 +1397,12 @@ export async function runPipeline(jobId, options = {}) {
       await persistCheckpoint(getJob(jobId), null, deps);
       await finishStageAnalytics(JobStep.KEYFRAMES, { executed: true, status: 'succeeded' });
       currentJob = getJob(jobId);
+
+      if (shouldPause) {
+        const paused = updateJob(jobId, { status: JobStatus.PAUSED });
+        await persistCheckpoint(paused, null, deps);
+        return paused;
+      }
     } else if (
       currentJob.artifacts.keyframeUrls.length > 0 &&
       (!currentJob.artifacts.keyframePaths || currentJob.artifacts.keyframePaths.length === 0)

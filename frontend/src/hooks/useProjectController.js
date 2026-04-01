@@ -116,6 +116,7 @@ export function useProjectController() {
   const mediaColMin = `${Math.min(320, Math.max(120, Math.round(220 * mediaW / mediaH)))}px`;
   const runStatus = currentJob?.status || projectDetails?.runState?.status;
   const isRunning = runStatus === 'running' || runStatus === 'pending';
+  const isPaused = runStatus === 'paused';
   const rawSteps = (isRunning ? currentJob?.steps : null) || projectDetails?.runState?.steps;
   const activeStep =
     isRunning
@@ -258,10 +259,12 @@ export function useProjectController() {
         if (cancelled) return;
 
         setCurrentJob(job);
-        if (job.status === 'completed' || job.status === 'failed') {
+        if (job.status === 'completed' || job.status === 'failed' || job.status === 'paused') {
           setActiveJobId('');
           if (job.status === 'failed') {
             flash(`Job failed: ${job.error || 'unknown error'}`, true);
+          } else if (job.status === 'paused') {
+            flash('Keyframes ready — review and continue when happy.');
           } else {
             flash('Generation complete.');
           }
@@ -548,6 +551,7 @@ export function useProjectController() {
     mediaColMin,
     runStatus,
     isRunning,
+    isPaused,
     steps,
     activeStep,
     activeSegmentIndex,

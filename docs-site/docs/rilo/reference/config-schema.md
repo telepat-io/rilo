@@ -15,6 +15,7 @@ This page documents every configuration option across both **project config** (`
 | `aspectRatio` | string | `"9:16"` | `"1:1"` \| `"16:9"` \| `"9:16"` — output video aspect ratio |
 | `targetDurationSec` | number | `60` | Target script/narration duration in seconds; influences pacing |
 | `finalDurationMode` | string | `"match_audio"` | `"match_audio"` \| `"match_visual"` — how to handle final composition duration |
+| `pauseAfterKeyframes` | boolean | `true` | When `true`, the pipeline stops after keyframe generation to allow review. Set to `false` to run all stages in one shot (equivalent to `--full-run` in the CLI) |
 
 ### Keyframe Dimensions
 

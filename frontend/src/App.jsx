@@ -66,6 +66,7 @@ export function App() {
     mediaColMin,
     runStatus,
     isRunning,
+    isPaused,
     steps,
     activeStep,
     activeSegmentIndex,
@@ -120,6 +121,7 @@ export function App() {
               selectedProject={selectedProject}
               runStatus={runStatus}
               isRunning={isRunning}
+              isPaused={isPaused}
               loadingDetails={loadingDetails}
               steps={steps}
               activeStep={activeStep}
@@ -129,6 +131,7 @@ export function App() {
               onRefresh={() => loadProjectDetails(selectedProject)}
               onRegenerate={() => handleRunRegenerate(false)}
               onForceRestart={() => handleRunRegenerate(true)}
+              onContinue={() => handleRunRegenerate(false)}
               onChangeTab={setActiveTab}
             />
 

@@ -97,6 +97,38 @@ test('jobs routes handle missing story, accepted creation, and missing job looku
     });
     assert.equal(missingStory.status, 400);
 
+    const nonStringStory = await fetch(`${baseUrl}/jobs`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        project: trackProject(`ut-route-job-story-type-${Date.now()}`),
+        story: 123
+      })
+    });
+    assert.equal(nonStringStory.status, 400);
+
+    const invalidForceRestart = await fetch(`${baseUrl}/jobs`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        project: trackProject(`ut-route-job-invalid-force-${Date.now()}`),
+        story: 'short',
+        forceRestart: 'yes'
+      })
+    });
+    assert.equal(invalidForceRestart.status, 400);
+
+    const invalidPauseAfterKeyframes = await fetch(`${baseUrl}/jobs`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        project: trackProject(`ut-route-job-invalid-pause-${Date.now()}`),
+        story: 'short',
+        pauseAfterKeyframes: 'false'
+      })
+    });
+    assert.equal(invalidPauseAfterKeyframes.status, 400);
+
     const accepted = await fetch(`${baseUrl}/jobs`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -113,6 +145,17 @@ test('jobs routes handle missing story, accepted creation, and missing job looku
 
     const createdJob = await fetch(`${baseUrl}/jobs/${acceptedBody.jobId}`);
     assert.equal(createdJob.status, 200);
+
+    const acceptedWithBooleanPause = await fetch(`${baseUrl}/jobs`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        project: trackProject(`ut-route-job-bool-pause-${Date.now()}`),
+        story: 'short',
+        pauseAfterKeyframes: false
+      })
+    });
+    assert.equal(acceptedWithBooleanPause.status, 202);
 
     const projectsRoot = env.projectsDir;
     const listApiProjects = async () => {
@@ -1122,6 +1165,20 @@ test('projects content and regenerate validation branches return 400 for malform
       body: JSON.stringify({ forceRestart: 'yes' })
     });
     assert.equal(nonBooleanForceRestart.status, 400);
+
+    const nonBooleanPauseAfterKeyframes = await fetch(`${baseUrl}/projects/${project}/regenerate`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ pauseAfterKeyframes: 'yes' })
+    });
+    assert.equal(nonBooleanPauseAfterKeyframes.status, 400);
+
+    const pauseAfterKeyframesOnTargeted = await fetch(`${baseUrl}/projects/${project}/regenerate`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ targetType: 'script', pauseAfterKeyframes: false })
+    });
+    assert.equal(pauseAfterKeyframesOnTargeted.status, 400);
 
     const invalidProjectRegenerate = await fetch(`${baseUrl}/projects/${encodeURIComponent('INVALID PROJECT NAME!')}/regenerate`, {
       method: 'POST',

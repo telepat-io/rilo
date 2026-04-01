@@ -2,7 +2,8 @@ export const JobStatus = {
   PENDING: 'pending',
   RUNNING: 'running',
   FAILED: 'failed',
-  COMPLETED: 'completed'
+  COMPLETED: 'completed',
+  PAUSED: 'paused'
 };
 
 export const JobStep = {

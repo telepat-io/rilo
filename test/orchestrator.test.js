@@ -1534,7 +1534,7 @@ test('regenerateProjectAsset keyframe at last index invalidates final adjacent s
   assert.equal(result.artifacts.segmentUrls[0], '');
   assert.equal(result.artifacts.segmentPaths[0], '');
   assert.ok(writtenRunState);
-  assert.equal(writtenRunState.status, 'completed');
+  assert.equal(writtenRunState.status, 'paused');
   assert.equal(writtenRunState.error, 'prior-error');
 });
 
@@ -2931,4 +2931,407 @@ test('runPipeline invalidates voice/segments when script asset hash changes', as
   assert.equal(result.artifacts.script, 'Updated script from asset');
 
   await fs.rm(projectDir, { recursive: true, force: true });
+});
+
+// ── pauseAfterKeyframes ───────────────────────────────────────────────────────
+
+function makePauseTestDeps() {
+  return {
+    ensureProject: async () => {},
+    readProjectConfig: async () => ({
+      aspectRatio: '9:16',
+      targetDurationSec: 10,
+      finalDurationMode: 'match_audio',
+      pauseAfterKeyframes: true
+    }),
+    readProjectRunState: async () => null,
+    archiveProjectAssets: async () => null,
+    persistArtifacts: async () => {},
+    writeProjectRunState: async () => {},
+    syncProjectSnapshot: async () => {},
+    writeRunRecord: async () => {},
+    collectRunPredictions: async () => [],
+    preprocessStory: (story) => story,
+    generateScript: async () => ({
+      script: 'Generated script for pause test',
+      tone: 'neutral',
+      scriptWordCount: 10,
+      targetWordCount: 10
+    }),
+    generateShots: async (_script, { shotCount }) => ({
+      shots: Array.from({ length: shotCount }, (_value, index) => `Shot ${index + 1}`)
+    }),
+    generateVoiceover: async () => ({
+      timeline: [
+        { index: 0, startSec: 0, endSec: 5 },
+        { index: 1, startSec: 5, endSec: 10 }
+      ],
+      voiceoverUrl: 'https://example.com/voice.wav',
+      ttsPlan: { speed: 1.0 }
+    }),
+    persistVoiceover: async () => '/tmp/voice-pause.wav',
+    probeMediaDurationSeconds: async () => 10,
+    resolveSegmentCountFromAudioDuration: () => 2,
+    buildFixedTimeline: () => [
+      { index: 0, startSec: 0, endSec: 5 },
+      { index: 1, startSec: 5, endSec: 10 }
+    ],
+    generateKeyframe: async (_shot, _tone, _aspect, index) =>
+      `https://example.com/keyframe-${index}.png`,
+    persistKeyframe: async (_projectDir, _url, index) => `/tmp/keyframe-pause-${index}.png`,
+    generateVideoSegmentAtIndex: async () => {
+      throw new Error('generateVideoSegmentAtIndex should not run when paused after keyframes');
+    },
+    persistSegment: async () => {
+      throw new Error('persistSegment should not run when paused after keyframes');
+    },
+    composeFinalVideo: async () => {
+      throw new Error('composeFinalVideo should not run when paused after keyframes');
+    }
+  };
+}
+
+test('runPipeline pauses after keyframe generation when pauseAfterKeyframes is true (default)', async () => {
+  const project = uniqueProject('ut-orch-pause-after-keyframes');
+  const job = createJob({
+    project,
+    story: 'This is a long enough story body for the pause-after-keyframes behavior coverage test.'
+  });
+
+  const result = await runPipeline(job.id, {
+    forceRestart: true,
+    deps: makePauseTestDeps()
+  });
+
+  assert.equal(result.status, 'paused');
+  assert.equal(result.steps[JobStep.KEYFRAMES], true);
+  assert.equal(result.steps[JobStep.SEGMENTS], false);
+  assert.equal(result.steps[JobStep.COMPOSE], false);
+  assert.ok(result.artifacts.keyframeUrls.length > 0);
+  assert.equal(getProjectRunLockOwner(project), null, 'lock should be released after pause');
+
+  await cleanupProject(project);
+});
+
+test('runPipeline does not pause when pauseAfterKeyframes option is false', async () => {
+  const project = uniqueProject('ut-orch-no-pause');
+  const job = createJob({
+    project,
+    story: 'This is a long enough story body for the full-run without keyframe pause test.'
+  });
+
+  let segmentCalls = 0;
+
+  const deps = {
+    ...makePauseTestDeps(),
+    generateVideoSegmentAtIndex: async (_index) => {
+      segmentCalls += 1;
+      return `https://example.com/segment-${_index}.mp4`;
+    },
+    persistSegment: async (_projectDir, _url, index) => `/tmp/segment-nopause-${index}.mp4`,
+    composeFinalVideo: async () => ({
+      finalVideoPath: '/tmp/final-nopause.mp4',
+      voiceoverPath: '/tmp/voice-nopause.wav',
+      keyframePaths: ['/tmp/k0.png', '/tmp/k1.png'],
+      segmentPaths: ['/tmp/s0.mp4']
+    })
+  };
+
+  const result = await runPipeline(job.id, {
+    forceRestart: true,
+    pauseAfterKeyframes: false,
+    deps
+  });
+
+  assert.equal(result.status, 'completed');
+  assert.ok(segmentCalls > 0, 'segments should be generated when not pausing');
+  assert.equal(result.artifacts.finalVideoPath, '/tmp/final-nopause.mp4');
+  assert.equal(getProjectRunLockOwner(project), null);
+
+  await cleanupProject(project);
+});
+
+test('runPipeline resumes from paused state and continues to segments (keyframes already done)', async () => {
+  const project = uniqueProject('ut-orch-resume-from-paused');
+  const story = 'This is a long enough story body for testing resume from a paused keyframe checkpoint.';
+
+  const existingKeyframeUrls = ['https://example.com/k0.png', 'https://example.com/k1.png', 'https://example.com/k2.png'];
+  const existingKeyframePaths = ['/tmp/rk0.png', '/tmp/rk1.png', '/tmp/rk2.png'];
+
+  for (const filePath of existingKeyframePaths) {
+    await fs.writeFile(filePath, 'x', 'utf8');
+  }
+
+  let segmentCalls = 0;
+  let keyframeCalls = 0;
+
+  const job = createJob({ project, story });
+
+  const result = await runPipeline(job.id, {
+    deps: {
+      ensureProject: async () => {},
+      readProjectConfig: async () => ({
+        aspectRatio: '9:16',
+        targetDurationSec: 10,
+        finalDurationMode: 'match_audio',
+        pauseAfterKeyframes: true
+      }),
+      readProjectRunState: async () => ({
+        status: 'paused',
+        error: null,
+        steps: {
+          [JobStep.SCRIPT]: true,
+          [JobStep.VOICE]: true,
+          [JobStep.KEYFRAMES]: true,
+          [JobStep.SEGMENTS]: false,
+          [JobStep.COMPOSE]: false,
+          [JobStep.ALIGN]: false,
+          [JobStep.BURNIN]: false
+        },
+        artifacts: {
+          ...emptyPipelineArtifacts(),
+          targetDurationSec: 10,
+          finalDurationMode: 'match_audio',
+          script: 'Resume script',
+          scriptSourceStoryHash: hashText(story),
+          scriptHash: hashText('Resume script'),
+          shotHashes: [hashText('Shot A'), hashText('Shot B'), hashText('Shot C')],
+          tone: 'neutral',
+          shots: ['Shot A', 'Shot B', 'Shot C'],
+          timeline: [
+            { index: 0, startSec: 0, endSec: 5 },
+            { index: 1, startSec: 5, endSec: 10 }
+          ],
+          voiceoverUrl: 'https://example.com/voice.wav',
+          voiceoverPath: '/tmp/rk-voice.wav',
+          keyframeUrls: existingKeyframeUrls,
+          keyframePaths: existingKeyframePaths,
+          segmentUrls: [],
+          segmentPaths: []
+        }
+      }),
+      archiveProjectAssets: async () => null,
+      persistArtifacts: async () => {},
+      writeProjectRunState: async () => {},
+      syncProjectSnapshot: async () => {},
+      writeRunRecord: async () => {},
+      collectRunPredictions: async () => [],
+      preprocessStory: (story) => story,
+      generateScript: async () => {
+        throw new Error('generateScript should not run on resume from paused');
+      },
+      generateShots: async (_script, { shotCount }) => ({
+        shots: Array.from({ length: shotCount }, (_value, i) => `Shot ${i + 1}`)
+      }),
+      generateVoiceover: async () => {
+        throw new Error('generateVoiceover should not run on resume from paused');
+      },
+      persistVoiceover: async () => '/tmp/rk-voice.wav',
+      probeMediaDurationSeconds: async () => 10,
+      resolveSegmentCountFromAudioDuration: () => 2,
+      buildFixedTimeline: () => [
+        { index: 0, startSec: 0, endSec: 5 },
+        { index: 1, startSec: 5, endSec: 10 }
+      ],
+      generateKeyframe: async () => {
+        keyframeCalls += 1;
+        throw new Error('generateKeyframe should not run when keyframes already done');
+      },
+      persistKeyframe: async (_projectDir, _url, index) => `/tmp/rk-kf-${index}.png`,
+      persistKeyframes: async (_projectDir, urls) =>
+        urls.map((_url, index) => `/tmp/rk-kf-${index}.png`),
+      generateVideoSegmentAtIndex: async (_index) => {
+        segmentCalls += 1;
+        return `https://example.com/segment-${_index}.mp4`;
+      },
+      persistSegment: async (_projectDir, _url, index) => `/tmp/rk-seg-${index}.mp4`,
+      composeFinalVideo: async () => ({
+        finalVideoPath: '/tmp/rk-final.mp4',
+        voiceoverPath: '/tmp/rk-voice.wav',
+        keyframePaths: existingKeyframePaths,
+        segmentPaths: ['/tmp/rk-seg-0.mp4', '/tmp/rk-seg-1.mp4']
+      })
+    }
+  });
+
+  assert.equal(keyframeCalls, 0, 'keyframes should not be regenerated on resume from paused');
+  assert.ok(segmentCalls > 0, 'segments should be generated on resume');
+  assert.equal(result.status, 'completed');
+  assert.equal(result.artifacts.finalVideoPath, '/tmp/rk-final.mp4');
+
+  for (const filePath of existingKeyframePaths) {
+    await fs.rm(filePath, { force: true });
+  }
+  await cleanupProject(project);
+});
+
+test('regenerateProjectAsset keyframe sets run-state status to paused', async () => {
+  let writtenStatus = null;
+
+  await regenerateProjectAsset('project-kf-pause-status', { targetType: 'keyframe', index: 0 }, {
+    deps: {
+      resolveProjectName: (project) => project,
+      ensureProject: async () => {},
+      readProjectConfig: async () => ({
+        aspectRatio: '9:16',
+        targetDurationSec: 60,
+        finalDurationMode: 'match_audio'
+      }),
+      getProjectDir: () => '/tmp/project-dir',
+      readProjectRunState: async () => ({
+        status: 'completed',
+        error: null,
+        steps: allStepsTrue(),
+        artifacts: {
+          ...emptyPipelineArtifacts(),
+          shots: ['Shot A', 'Shot B'],
+          tone: 'neutral',
+          keyframeUrls: ['https://old/k0.png', 'https://old/k1.png'],
+          keyframePaths: ['/tmp/k0.png', '/tmp/k1.png'],
+          segmentUrls: ['https://old/s0.mp4'],
+          segmentPaths: ['/tmp/s0.mp4'],
+          timeline: [{ index: 0, startSec: 0, endSec: 5 }]
+        }
+      }),
+      generateKeyframe: async (_shot, _tone, _aspect, index) =>
+        `https://new/keyframe-${index}.png`,
+      persistKeyframe: async (_projectDir, _url, index) => `/tmp/new-k${index}.png`,
+      persistArtifacts: async () => {},
+      writeProjectRunState: async (_project, state) => {
+        writtenStatus = state.status;
+      },
+      syncProjectSnapshot: async () => {}
+    }
+  });
+
+  assert.equal(writtenStatus, 'paused', 'targeted keyframe regen should write paused status to run-state');
+});
+
+test('runPipeline partial-regen path also pauses after keyframes when pauseAfterKeyframes is true', async () => {
+  const project = uniqueProject('ut-orch-partial-regen-pause');
+  const projectDir = await fs.mkdtemp(path.join(os.tmpdir(), 'videogen-orch-partial-pause-'));
+  const story = 'This is a long enough story body to test partial-regen pause behavior in the pipeline.';
+
+  const keyframeUrls = ['https://example.com/kp0.png', 'https://example.com/kp1.png', 'https://example.com/kp2.png'];
+  const keyframePaths = ['/tmp/prp0.png', '/tmp/prp1.png', '/tmp/prp2.png'];
+  const segmentUrls = ['https://example.com/sp0.mp4', 'https://example.com/sp1.mp4'];
+  const segmentPaths = ['/tmp/prp-s0.mp4', '/tmp/prp-s1.mp4'];
+
+  await fs.mkdir(path.join(projectDir, 'assets', 'text'), { recursive: true });
+  await fs.writeFile(
+    path.join(projectDir, 'assets', 'text', 'script.json'),
+    JSON.stringify({
+      script: 'Partial regen script',
+      shots: ['Shot A changed', 'Shot B', 'Shot C'],
+      tone: 'neutral'
+    }),
+    'utf8'
+  );
+
+  for (const filePath of [...keyframePaths, ...segmentPaths]) {
+    await fs.writeFile(filePath, 'x', 'utf8');
+  }
+
+  let segmentGenerateCalls = 0;
+  let composeCalls = 0;
+
+  const job = createJob({ project, story });
+
+  const result = await runPipeline(job.id, {
+    deps: {
+      ensureProject: async () => {},
+      readProjectConfig: async () => ({
+        aspectRatio: '9:16',
+        targetDurationSec: 60,
+        finalDurationMode: 'match_audio',
+        pauseAfterKeyframes: true
+      }),
+      getProjectDir: () => projectDir,
+      readProjectRunState: async () => ({
+        status: 'paused',
+        error: null,
+        steps: {
+          [JobStep.SCRIPT]: true,
+          [JobStep.VOICE]: true,
+          [JobStep.KEYFRAMES]: true,
+          [JobStep.SEGMENTS]: true,
+          [JobStep.COMPOSE]: false,
+          [JobStep.ALIGN]: false,
+          [JobStep.BURNIN]: false
+        },
+        artifacts: {
+          ...emptyPipelineArtifacts(),
+          keyframeSizeKey: '576x1024',
+          targetDurationSec: 60,
+          finalDurationMode: 'match_audio',
+          script: 'Partial regen script',
+          scriptSourceStoryHash: hashText(story),
+          scriptHash: hashText('Partial regen script'),
+          tone: 'neutral',
+          shots: ['Shot A', 'Shot B', 'Shot C'],
+          shotHashes: [hashText('Shot A'), hashText('Shot B'), hashText('Shot C')],
+          timeline: [
+            { index: 0, startSec: 0, endSec: 5 },
+            { index: 1, startSec: 5, endSec: 10 }
+          ],
+          voiceoverUrl: 'https://example.com/voice.wav',
+          voiceoverPath: '/tmp/prp-voice.wav',
+          keyframeUrls,
+          keyframePaths,
+          segmentUrls,
+          segmentPaths
+        }
+      }),
+      archiveProjectAssets: async () => null,
+      persistArtifacts: async () => {},
+      writeProjectRunState: async () => {},
+      syncProjectSnapshot: async () => {},
+      writeRunRecord: async () => {},
+      collectRunPredictions: async () => [],
+      preprocessStory: (story) => story,
+      generateScript: async () => {
+        throw new Error('generateScript should not run in partial-regen');
+      },
+      generateShots: async (_script, { shotCount }) => ({
+        shots: Array.from({ length: shotCount }, (_value, i) => `Shot ${i + 1}`)
+      }),
+      generateVoiceover: async () => {
+        throw new Error('generateVoiceover should not run in partial-regen');
+      },
+      persistVoiceover: async () => '/tmp/prp-voice.wav',
+      probeMediaDurationSeconds: async () => 10,
+      resolveSegmentCountFromAudioDuration: () => 2,
+      buildFixedTimeline: () => [
+        { index: 0, startSec: 0, endSec: 5 },
+        { index: 1, startSec: 5, endSec: 10 }
+      ],
+      generateKeyframe: async (_shot, _tone, _aspect, index) =>
+        `https://example.com/new-kp${index}.png`,
+      persistKeyframe: async (_projectDir, _url, index) => `/tmp/new-prp${index}.png`,
+      persistKeyframes: async (_projectDir, urls) =>
+        urls.map((_url, index) => `/tmp/new-prp${index}.png`),
+      generateVideoSegmentAtIndex: async (_index) => {
+        segmentGenerateCalls += 1;
+        return `https://example.com/new-sp${_index}.mp4`;
+      },
+      persistSegment: async (_projectDir, _url, index) => `/tmp/new-prp-s${index}.mp4`,
+      composeFinalVideo: async () => {
+        composeCalls += 1;
+        throw new Error('composeFinalVideo should not run when paused after keyframes');
+      }
+    }
+  });
+
+  // Should pause: segments regenerated in partial-regen path, then pause before compose
+  assert.equal(result.status, 'paused',
+    'should pause after partial-regen of keyframes + segments');
+  assert.ok(segmentGenerateCalls > 0, 'partial regen should regenerate affected segments before pausing');
+  assert.equal(composeCalls, 0, 'compose should not run when paused after partial regen');
+  assert.equal(getProjectRunLockOwner(project), null);
+
+  for (const filePath of [...keyframePaths, ...segmentPaths]) {
+    await fs.rm(filePath, { force: true });
+  }
+  await fs.rm(projectDir, { recursive: true, force: true });
+  await cleanupProject(project);
 });

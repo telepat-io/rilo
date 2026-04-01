@@ -7,9 +7,24 @@ export function createJobsRouter() {
   const router = express.Router();
 
   router.post('/', async (req, res) => {
-    const { story, project, forceRestart } = req.body || {};
+    const { story, project, forceRestart, pauseAfterKeyframes } = req.body || {};
     if (!story) {
       res.status(400).json({ error: 'story is required' });
+      return;
+    }
+
+    if (typeof story !== 'string') {
+      res.status(400).json({ error: 'story must be a string' });
+      return;
+    }
+
+    if (forceRestart !== undefined && typeof forceRestart !== 'boolean') {
+      res.status(400).json({ error: 'forceRestart must be a boolean when provided' });
+      return;
+    }
+
+    if (pauseAfterKeyframes !== undefined && typeof pauseAfterKeyframes !== 'boolean') {
+      res.status(400).json({ error: 'pauseAfterKeyframes must be a boolean when provided' });
       return;
     }
 
@@ -28,7 +43,11 @@ export function createJobsRouter() {
     await writeProjectStory(resolvedProject, story);
 
     const job = createJob({ story, project: resolvedProject });
-    setImmediate(() => runPipeline(job.id, { forceRestart: Boolean(forceRestart) }));
+    const pipelineOptions = { forceRestart: forceRestart === true };
+    if (pauseAfterKeyframes !== undefined) {
+      pipelineOptions.pauseAfterKeyframes = pauseAfterKeyframes;
+    }
+    setImmediate(() => runPipeline(job.id, pipelineOptions));
     res.status(202).json({ jobId: job.id, status: job.status });
   });
 

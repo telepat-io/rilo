@@ -9,7 +9,7 @@ title: CLI Reference
 Core command to generate a complete video from a story:
 
 ```bash
-rilo --project <name> [--story-file <path>] [--force]
+rilo --project <name> [--story-file <path>] [--force] [--full-run]
 ```
 
 ### Flags
@@ -19,6 +19,7 @@ rilo --project <name> [--story-file <path>] [--force]
 | `--project` | `<name>` | **Required.** Project identifier (alphanumeric, hyphens allowed). Creates `projects/<name>/` directory. |
 | `--story-file` | `<path>` | Path to story text file. On first run, initializes the project with this story. On subsequent runs, overwrites the project's story (requires `--force`). Omit if project already has a story. |
 | `--force` | flag | Force restart from earlier stages where applicable. Invalidates artifacts that depend on config changes. |
+| `--full-run` | flag | Skip the keyframe review pause and run all pipeline stages in one shot (overrides `pauseAfterKeyframes: true` in project config). |
 | `--help` | flag | Print usage information. |
 | `--version` | flag | Print CLI version. |
 
@@ -263,7 +264,7 @@ rilo --help
 
 Output:
 ```
-Usage: rilo --project <name> [--story-file <path>] [--force]
+Usage: rilo --project <name> [--story-file <path>] [--force] [--full-run]
        rilo settings
    rilo home
 Example: rilo --project housing-case --story-file ./story.txt

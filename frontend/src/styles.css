@@ -565,6 +565,18 @@ textarea:focus, input:focus {
 .badge-running { color: var(--yellow); animation: pulse 1.2s ease-in-out infinite; }
 .badge-pending { color: var(--orange); }
 .badge-fail { color: var(--red); }
+.badge-paused { color: var(--yellow); }
+
+/* ── pause banner ────────────────────────────────────────────────────────── */
+.pause-banner {
+  font-size: 0.82rem;
+  color: var(--yellow);
+  background: color-mix(in srgb, var(--yellow) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--yellow) 30%, transparent);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.5rem;
+}
 
 /* ── spinner ─────────────────────────────────────────────────────────────── */
 .spinner {

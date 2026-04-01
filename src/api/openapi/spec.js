@@ -57,7 +57,8 @@ const schemas = {
     properties: {
       story: { type: 'string' },
       project: { type: 'string' },
-      forceRestart: { type: 'boolean' }
+      forceRestart: { type: 'boolean' },
+      pauseAfterKeyframes: { type: 'boolean' }
     },
     required: ['story'],
     additionalProperties: true
@@ -180,6 +181,7 @@ const schemas = {
     type: 'object',
     properties: {
       forceRestart: { type: 'boolean' },
+      pauseAfterKeyframes: { type: 'boolean' },
       targetType: {
         type: 'string',
         enum: ['script', 'voiceover', 'keyframe', 'segment', 'align', 'burnin']

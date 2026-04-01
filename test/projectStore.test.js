@@ -45,6 +45,7 @@ test('normalizeAndValidateProjectConfig applies defaults and validates fields', 
   assert.equal(normalized.aspectRatio, '9:16');
   assert.equal(normalized.targetDurationSec, 30);
   assert.equal(normalized.finalDurationMode, 'match_audio');
+  assert.equal(normalized.pauseAfterKeyframes, true, 'pauseAfterKeyframes should default to true');
   assert.equal(normalized.subtitleOptions.enabled, false);
   assert.equal(normalized.subtitleOptions.templateId, 'custom');
   assert.equal(normalized.subtitleOptions.position, 'center');
@@ -56,6 +57,9 @@ test('normalizeAndValidateProjectConfig applies defaults and validates fields', 
   assert.equal(normalized.subtitleOptions.maxLines, 2);
   assert.equal(normalized.subtitleOptions.highlightMode, 'spoken_upcoming');
   assert.deepEqual(normalized.models, DEFAULT_MODEL_SELECTIONS);
+
+  const withPauseFalse = normalizeAndValidateProjectConfig({ targetDurationSec: 30, pauseAfterKeyframes: false });
+  assert.equal(withPauseFalse.pauseAfterKeyframes, false);
 
   assert.throws(
     () => normalizeAndValidateProjectConfig({ schemaVersion: '1' }),
@@ -156,6 +160,10 @@ test('normalizeAndValidateProjectConfig applies defaults and validates fields', 
   assert.throws(
     () => normalizeAndValidateProjectConfig({ subtitleOptions: { maxLines: 4 } }),
     /subtitleOptions\.maxLines must be an integer between 1 and 3/
+  );
+  assert.throws(
+    () => normalizeAndValidateProjectConfig({ pauseAfterKeyframes: 'yes' }),
+    /pauseAfterKeyframes must be a boolean/
   );
 });
 

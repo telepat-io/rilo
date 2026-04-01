@@ -64,6 +64,7 @@ COMMANDS
     --project <name>         Project identifier (required); creates projects/<name>/
     --story-file <path>      Path to story text file (required on first run)
     --force                  Force restart from earlier stages (use after config changes)
+    --full-run               Skip the pause after keyframe generation and run all the way through
 
   rilo settings
     Configure API tokens, timeouts, and binary paths interactively
@@ -83,6 +84,7 @@ COMMANDS
 FLAGS
   --help                     Show this help message
   --version                  Show version information
+  --full-run                 Skip the keyframe review pause and run all pipeline stages
 
 EXAMPLES
   # First run: create project and generate
@@ -182,6 +184,7 @@ INVOCATION METHODS
 
   const project = resolveProjectName(projectArg);
   const forceRestart = hasFlag('--force');
+  const fullRun = hasFlag('--full-run');
   const storyFile = getArg('--story-file');
 
   await ensureProject(project);
@@ -199,7 +202,17 @@ INVOCATION METHODS
   }
 
   const job = createJob({ story, project });
-  const result = await runPipeline(job.id, { forceRestart });
+  const result = await runPipeline(job.id, { forceRestart, pauseAfterKeyframes: !fullRun });
+
+  if (result.status === 'paused') {
+    console.log(JSON.stringify({
+      jobId: result.id,
+      project,
+      status: 'paused',
+      message: `Keyframes generated. Review assets in projects/${project}/assets/, then run again to continue to video generation.`
+    }, null, 2));
+    return;
+  }
 
   if (result.status !== 'completed') {
     throw new Error(`Generation failed: ${result.error || 'unknown error'}`);

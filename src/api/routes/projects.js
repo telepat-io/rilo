@@ -578,6 +578,7 @@ export function createProjectsRouter(deps = {}) {
 
       const {
         forceRestart,
+        pauseAfterKeyframes,
         targetType,
         index
       } = req.body || {};
@@ -594,6 +595,11 @@ export function createProjectsRouter(deps = {}) {
       if (hasTargetType) {
         if (forceRestart !== undefined) {
           res.status(400).json({ error: 'forceRestart is not supported for targeted regeneration' });
+          return;
+        }
+
+        if (pauseAfterKeyframes !== undefined) {
+          res.status(400).json({ error: 'pauseAfterKeyframes is not supported for targeted regeneration' });
           return;
         }
 
@@ -628,9 +634,18 @@ export function createProjectsRouter(deps = {}) {
         return;
       }
 
+      if (pauseAfterKeyframes !== undefined && typeof pauseAfterKeyframes !== 'boolean') {
+        res.status(400).json({ error: 'pauseAfterKeyframes must be a boolean when provided' });
+        return;
+      }
+
       const story = await readProjectStory(project);
       const job = createJobFn({ story, project });
-      setImmediate(() => runPipelineFn(job.id, { forceRestart: Boolean(forceRestart) }));
+      const pipelineOptions = { forceRestart: forceRestart === true };
+      if (pauseAfterKeyframes !== undefined) {
+        pipelineOptions.pauseAfterKeyframes = pauseAfterKeyframes;
+      }
+      setImmediate(() => runPipelineFn(job.id, pipelineOptions));
 
       res.status(202).json({
         jobId: job.id,

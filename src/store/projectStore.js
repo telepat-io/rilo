@@ -53,6 +53,7 @@ export const DEFAULT_PROJECT_CONFIG = {
   aspectRatio: '9:16',
   targetDurationSec: DEFAULT_VIDEO_CONFIG.durationSec,
   finalDurationMode: 'match_audio',
+  pauseAfterKeyframes: true,
   subtitleOptions: {
     ...DEFAULT_SUBTITLE_OPTIONS
   },
@@ -512,6 +513,10 @@ export function validateProjectConfig(config) {
   }
 
   validateSubtitleOptions(config.subtitleOptions);
+
+  if (typeof config.pauseAfterKeyframes !== 'boolean') {
+    throw new Error('Invalid project config: pauseAfterKeyframes must be a boolean');
+  }
 
   const hasWidth = config.keyframeWidth !== undefined;
   const hasHeight = config.keyframeHeight !== undefined;

@@ -63,6 +63,9 @@
           },
           "forceRestart": {
             "type": "boolean"
+          },
+          "pauseAfterKeyframes": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -387,6 +390,9 @@
         "type": "object",
         "properties": {
           "forceRestart": {
+            "type": "boolean"
+          },
+          "pauseAfterKeyframes": {
             "type": "boolean"
           },
           "targetType": {
