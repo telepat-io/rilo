@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.4](https://github.com/telepat-io/rilo/compare/rilo-v0.1.3...rilo-v0.1.4) (2026-04-01)
+
+
+### Bug Fixes
+
+* remove NODE_AUTH_TOKEN from npm publish step in workflows ([2ba3905](https://github.com/telepat-io/rilo/commit/2ba3905ad297d585e22ac649b507228735ee6dc5))
+
 ## [0.1.3](https://github.com/telepat-io/rilo/compare/rilo-v0.1.2...rilo-v0.1.3) (2026-04-01)
 
 
