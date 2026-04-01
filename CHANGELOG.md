@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/telepat-io/rilo/compare/rilo-v0.1.2...rilo-v0.1.3) (2026-04-01)
+
+
+### Bug Fixes
+
+* add installation step for documentation dependencies in release workflow ([3b004a9](https://github.com/telepat-io/rilo/commit/3b004a9bf962eb39069207b661cb535a73a0efe1))
+
 ## [0.1.2](https://github.com/telepat-io/rilo/compare/rilo-v0.1.1...rilo-v0.1.2) (2026-04-01)
 
 
