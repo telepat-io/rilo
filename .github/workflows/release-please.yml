@@ -50,6 +50,9 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci --prefix frontend
 
+      - name: Install docs dependencies
+        run: npm ci --prefix docs-site
+
       - name: Validate release quality gates
         run: |
           npm run lint
