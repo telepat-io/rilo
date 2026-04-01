@@ -31,7 +31,7 @@
     "frontend:lint": "npm --prefix frontend run lint",
     "frontend:build": "npm --prefix frontend run build",
     "frontend:preview": "npm --prefix frontend run preview",
-    "prepack": "npm run frontend:build",
+    "prepack": "node -e \"const fs=require('node:fs'); if(!fs.existsSync('frontend/dist/index.html')) { console.error('Missing frontend build output at frontend/dist/index.html. Run npm run build before publish.'); process.exit(1); }\"",
     "docs:start": "npm --prefix docs-site run start",
     "docs:build": "npm --prefix docs-site run build",
     "docs:serve": "npm --prefix docs-site run serve",
