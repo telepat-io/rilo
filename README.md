@@ -1,4 +1,6 @@
-# Rilo
+<p align="center"><img src="./rilo.webp" width="128" alt="Rilo"></p>
+<h1 align="center">Rilo</h1>
+<p align="center"><em>From story to screen.</em></p>
 
 [![CI](https://github.com/telepat-io/rilo/actions/workflows/ci.yml/badge.svg)](https://github.com/telepat-io/rilo/actions/workflows/ci.yml)
 [![Coverage](https://codecov.io/gh/telepat-io/rilo/graph/badge.svg)](https://codecov.io/gh/telepat-io/rilo)
