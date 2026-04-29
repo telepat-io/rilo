@@ -1,13 +1,18 @@
 <p align="center"><img src="./rilo-logo.webp" width="128" alt="Rilo"></p>
 <h1 align="center">Rilo</h1>
+<hr>
 <p align="center"><em>From story to screen.</em></p>
 
-[![CI](https://github.com/telepat-io/rilo/actions/workflows/ci.yml/badge.svg)](https://github.com/telepat-io/rilo/actions/workflows/ci.yml)
-[![Coverage](https://codecov.io/gh/telepat-io/rilo/graph/badge.svg)](https://codecov.io/gh/telepat-io/rilo)
-[![npm version](https://img.shields.io/npm/v/%40telepat%2Frilo)](https://www.npmjs.com/package/@telepat/rilo)
-[![npm downloads](https://img.shields.io/npm/dm/%40telepat%2Frilo)](https://www.npmjs.com/package/@telepat/rilo)
-[![Docs](https://img.shields.io/badge/docs-live-22c55e)](https://docs.telepat.io/rilo/)
-[![License](https://img.shields.io/github/license/telepat-io/rilo)](./LICENSE)
+<p align="center">
+  <a href="https://docs.telepat.io/rilo">📖 Docs</a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/telepat-io/rilo/actions/workflows/ci.yml"><img src="https://github.com/telepat-io/rilo/actions/workflows/ci.yml/badge.svg" alt="Build"></a>
+  <a href="https://codecov.io/gh/telepat-io/rilo"><img src="https://codecov.io/gh/telepat-io/rilo/graph/badge.svg" alt="Codecov"></a>
+  <a href="https://www.npmjs.com/package/@telepat/rilo"><img src="https://img.shields.io/npm/v/@telepat/rilo" alt="npm"></a>
+  <a href="https://github.com/telepat-io/rilo/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-yellow.svg" alt="License"></a>
+</p>
 
 Story-first vertical video generation.
 
