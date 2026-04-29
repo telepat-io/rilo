@@ -1,13 +1,16 @@
 <p align="center"><img src="./rilo-logo.webp" width="128" alt="Rilo"></p>
 <h1 align="center">Rilo</h1>
+<hr>
 <p align="center"><em>From story to screen.</em></p>
 
 <p align="center">
   <a href="https://docs.telepat.io/rilo">📖 Docs</a>
+  · <a href="./README.md">🇺🇸 English</a>
+  · <a href="./README.zh-CN.md">🇨🇳 简体中文</a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/telepat-io/rilo/actions/workflows/ci.yml"><img src="https://github.com/telepat-io/rilo/actions/workflows/ci.yml/badge.svg" alt="Build"></a>
+  <a href="https://github.com/telepat-io/rilo/actions/workflows/ci.yml"><img src="https://github.com/telepat-io/rilo/actions/workflows/ci.yml/badge.svg?branch=main" alt="Build"></a>
   <a href="https://codecov.io/gh/telepat-io/rilo"><img src="https://codecov.io/gh/telepat-io/rilo/graph/badge.svg" alt="Codecov"></a>
   <a href="https://www.npmjs.com/package/@telepat/rilo"><img src="https://img.shields.io/npm/v/@telepat/rilo" alt="npm"></a>
   <a href="https://github.com/telepat-io/rilo/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-yellow.svg" alt="License"></a>
@@ -15,31 +18,21 @@
 
 Story-first vertical video generation.
 
-Rilo turns one story into a complete short-form video pipeline:
-- script generation
-- voiceover generation
-- keyframe generation
-- video segment generation
-- final composition
-- optional subtitle alignment and burn-in
+Rilo turns one story into a complete short-form video pipeline: script generation, voiceover generation, keyframe generation, video segment generation, final composition, and optional subtitle alignment and burn-in.
 
-## Why Rilo
+## What It Solves
 
-- Built for vertical video workflows
-- Checkpointed runs with resume support
-- Targeted regeneration for faster iteration
-- Model selection and per-model option overrides
-- Local and Firebase output backends
-- API, worker, and frontend flow for production usage
+Rilo is built for creators and teams who need reproducible, high-quality short-form video at scale.
+
+- Turn a plain-text story into a finished vertical video in one command.
+- Iterate quickly with checkpointed runs and targeted regeneration.
+- Choose your models and override per-model options for full creative control.
+- Output to local disk or Firebase for team collaboration.
+- Run via CLI, API, or worker for production pipelines.
 
 ## Quick Start
 
-Requirements:
-- Node.js 22+
-- ffmpeg in PATH
-- Replicate API token
-
-Install from npm and configure settings:
+Requirements: Node.js 22+, ffmpeg in PATH, and a Replicate API token.
 
 ```bash
 npm install -g @telepat/rilo
@@ -47,184 +40,60 @@ rilo settings
 rilo --project demo --story-file ./story.txt
 ```
 
-If you prefer environment variables instead of the interactive settings menu:
+Expected outcome:
 
-```bash
-export RILO_REPLICATE_API_TOKEN=your-token
-export RILO_API_BEARER_TOKEN=your-api-bearer-token
-```
+- A project folder is created under `projects/demo/`.
+- The full pipeline runs through script, voiceover, keyframes, segments, and composition.
+- Final video is written to `projects/demo/final.mp4`.
+- Dashboard preview available via `rilo preview`.
 
-## Contributor Workflow
+## Requirements
 
-For development in this repository:
+- Node.js 22+
+- ffmpeg in PATH
+- Replicate API token
+- macOS, Linux, or Windows
 
-```bash
-npm install
-cp .env.example .env
-npm run dev:all
-```
+## How It Works
 
-## Settings
+Rilo runs a staged pipeline: script generation, voiceover synthesis, shot prompt generation, keyframe rendering, segment generation, and final video composition. Each stage writes checkpointed artifacts so you can resume or regenerate selectively.
 
-Configure rilo interactively without editing files:
+Configuration merges CLI flags, environment variables, and `~/.rilo/config.json` with schema defaults. The preview dashboard (`rilo preview`) starts a local API, worker, and Vite React frontend for monitoring and editing.
 
-```bash
-rilo settings
-```
+## Using With AI Agents
 
-If you're working from a checked-out repository instead of an installed package:
+Rilo provides multiple surfaces for agentic and automated workflows:
 
-```bash
-npm run dev -- settings
-npm run dev -- --project demo --story-file ./story.txt
-```
+- **CLI automation** — All generation is driven by CLI flags and environment variables. No interactive prompts are required after initial setup.
+- **HTTP API** — `rilo preview` starts an Express API with full job and project CRUD, asset serving, and webhook endpoints. Bearer-token auth via `Authorization: Bearer <API_BEARER_TOKEN>`.
+- **OpenAPI spec** — Auto-generated OpenAPI 3.1 spec for schema-driven agent integration.
+- **Webhooks** — Subscribe to job lifecycle events for external orchestration.
+- **Firebase Functions** — Deploy `src/api/firebaseFunction.js` for serverless API hosting.
+- **Agent docs** — [API Reference](https://docs.telepat.io/rilo/reference/api-reference) covers endpoints, auth, and webhooks.
 
-This opens a menu where you can edit all non-sensitive settings and manage API tokens securely. Navigate with arrow keys, select with Enter, and use "Done" or "Cancel" to exit. You can also press Ctrl+C at any time to quit.
+## Security And Trust
 
-**What gets stored where:**
+- API tokens and Replicate credentials are stored in the OS keystore (macOS Keychain, Windows Credential Manager, Linux Secret Service) when available.
+- Falls back to an AES-256 encrypted file at `~/.rilo/.secrets` if no native keystore is available.
+- Environment variables (`RILO_REPLICATE_API_TOKEN`, `RILO_API_BEARER_TOKEN`) take highest precedence and override stored values.
+- Preview `--expose` mode should only be used on trusted networks or isolated environments.
 
-| Setting type | Storage |
-|---|---|
-| Replicate API Token, API Bearer Token | OS keystore (macOS Keychain, Windows Credential Manager, Linux Secret Service) — or an AES-256 encrypted file at `~/.rilo/.secrets` if no native keystore is available |
-| All other settings (timeouts, limits, binary paths, etc.) | `~/.rilo/config.json` |
+## Documentation And Support
 
-**Precedence** (highest → lowest): environment variable > `~/.rilo/config.json` > schema default.  
-If an env var is set, the settings command shows it as read-only and any stored value is ignored while the env var is present.
+- [Documentation site](https://docs.telepat.io/rilo)
+- [Quickstart](https://docs.telepat.io/rilo/getting-started/quickstart)
+- [CLI Reference](https://docs.telepat.io/rilo/reference/cli-reference)
+- [Configuration Guide](https://docs.telepat.io/rilo/guides/configuration)
+- [API Reference](https://docs.telepat.io/rilo/reference/api-reference)
+- [Troubleshooting](https://docs.telepat.io/rilo/guides/troubleshooting)
+- Language support: English and Simplified Chinese
+- [Repository](https://github.com/telepat-io/rilo)
+- [npm package](https://www.npmjs.com/package/@telepat/rilo)
 
-**Hidden from settings UI** (env-only): Firebase credentials, webhook settings, output backend, API port, custom output/projects directories.
+## Contributing
 
-## Install from npm
-
-```bash
-npm install -g @telepat/rilo
-rilo --help
-```
-
-If you prefer not to install globally:
-
-```bash
-npx @telepat/rilo --help
-```
-
-## CLI Quick Reference
-
-### Launch dashboard preview
-
-```bash
-rilo preview
-```
-
-Starts local API + worker + dashboard on `127.0.0.1:3000` and opens the browser.
-
-For container/tunnel scenarios (unsafe unauthenticated access):
-
-```bash
-rilo preview --expose --unsafe-no-auth --host 0.0.0.0 --port 3000
-```
-
-Use exposed mode only on trusted networks or isolated environments.
-
-### Generate a video from a story
-
-```bash
-rilo --project <name> --story-file <path>
-```
-
-Examples:
-```bash
-# First run: create project and start generation
-rilo --project wedding-case --story-file ./story.txt
-
-# On subsequent runs: reuse story
-rilo --project wedding-case
-
-# Force restart from earlier stages (after config change)
-rilo --project wedding-case --force
-```
-
-### Configure settings
-
-```bash
-rilo settings
-```
-
-Opens an interactive menu to set API tokens, timeouts, and binary paths.
-
-### Open the Rilo home folder
-
-```bash
-rilo home
-```
-
-Opens `~/.rilo`, the default location for saved settings, projects, and generated output.
-
-### Help and version
-
-```bash
-rilo --help                    # Show usage
-rilo --version                 # Show version
-```
-
-### Invocation methods
-
-| Method | Command |
-|--------|---------|
-| **Global install** | `rilo --project <name> --story-file <path>` |
-| **No install (npx)** | `npx @telepat/rilo --project <name> --story-file <path>` |
-| **Contributor dev** | `npm run dev -- --project <name> --story-file <path>` |
-
-### Key flags
-
-| Flag | Type | Notes |
-|------|------|-------|
-| `--project` | `<name>` | **Required.** Project identifier; creates `projects/<name>/` |
-| `--story-file` | `<path>` | Path to story text file (required on first run) |
-| `--force` | flag | Restart from earlier stages; used after config changes |
-
-### Common tasks
-
-**Update project config and regenerate:**
-```bash
-# Edit projects/wedding-case/config.json (aspect ratio, models, etc.)
-rilo --project wedding-case --force
-```
-
-**Change app settings (tokens, timeouts, binary paths):**
-```bash
-rilo settings
-# Arrow keys to navigate, Enter to edit, "Done" to save
-```
-
-**Open the default app folder for projects/output:**
-```bash
-rilo home
-# Opens ~/.rilo in your system file manager
-```
-
-**Check where generated files are stored:**
-```bash
-ls projects/wedding-case/
-# Outputs: config.json, story.md, final.mp4, artifacts.json, run-state.json, assets/, logs/
-```
-
----
-
-## CLI Documentation
-
-For comprehensive CLI documentation, see:
-- **[Quickstart](/docs.telepat.io/rilo/getting-started/quickstart)** — Step-by-step guide to your first generation
-- **[CLI Reference](/docs.telepat.io/rilo/reference/cli-reference)** — All commands, flags, and invocation methods
-- **[Complete Config Schema](/docs.telepat.io/rilo/reference/config-schema)** — Every config key with types and defaults
-- **[Configuration Guide](/docs.telepat.io/rilo/guides/configuration)** — Project and app settings with examples
-- **[Troubleshooting](/docs.telepat.io/rilo/guides/troubleshooting)** — Common errors and solutions
-- **[Environment Variables](/docs.telepat.io/rilo/reference/environment-variables)** — Setting precedence and env var reference
-
-## Full Documentation
-
-Guides, API reference, architecture notes, and advanced configuration:
-
-https://docs.telepat.io/rilo/
+Contributions are welcome. See [Development](https://docs.telepat.io/rilo/contributing/development) for local setup, build commands, and test workflows.
 
 ## License
 
-MIT
+MIT. See [LICENSE](./LICENSE).
