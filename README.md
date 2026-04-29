@@ -1,6 +1,5 @@
 <p align="center"><img src="./rilo-logo.webp" width="128" alt="Rilo"></p>
 <h1 align="center">Rilo</h1>
-<hr>
 <p align="center"><em>From story to screen.</em></p>
 
 <p align="center">
