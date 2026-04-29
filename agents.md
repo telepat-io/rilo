@@ -40,6 +40,10 @@
 - **[src/cli/index.js](src/cli/index.js) help text** — Expanded `--help` output: full usage, commands, flags, examples (with real project names), documentation links, project output structure, settings guidance, invocation methods
 - **Docs build** — All changes verified: eslint ✓, 214 tests ✓, docs-site build ✓
 
+## Commits and Releases
+
+Use Conventional Commits (`fix:`, `feat:`, `docs:`, etc.). This repo uses a release-please driven workflow, so commit messages directly affect changelogs and version bumps.
+
 ## Required checks before finishing
 - Run `npm run lint` in both root and `frontend/` to ensure no lint errors.
 - Run `npm test` and `npm run test:coverage`.
