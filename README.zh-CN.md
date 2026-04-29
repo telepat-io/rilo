@@ -85,7 +85,6 @@ Rilo 为智能体和自动化工作流提供多种接口：
 - [配置指南](https://docs.telepat.io/rilo/guides/configuration)
 - [API 参考](https://docs.telepat.io/rilo/reference/api-reference)
 - [故障排查](https://docs.telepat.io/rilo/guides/troubleshooting)
-- 语言支持：English 与 简体中文
 - [仓库](https://github.com/telepat-io/rilo)
 - [npm 包](https://www.npmjs.com/package/@telepat/rilo)
 

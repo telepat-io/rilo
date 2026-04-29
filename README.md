@@ -85,7 +85,6 @@ Rilo provides multiple surfaces for agentic and automated workflows:
 - [Configuration Guide](https://docs.telepat.io/rilo/guides/configuration)
 - [API Reference](https://docs.telepat.io/rilo/reference/api-reference)
 - [Troubleshooting](https://docs.telepat.io/rilo/guides/troubleshooting)
-- Language support: English and Simplified Chinese
 - [Repository](https://github.com/telepat-io/rilo)
 - [npm package](https://www.npmjs.com/package/@telepat/rilo)
 
