@@ -7,7 +7,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 const config: Config = {
   title: 'Rilo Docs',
   tagline: 'Story-first vertical video generation with configurable AI media pipelines.',
-  favicon: 'img/favicon.svg',
+  favicon: 'img/rilo-favicon.png',
 
   // Set the production url of your site here
   url: 'https://docs.telepat.io',
