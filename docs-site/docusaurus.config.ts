@@ -63,7 +63,7 @@ const config: Config = {
       title: 'Rilo',
       logo: {
         alt: 'Rilo Logo',
-        src: 'img/logo.svg',
+        src: 'img/rilo-avatar.webp',
       },
       items: [
         {
