@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.7](https://github.com/telepat-io/rilo/compare/rilo-v0.1.6...rilo-v0.1.7) (2026-05-01)
+
+
+### Bug Fixes
+
+* update prepack script to check for frontend build output ([ca5e38d](https://github.com/telepat-io/rilo/commit/ca5e38d59a90f34adbbbaac0947d19d3b377a644))
+
 ## [0.1.6](https://github.com/telepat-io/rilo/compare/rilo-v0.1.5...rilo-v0.1.6) (2026-04-01)
 
 
