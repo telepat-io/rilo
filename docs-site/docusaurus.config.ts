@@ -6,7 +6,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
   title: 'Rilo Docs',
-  tagline: 'Story-first vertical video generation with configurable AI media pipelines.',
+  tagline: 'Turn a story into a finished video — AI-generated script, voiceover, keyframes, and composition, all in one command.',
   favicon: 'img/rilo-favicon.png',
 
   // Set the production url of your site here

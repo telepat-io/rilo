@@ -1,6 +1,6 @@
 <p align="center"><img src="./assets/avatar/rilo-logo.webp" width="128" alt="Rilo"></p>
 <h1 align="center">Rilo</h1>
-<p align="center"><em>From story to screen.</em></p>
+<p align="center"><em>Turn a story into a finished video — AI-generated script, voiceover, keyframes, and composition, all in one command.</em></p>
 
 <p align="center">
   <a href="https://docs.telepat.io/rilo">📖 Docs</a>
@@ -15,19 +15,22 @@
   <a href="https://github.com/telepat-io/rilo/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-yellow.svg" alt="License"></a>
 </p>
 
-Story-first vertical video generation.
+Rilo turns a story into a finished video — AI-generated script, voiceover, keyframes, and composition, all in one command.
 
-Rilo turns one story into a complete short-form video pipeline: script generation, voiceover generation, keyframe generation, video segment generation, final composition, and optional subtitle alignment and burn-in.
+Write your story in plain text. Rilo handles the rest: script generation, narration, visual keyframes, video segments, and final composition — with optional subtitle alignment and burn-in.
 
-## What It Solves
+Built for creators and teams who need reproducible, high-quality video at scale without manual editing.
 
-Rilo is built for creators and teams who need reproducible, high-quality short-form video at scale.
+## Features
 
-- Turn a plain-text story into a finished vertical video in one command.
-- Iterate quickly with checkpointed runs and targeted regeneration.
-- Choose your models and override per-model options for full creative control.
-- Output to local disk or Firebase for team collaboration.
-- Run via CLI, API, or worker for production pipelines.
+- **Full pipeline, one command** — Story → script → voiceover → keyframes → segments → final video. `rilo --project demo --story-file ./story.txt`
+- **Checkpointed runs** — Every stage saves artifacts. Resume or regenerate any stage selectively. `rilo --project demo --force`
+- **Your models, your control** — Choose T2I and I2V models. Override per-model options. Switch models anytime.
+- **Code-driven pipeline** — Deterministic orchestration, checkpointing, and artifact management. Tokens spent on generation, not infrastructure.
+- **Subtitle alignment & burn-in** — Auto-align subtitles to voiceover timing. Burn them into the final video.
+- **Preview dashboard** — Web UI for project management, regeneration, and asset preview. `rilo preview`
+- **HTTP API & webhooks** — Bearer-token auth, OpenAPI 3.1 spec, webhook subscriptions. Firebase or local.
+- **Cross-platform** — macOS, Linux, Windows. Node.js 22+ and ffmpeg.
 
 ## Quick Start
 

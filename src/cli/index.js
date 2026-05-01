@@ -47,7 +47,7 @@ async function main() {
 
   if (process.argv.includes('--help')) {
     const helpText = `
-Rilo — Story-first vertical video generation
+Rilo — Turn a story into a finished video
 
 USAGE
   rilo --project <name> [--story-file <path>] [--force]

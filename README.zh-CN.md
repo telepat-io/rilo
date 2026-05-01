@@ -1,6 +1,6 @@
 <p align="center"><img src="./assets/avatar/rilo-logo.webp" width="128" alt="Rilo"></p>
 <h1 align="center">Rilo</h1>
-<p align="center"><em>从故事到屏幕。</em></p>
+<p align="center"><em>将故事转化为成品视频——AI 生成脚本、配音、关键帧和合成，一条命令完成。</em></p>
 
 <p align="center">
   <a href="https://docs.telepat.io/rilo">📖 文档</a>
@@ -15,19 +15,22 @@
   <a href="https://github.com/telepat-io/rilo/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-yellow.svg" alt="License"></a>
 </p>
 
-故事优先的竖屏视频生成工具。
+Rilo 将故事转化为成品视频——AI 生成脚本、配音、关键帧和合成，一条命令完成。
 
-Rilo 将一个故事转化为完整的短视频流水线：脚本生成、配音生成、关键帧生成、视频片段生成、最终合成，以及可选的字幕对齐与烧录。
+用纯文本写下您的故事。Rilo 处理剩下的部分：脚本生成、旁白配音、视觉关键帧、视频片段和最终合成——以及可选的字幕对齐与烧录。
 
-## 它能解决什么问题
+专为需要大规模、可复现、高质量视频生产而无需手动编辑的创作者和团队打造。
 
-Rilo 专为创作者和团队打造，支持大规模、可复现的高质量短视频生产。
+## 功能特性
 
-- 一条命令将纯文本故事转换为成品竖屏视频。
-- 通过检查点运行和定向重新生成实现快速迭代。
-- 选择模型并覆盖每模型选项，获得完全的创意控制。
-- 输出到本地磁盘或 Firebase，便于团队协作。
-- 通过 CLI、API 或 worker 运行，适配生产流水线。
+- **完整流水线，一条命令** — 故事 → 脚本 → 配音 → 关键帧 → 片段 → 最终视频。`rilo --project demo --story-file ./story.txt`
+- **检查点运行** — 每个阶段保存产物。可恢复或选择性重新生成任何阶段。`rilo --project demo --force`
+- **您的模型，您做主** — 选择 T2I 和 I2V 模型。覆盖每个模型的选项。随时切换。
+- **代码驱动的工作流** — 确定性编排、检查点和产物管理。Token 用于生成，而非基础设施。
+- **字幕对齐与烧录** — 自动将字幕对齐到配音时间轴。烧录到最终视频中。
+- **预览控制台** — Web 界面用于项目管理、重新生成和资产预览。`rilo preview`
+- **HTTP API 与 Webhook** — Bearer 令牌认证、OpenAPI 3.1 规范、Webhook 订阅。支持 Firebase 或本地。
+- **跨平台** — macOS、Linux、Windows。需要 Node.js 22+ 和 ffmpeg。
 
 ## 快速开始
 
