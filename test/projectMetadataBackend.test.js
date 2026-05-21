@@ -82,7 +82,7 @@ test('createProject writes validated merged config with defaults', async () => {
   assert.equal(created.config.finalDurationMode, 'match_audio');
   assert.equal(created.config.models.textToText, 'deepseek-ai/deepseek-v3');
   assert.equal(created.config.models.textToSpeech, 'minimax/speech-02-turbo');
-  assert.equal(created.config.models.textToImage, 'prunaai/z-image-turbo');
+  assert.equal(created.config.models.textToImage, 'z-image-turbo');
   assert.equal(created.config.models.imageTextToVideo, 'wan-video/wan-2.2-i2v-fast');
   assert.equal(created.metadata.title, 'Test');
 

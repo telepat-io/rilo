@@ -1,68 +1,94 @@
-import { ASPECT_RATIO_PRESETS, MODEL_CATEGORIES, resolveModelForCategory } from '../config/models.js';
-import { runModel, extractOutputUri } from '../providers/predictions.js';
 import path from 'node:path';
-import { downloadToFile, ensureDir } from '../media/files.js';
-import { resolveTextToImageAdapter } from './textToImageAdapters.js';
+import { writeFile } from 'node:fs/promises';
+import { ensureDir } from '../media/files.js';
 
 export async function generateKeyframe(
   promptText,
   tone,
   aspectRatio = '9:16',
   index = 0,
-  trace = null,
-  sizeOverride = null,
+  _trace,
   options = {}
 ) {
   const deps = options.deps || {};
-  const runModelFn = deps.runModel || runModel;
-  const extractOutputUriFn = deps.extractOutputUri || extractOutputUri;
+  const limn = options.limn || deps.limn || null;
+  const family = options.family;
+  const replicateModel = options.replicateModel;
+  const modelOptions = options.modelOptions ?? {};
 
-  const preset = ASPECT_RATIO_PRESETS[aspectRatio] || ASPECT_RATIO_PRESETS['9:16'];
-  const width = sizeOverride?.width || preset.keyframeWidth || ASPECT_RATIO_PRESETS['9:16'].keyframeWidth;
-  const height = sizeOverride?.height || preset.keyframeHeight || ASPECT_RATIO_PRESETS['9:16'].keyframeHeight;
-  const modelId = options.modelId || resolveModelForCategory(MODEL_CATEGORIES.textToImage);
-  const modelOptions = options.modelOptions;
-  const adapter = resolveTextToImageAdapter(modelId);
+  if (!family) {
+    throw new Error('Limn model family is required for keyframe generation');
+  }
 
-  const prediction = await runModelFn({
-    model: modelId,
-    input: adapter.buildInput({ promptText, tone, index, aspectRatio, width, height, modelOptions }),
-    trace: trace ? { ...trace, step: 'keyframe', index } : null
+  if (!limn) {
+    throw new Error('Limn instance is required for keyframe generation');
+  }
+
+  const result = await limn.generate(promptText, family, {
+    aspectRatio,
+    ...(replicateModel ? { replicateModel } : {}),
+    options: modelOptions
   });
 
-  const imageUrl = extractOutputUriFn(prediction.output);
-  if (!imageUrl) {
+  if (!result || !result.image) {
     throw new Error(`Missing keyframe output for shot ${index + 1}`);
   }
 
-  return imageUrl;
+  return {
+    buffer: result.image,
+    outputUrl: result.outputUrl || '',
+    mimeType: result.mimeType || 'image/png',
+    modelSlug: result.modelSlug || family
+  };
 }
 
-export async function generateKeyframes(shots, tone, aspectRatio = '9:16', trace = null, options = {}) {
-  const urls = [];
+export async function generateKeyframes(shots, tone, aspectRatio = '9:16', _trace, options = {}) {
+  const results = [];
   for (let i = 0; i < shots.length; i += 1) {
-    const imageUrl = await generateKeyframe(shots[i], tone, aspectRatio, i, trace, null, options);
-    urls.push(imageUrl);
+    const result = await generateKeyframe(shots[i], tone, aspectRatio, i, _trace, options);
+    results.push(result);
   }
-  return urls;
+  return results;
 }
 
-export async function persistKeyframe(projectDir, keyframeUrl, index, options = {}) {
+function mimeTypeToExtension(mimeType) {
+  if (mimeType === 'image/jpeg') return 'jpg';
+  if (mimeType === 'image/webp') return 'webp';
+  return 'png';
+}
+
+export async function persistKeyframe(projectDir, keyframeResult, index, options = {}) {
   const deps = options.deps || {};
   const ensureDirFn = deps.ensureDir || ensureDir;
-  const downloadToFileFn = deps.downloadToFile || downloadToFile;
+  const writeFileFn = deps.writeFile || writeFile;
 
   const keyframesDir = path.join(projectDir, 'assets', 'keyframes');
   await ensureDirFn(keyframesDir);
-  const keyframePath = path.join(keyframesDir, `keyframe_${String(index + 1).padStart(2, '0')}.png`);
-  await downloadToFileFn(keyframeUrl, keyframePath);
-  return keyframePath;
+
+  // Handle Limn buffer result
+  if (keyframeResult && typeof keyframeResult === 'object' && keyframeResult.buffer) {
+    const ext = mimeTypeToExtension(keyframeResult.mimeType || 'image/png');
+    const keyframePath = path.join(keyframesDir, `keyframe_${String(index + 1).padStart(2, '0')}.${ext}`);
+    await writeFileFn(keyframePath, keyframeResult.buffer);
+    return keyframePath;
+  }
+
+  // Handle legacy URL string
+  if (typeof keyframeResult === 'string') {
+    const depsDownload = deps.downloadToFile;
+    const downloadToFileFn = depsDownload || (await import('../media/files.js')).downloadToFile;
+    const keyframePath = path.join(keyframesDir, `keyframe_${String(index + 1).padStart(2, '0')}.png`);
+    await downloadToFileFn(keyframeResult, keyframePath);
+    return keyframePath;
+  }
+
+  throw new Error('Invalid keyframe result: expected buffer object or URL string');
 }
 
-export async function persistKeyframes(projectDir, keyframeUrls, options = {}) {
+export async function persistKeyframes(projectDir, keyframeResults, options = {}) {
   const keyframePaths = [];
-  for (let i = 0; i < keyframeUrls.length; i += 1) {
-    const keyframePath = await persistKeyframe(projectDir, keyframeUrls[i], i, options);
+  for (let i = 0; i < keyframeResults.length; i += 1) {
+    const keyframePath = await persistKeyframe(projectDir, keyframeResults[i], i, options);
     keyframePaths.push(keyframePath);
   }
 

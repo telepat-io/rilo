@@ -18,7 +18,7 @@ import {
 } from '../src/store/projectAnalyticsStore.js';
 import { ensureDir, writeJson } from '../src/media/files.js';
 import { getProjectDir } from '../src/store/projectStore.js';
-import { MODEL_METADATA } from '../src/config/models.js';
+import { MODEL_METADATA, MODEL_PRICING } from '../src/config/models.js';
 
 function uniqueProject(prefix) {
   const project = `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
@@ -67,6 +67,21 @@ test('collectRunPredictions normalizes entries and finalizeRunRecord aggregates 
   const runId = 'run-collect-1';
   const traceDir = path.join(projectDir, 'assets', 'debug');
   await ensureDir(traceDir);
+
+  // Ensure T2I model pricing is available after port to Limn
+  if (!MODEL_PRICING['prunaai/z-image-turbo']) {
+    MODEL_PRICING['prunaai/z-image-turbo'] = { usdPerSecond: 0.0004 };
+  }
+  if (!MODEL_METADATA['prunaai/z-image-turbo']) {
+    MODEL_METADATA['prunaai/z-image-turbo'] = {
+      modelId: 'prunaai/z-image-turbo',
+      pricing: { usdPerSecond: 0.0004 },
+      pricingRules: {
+        basis: 'output_image_megapixels',
+        tiers: [{ maxMegapixels: 2, usdPerImage: 0.01 }]
+      }
+    };
+  }
 
   const entries = [
     {

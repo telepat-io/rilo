@@ -46,6 +46,12 @@ export const env = {
       || process.env.REPLICATE_API_TOKEN,
     ''
   ),
+  openRouterApiKey: parseEnvString(
+    process.env.SECRET_OPENROUTER_API_KEY
+      || process.env.RILO_OPENROUTER_API_KEY
+      || process.env.OPENROUTER_API_KEY,
+    ''
+  ),
   apiBearerToken: parseEnvString(
     process.env.SECRET_API_BEARER_TOKEN
       || process.env.RILO_API_BEARER_TOKEN

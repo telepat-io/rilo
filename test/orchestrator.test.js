@@ -330,10 +330,10 @@ test('runPipeline executes all stages with injected deps and completes offline',
         { index: 0, startSec: 0, endSec: 5 },
         { index: 1, startSec: 5, endSec: 10 }
       ],
-      generateKeyframe: async (_shot, _tone, _aspect, index, _trace, _size, options) => {
+      generateKeyframe: async (_shot, _tone, _aspect, index, _trace, options) => {
         stepsCalled.keyframe += 1;
-        modelIds.keyframe = options?.modelId || null;
-        return `https://replicate.delivery/keyframe-${index}.png`;
+        modelIds.keyframe = options?.family || null;
+        return { outputUrl: `https://replicate.delivery/keyframe-${index}.png`, buffer: Buffer.from('test'), mimeType: 'image/png', modelSlug: options?.family || 'test' };
       },
       persistKeyframe: async (_projectDir, _url, index) => `/tmp/keyframe-${index}.png`,
       generateVideoSegmentAtIndex: async (index, _keyframes, _timeline, _shots, _aspect, _trace, options) => {
@@ -364,7 +364,7 @@ test('runPipeline executes all stages with injected deps and completes offline',
   assert.equal(modelIds.script, 'deepseek-ai/deepseek-v3');
   assert.equal(modelIds.shots, 'deepseek-ai/deepseek-v3');
   assert.equal(modelIds.voice, 'minimax/speech-02-turbo');
-  assert.equal(modelIds.keyframe, 'prunaai/z-image-turbo');
+  assert.equal(modelIds.keyframe, 'z-image-turbo');
   assert.equal(modelIds.segment, 'wan-video/wan-2.2-i2v-fast');
   assert.ok(stepsCalled.checkpointSync >= 1);
   assert.equal(getProjectRunLockOwner(project), null);
@@ -667,7 +667,7 @@ test('regenerateProjectAsset regenerates targeted keyframe and invalidates downs
       }),
       getProjectDir: () => '/tmp/project-dir',
       readProjectRunState: async () => runState,
-      generateKeyframe: async (_shot, _tone, _aspect, index) => `https://new/keyframe-${index}.png`,
+      generateKeyframe: async (_shot, _tone, _aspect, index) => ({ outputUrl: `https://new/keyframe-${index}.png`, buffer: Buffer.from('test'), mimeType: 'image/png', modelSlug: 'test' }),
       persistKeyframe: async (_projectDir, _url, index) => `/tmp/new-k${index}.png`,
       persistArtifacts: async (_project, artifacts) => {
         persisted.artifacts = artifacts;
@@ -1273,7 +1273,7 @@ test('runPipeline regenerates voiceover after targeted script regeneration', asy
       generateShots: async (_script, { shotCount }) => ({
         shots: Array.from({ length: shotCount }, (_value, idx) => `Shot ${idx + 1}`)
       }),
-      generateKeyframe: async (_shot, _tone, _aspect, idx) => `https://replicate.delivery/keyframe-${idx}.png`,
+      generateKeyframe: async (_shot, _tone, _aspect, idx) => ({ outputUrl: `https://replicate.delivery/keyframe-${idx}.png`, buffer: Buffer.from('test'), mimeType: 'image/png', modelSlug: 'test' }),
       persistKeyframe: async (_projectDir, _url, idx) => `/tmp/keyframe-${idx}.png`,
       generateVideoSegmentAtIndex: async (idx) => `https://replicate.delivery/segment-${idx}.mp4`,
       persistSegment: async (_projectDir, _url, idx) => `/tmp/segment-${idx}.mp4`,
@@ -1521,7 +1521,7 @@ test('regenerateProjectAsset keyframe at last index invalidates final adjacent s
           finalVideoPath: '/tmp/final.mp4'
         }
       }),
-      generateKeyframe: async (_shot, _tone, _aspect, index) => `https://new/keyframe-${index}.png`,
+      generateKeyframe: async (_shot, _tone, _aspect, index) => ({ outputUrl: `https://new/keyframe-${index}.png`, buffer: Buffer.from('test'), mimeType: 'image/png', modelSlug: 'test' }),
       persistKeyframe: async (_projectDir, _url, index) => `/tmp/new-k${index}.png`,
       persistArtifacts: async () => {},
       writeProjectRunState: async (_project, state) => {
@@ -2064,7 +2064,7 @@ test('runPipeline partial regen restores missing local keyframe and segment path
       writeRunRecord: async () => {},
       collectRunPredictions: async () => [],
       persistVoiceover: async () => '/tmp/new-voice.mp3',
-      generateKeyframe: async (_shot, _tone, _aspectRatio, index) => `https://replicate.delivery/new-k-${index}.png`,
+      generateKeyframe: async (_shot, _tone, _aspectRatio, index) => ({ outputUrl: `https://replicate.delivery/new-k-${index}.png`, buffer: Buffer.from('test'), mimeType: 'image/png', modelSlug: 'test' }),
       persistKeyframe: async (_projectDir, _keyframeUrl, index) => {
         keyframePersisted.push(index);
         return `/tmp/new-k-${index}.png`;
@@ -2215,7 +2215,7 @@ test('runPipeline alignment handles empty shots with positive and zero required 
       generateShots: async (_script, { shotCount }) => ({
         shots: Array.from({ length: shotCount }, (_value, index) => `Generated shot ${index + 1}`)
       }),
-      generateKeyframe: async (_shot, _tone, _aspect, index) => `https://replicate.delivery/new-k-${index}.png`,
+      generateKeyframe: async (_shot, _tone, _aspect, index) => ({ outputUrl: `https://replicate.delivery/new-k-${index}.png`, buffer: Buffer.from('test'), mimeType: 'image/png', modelSlug: 'test' }),
       persistKeyframe: async (_projectDir, _url, index) => `/tmp/new-k-${index}.png`,
       generateVideoSegmentAtIndex: async (index) => `https://replicate.delivery/new-s-${index}.mp4`,
       persistSegment: async (_projectDir, _url, index) => `/tmp/new-s-${index}.mp4`,
@@ -2256,7 +2256,7 @@ test('runPipeline alignment handles empty shots with positive and zero required 
       generateShots: async (_script, { shotCount }) => ({
         shots: Array.from({ length: shotCount }, (_value, index) => `Generated shot ${index + 1}`)
       }),
-      generateKeyframe: async (_shot, _tone, _aspect, index) => `https://replicate.delivery/zero-k-${index}.png`,
+      generateKeyframe: async (_shot, _tone, _aspect, index) => ({ outputUrl: `https://replicate.delivery/zero-k-${index}.png`, buffer: Buffer.from('test'), mimeType: 'image/png', modelSlug: 'test' }),
       persistKeyframe: async (_projectDir, _url, index) => `/tmp/zero-k-${index}.png`,
       generateVideoSegmentAtIndex: async (index) => `https://replicate.delivery/zero-s-${index}.mp4`,
       persistSegment: async (_projectDir, _url, index) => `/tmp/zero-s-${index}.mp4`,
@@ -2328,7 +2328,7 @@ test('runPipeline alignment trims and extends shots to match required segment co
       probeMediaDurationSeconds: async () => 9,
       resolveSegmentCountFromAudioDuration: () => 2,
       buildFixedTimeline: () => [{ durationSec: 5 }, { durationSec: 5 }],
-      generateKeyframe: async (_shot, _tone, _aspect, index) => `https://replicate.delivery/new-k-${index}.png`,
+      generateKeyframe: async (_shot, _tone, _aspect, index) => ({ outputUrl: `https://replicate.delivery/new-k-${index}.png`, buffer: Buffer.from('test'), mimeType: 'image/png', modelSlug: 'test' }),
       persistKeyframe: async (_projectDir, _url, index) => `/tmp/new-k-${index}.png`,
       generateVideoSegmentAtIndex: async (index) => `https://replicate.delivery/new-s-${index}.mp4`,
       persistSegment: async (_projectDir, _url, index) => `/tmp/new-s-${index}.mp4`,
@@ -2823,7 +2823,7 @@ test('runPipeline invalidates legacy resume state without script source hash', a
         ttsPlan: { speed: 1 }
       }),
       persistVoiceover: async () => '/tmp/new-voice.mp3',
-      generateKeyframe: async () => 'https://replicate.delivery/new-k1.png',
+      generateKeyframe: async () => ({ outputUrl: 'https://replicate.delivery/new-k1.png', buffer: Buffer.from('test'), mimeType: 'image/png', modelSlug: 'test' }),
       persistKeyframe: async () => '/tmp/new-k1.png',
       generateVideoSegmentAtIndex: async () => 'https://replicate.delivery/new-s1.mp4',
       persistSegment: async () => '/tmp/new-s1.mp4',
@@ -2911,7 +2911,7 @@ test('runPipeline invalidates voice/segments when script asset hash changes', as
         shots: Array.from({ length: shotCount }, (_value, index) => `Shot ${index + 1}`)
       }),
       persistVoiceover: async () => '/tmp/new-voice.mp3',
-      generateKeyframe: async (_shot, _tone, _aspect, index) => `https://replicate.delivery/new-k${index + 1}.png`,
+      generateKeyframe: async (_shot, _tone, _aspect, index) => ({ outputUrl: `https://replicate.delivery/new-k${index + 1}.png`, buffer: Buffer.from('test'), mimeType: 'image/png', modelSlug: 'test' }),
       persistKeyframe: async (_projectDir, _url, index) => `/tmp/new-k${index + 1}.png`,
       generateVideoSegmentAtIndex: async () => 'https://replicate.delivery/new-s1.mp4',
       persistSegment: async () => '/tmp/new-s1.mp4',

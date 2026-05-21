@@ -26,6 +26,15 @@ export const SETTINGS = [
     default: ''
   },
   {
+    id: 'openRouterApiKey',
+    label: 'OpenRouter API Key',
+    description: 'Your OpenRouter API key for LLM-driven prompt transformation (openrouter.ai/keys).',
+    type: 'secure',
+    keystoreKey: 'openRouterApiKey',
+    envNames: ['RILO_OPENROUTER_API_KEY', 'OPENROUTER_API_KEY'],
+    default: ''
+  },
+  {
     id: 'apiBearerToken',
     label: 'API Bearer Token',
     description: 'Bearer token for authenticating requests to the rilo HTTP API.',

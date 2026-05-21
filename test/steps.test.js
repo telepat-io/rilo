@@ -249,17 +249,19 @@ test('step generators forward explicit modelId overrides to runModel', async () 
   });
   assert.equal(voiceModels[0], 'custom/tts-model');
 
-  const keyframeModels = [];
-  await generateKeyframe('prompt', 'neutral', '9:16', 0, null, null, {
-    modelId: 'custom/image-model',
+  const keyframeFamilies = [];
+  await generateKeyframe('prompt', 'neutral', '9:16', 0, null, {
+    family: 'custom-family',
     deps: {
-      runModel: async ({ model }) => {
-        keyframeModels.push(model);
-        return { output: 'https://replicate.delivery/kf.png' };
+      limn: {
+        generate: async (_prompt, family) => {
+          keyframeFamilies.push(family);
+          return { image: Buffer.from('test'), outputUrl: 'https://replicate.delivery/kf.png', mimeType: 'image/png', modelSlug: 'custom-family' };
+        }
       }
     }
   });
-  assert.equal(keyframeModels[0], 'custom/image-model');
+  assert.equal(keyframeFamilies[0], 'custom-family');
 
   const segmentModels = [];
   await generateVideoSegmentAtIndex(0, ['k1', 'k2'], [{ durationSec: 5 }, { durationSec: 5 }], ['s1', 's2'], '9:16', null, {
@@ -353,23 +355,29 @@ test('step generators merge modelOptions and preserve runtime-managed fields', a
   assert.equal(kokoroInput.text, 'hello world narration body');
   assert.equal(Object.prototype.hasOwnProperty.call(kokoroInput, 'subtitle_enable'), false);
 
-  let keyframeInput;
-  await generateKeyframe('prompt body', 'neutral', '9:16', 0, null, { width: 700, height: 1200 }, {
+  let keyframeOptions;
+  let keyframeFamily;
+  await generateKeyframe('prompt body', 'neutral', '9:16', 0, null, {
+    family: 'z-image-turbo',
+    replicateModel: 'prunaai/z-image-turbo',
     modelOptions: {
-      width: 1,
-      height: 1,
-      num_inference_steps: 12
+      num_inference_steps: 12,
+      resolution: '2K'
     },
     deps: {
-      runModel: async ({ input }) => {
-        keyframeInput = input;
-        return { output: 'https://replicate.delivery/kf.png' };
+      limn: {
+        generate: async (_prompt, family, genOptions) => {
+          keyframeFamily = family;
+          keyframeOptions = genOptions;
+          return { image: Buffer.from('test'), outputUrl: 'https://replicate.delivery/kf.png', mimeType: 'image/png', modelSlug: 'prunaai/z-image-turbo' };
+        }
       }
     }
   });
-  assert.equal(keyframeInput.num_inference_steps, 12);
-  assert.equal(keyframeInput.width, 700);
-  assert.equal(keyframeInput.height, 1200);
+  assert.equal(keyframeFamily, 'z-image-turbo');
+  assert.equal(keyframeOptions.aspectRatio, '9:16');
+  assert.equal(keyframeOptions.replicateModel, 'prunaai/z-image-turbo');
+  assert.deepStrictEqual(keyframeOptions.options, { num_inference_steps: 12, resolution: '2K' });
 
   let segmentInput;
   await generateVideoSegmentAtIndex(0, ['k1', 'k2'], [{ durationSec: 5 }, { durationSec: 5 }], ['shot 1', 'shot 2'], '9:16', null, {
@@ -388,113 +396,48 @@ test('step generators merge modelOptions and preserve runtime-managed fields', a
   assert.equal(segmentInput.resolution, '720p');
 });
 
-test('generateKeyframe uses Flux adapter mapping for custom-size keyframes', async () => {
-  let fluxInput;
-  await generateKeyframe('modern courtroom interior', 'cinematic', '9:16', 1, null, { width: 768, height: 1344 }, {
-    modelId: 'black-forest-labs/flux-2-pro',
+test('generateKeyframe passes family, replicateModel override, and modelOptions to Limn', async () => {
+  let genPrompt, genFamily, genOptions;
+  await generateKeyframe('high fidelity infographic style', 'neutral', '1:1', 2, null, {
+    limn: {
+      generate: async (prompt, family, options) => {
+        genPrompt = prompt;
+        genFamily = family;
+        genOptions = options;
+        return { image: Buffer.from('test'), outputUrl: 'https://replicate.delivery/limn-kf.png', mimeType: 'image/webp', modelSlug: 'flux-schnell' };
+      }
+    },
+    family: 'flux',
+    replicateModel: 'black-forest-labs/flux-2-pro',
     modelOptions: {
-      aspect_ratio: '16:9',
       safety_tolerance: 4,
       output_format: 'png'
-    },
-    deps: {
-      runModel: async ({ model, input }) => {
-        assert.equal(model, 'black-forest-labs/flux-2-pro');
-        fluxInput = input;
-        return { output: 'https://replicate.delivery/flux-kf.png' };
-      }
     }
   });
 
-  assert.equal(fluxInput.safety_tolerance, 4);
-  assert.equal(fluxInput.output_format, 'png');
-  assert.equal(fluxInput.aspect_ratio, 'custom');
-  assert.equal(fluxInput.width, 768);
-  assert.equal(fluxInput.height, 1344);
-  assert.match(fluxInput.prompt, /shot 2/);
+  assert.equal(genFamily, 'flux');
+  assert.equal(genOptions.replicateModel, 'black-forest-labs/flux-2-pro');
+  assert.equal(genOptions.aspectRatio, '1:1');
+  assert.deepStrictEqual(genOptions.options, { safety_tolerance: 4, output_format: 'png' });
+  assert.match(genPrompt, /high fidelity infographic style/);
 });
 
-test('generateKeyframe uses Flux Schnell adapter mapping with aspect ratio', async () => {
-  let schnellInput;
-  await generateKeyframe('speed-focused image generation', 'neutral', '16:9', 0, null, { width: 1024, height: 576 }, {
-    modelId: 'black-forest-labs/flux-schnell',
-    modelOptions: {
-      num_outputs: 2,
-      go_fast: false
-    },
-    deps: {
-      runModel: async ({ model, input }) => {
-        assert.equal(model, 'black-forest-labs/flux-schnell');
-        schnellInput = input;
-        return { output: ['https://replicate.delivery/schnell-1.webp', 'https://replicate.delivery/schnell-2.webp'] };
-      }
-    }
-  });
-
-  assert.equal(schnellInput.num_outputs, 2);
-  assert.equal(schnellInput.go_fast, false);
-  assert.equal(schnellInput.aspect_ratio, '16:9');
-  assert.equal(schnellInput.width, undefined);
-  assert.equal(schnellInput.height, undefined);
-  assert.match(schnellInput.prompt, /shot 1/);
+test('generateKeyframe throws when Limn instance is missing', async () => {
+  await assert.rejects(
+    generateKeyframe('prompt', 'neutral', '9:16', 0, null, {
+      family: 'flux'
+    }),
+    /Limn instance/
+  );
 });
 
-test('generateKeyframe uses Nano Banana Pro adapter mapping with aspect ratio and options', async () => {
-  let nanoInput;
-  await generateKeyframe('high fidelity infographic style', 'neutral', '1:1', 2, null, { width: 1024, height: 1024 }, {
-    modelId: 'google/nano-banana-pro',
-    modelOptions: {
-      resolution: '4K',
-      output_format: 'png',
-      safety_filter_level: 'block_only_high',
-      allow_fallback_model: true
-    },
-    deps: {
-      runModel: async ({ model, input }) => {
-        assert.equal(model, 'google/nano-banana-pro');
-        nanoInput = input;
-        return { output: 'https://replicate.delivery/nano.webp' };
-      }
-    }
-  });
-
-  assert.equal(nanoInput.resolution, '4K');
-  assert.equal(nanoInput.output_format, 'png');
-  assert.equal(nanoInput.safety_filter_level, 'block_only_high');
-  assert.equal(nanoInput.allow_fallback_model, true);
-  assert.equal(nanoInput.aspect_ratio, '1:1');
-  assert.equal(nanoInput.width, undefined);
-  assert.equal(nanoInput.height, undefined);
-  assert.match(nanoInput.prompt, /shot 3/);
-});
-
-test('generateKeyframe uses Seedream 4 adapter mapping with aspect ratio and options', async () => {
-  let seedreamInput;
-  await generateKeyframe('dynamic storyboard panel', 'neutral', '16:9', 3, null, { width: 1024, height: 576 }, {
-    modelId: 'bytedance/seedream-4',
-    modelOptions: {
-      size: '4K',
-      sequential_image_generation: 'auto',
-      max_images: 2,
-      enhance_prompt: true
-    },
-    deps: {
-      runModel: async ({ model, input }) => {
-        assert.equal(model, 'bytedance/seedream-4');
-        seedreamInput = input;
-        return { output: ['https://replicate.delivery/seedream-1.jpg', 'https://replicate.delivery/seedream-2.jpg'] };
-      }
-    }
-  });
-
-  assert.equal(seedreamInput.size, '4K');
-  assert.equal(seedreamInput.sequential_image_generation, 'auto');
-  assert.equal(seedreamInput.max_images, 2);
-  assert.equal(seedreamInput.enhance_prompt, true);
-  assert.equal(seedreamInput.aspect_ratio, '16:9');
-  assert.equal(seedreamInput.width, undefined);
-  assert.equal(seedreamInput.height, undefined);
-  assert.match(seedreamInput.prompt, /shot 4/);
+test('generateKeyframe throws when family is missing', async () => {
+  await assert.rejects(
+    generateKeyframe('prompt', 'neutral', '9:16', 0, null, {
+      limn: { generate: async () => ({ image: Buffer.from('test') }) }
+    }),
+    /Limn model family/
+  );
 });
 
 test('generateVideoSegmentAtIndex uses Kling v3 adapter mapping with start/end images and fixed 5s duration', async () => {
@@ -864,27 +807,36 @@ test('generateVoiceover and persistVoiceover use injected dependencies', async (
 
 test('keyframe and segment helpers cover success and missing-output branches', async () => {
   await assert.rejects(
-    generateKeyframe('prompt', 'tone', '9:16', 0, null, null, {
+    generateKeyframe('prompt', 'tone', '9:16', 0, null, {
+      family: 'flux',
       deps: {
-        runModel: async () => ({ output: '' })
+        limn: {
+          generate: async () => ({ image: null })
+        }
       }
     }),
     /Missing keyframe output/
   );
 
-  const keyframeUrl = await generateKeyframe('prompt', 'tone', '9:16', 1, null, null, {
+  const keyframeResult = await generateKeyframe('prompt', 'tone', '9:16', 1, null, {
+    family: 'flux',
     deps: {
-      runModel: async () => ({ output: 'https://replicate.delivery/k2.png' })
+      limn: {
+        generate: async () => ({ image: Buffer.from('test'), outputUrl: 'https://replicate.delivery/k2.png', mimeType: 'image/png', modelSlug: 'flux' })
+      }
     }
   });
-  assert.equal(keyframeUrl, 'https://replicate.delivery/k2.png');
+  assert.equal(keyframeResult.outputUrl, 'https://replicate.delivery/k2.png');
 
   const keyframes = await generateKeyframes(['a', 'b'], 'tone', '9:16', null, {
+    family: 'flux',
     deps: {
-      runModel: (() => {
-        let idx = 0;
-        return async () => ({ output: `https://replicate.delivery/key-${idx++}.png` });
-      })()
+      limn: {
+        generate: (() => {
+          let idx = 0;
+          return async () => ({ image: Buffer.from('test'), outputUrl: `https://replicate.delivery/key-${idx++}.png`, mimeType: 'image/png', modelSlug: 'flux' });
+        })()
+      }
     }
   });
   assert.equal(keyframes.length, 2);
@@ -1076,27 +1028,15 @@ test('step helpers hit fallback/default branches for aspect ratio, duration, and
 
   assert.equal(resolveSegmentCountFromAudioDuration(8, 0), 2);
 
-  const keyframeWithFallbackPreset = await generateKeyframe('prompt fallback', 'neutral', 'bad-ratio', 0, null, null, {
+  const keyframeWithAspectRatio = await generateKeyframe('prompt fallback', 'neutral', 'bad-ratio', 0, null, {
+    family: 'flux',
     deps: {
-      runModel: async ({ input }) => ({ output: `${input.width}x${input.height}` })
-    }
-  });
-  assert.equal(keyframeWithFallbackPreset, '576x1024');
-
-  const keyframeWithPartialSizeOverride = await generateKeyframe(
-    'prompt size override',
-    'neutral',
-    '9:16',
-    0,
-    null,
-    { width: 640 },
-    {
-      deps: {
-        runModel: async ({ input }) => ({ output: `${input.width}x${input.height}` })
+      limn: {
+        generate: async (_prompt, _family, genOptions) => ({ image: Buffer.from('test'), outputUrl: genOptions.aspectRatio, mimeType: 'image/png', modelSlug: 'flux' })
       }
     }
-  );
-  assert.equal(keyframeWithPartialSizeOverride, '640x1024');
+  });
+  assert.equal(keyframeWithAspectRatio.outputUrl, 'bad-ratio');
 
   const unknownAspectSegment = await generateVideoSegmentAtIndex(
     0,
@@ -1183,7 +1123,7 @@ test('step modules cover default dependency branches safely', async () => {
 
     await assert.rejects(
       generateKeyframe('prompt', 'tone', '9:16', 0),
-      /webhook/i
+      /Limn model family/i
     );
 
     await assert.rejects(

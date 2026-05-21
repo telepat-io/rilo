@@ -28,17 +28,21 @@ import {
 import {
   DEFAULT_VIDEO_CONFIG,
   MODEL_CATEGORIES,
+  MODEL_SELECTION_KEYS,
   resolveKeyframeSize,
   resolveProjectModelOptions,
   resolveProjectModelSelections,
   resolveShotCount,
   resolveTargetDurationSec
 } from '../config/models.js';
+import { Limn } from '@telepat/limn';
+import { resolveFamilyFromReplicateModelId } from '../images/limnModelCatalog.js';
 import fs from 'node:fs/promises';
 import crypto from 'node:crypto';
 import path from 'node:path';
 import { ensureDir, writeJson } from '../media/files.js';
 import { probeMediaDurationSeconds } from '../media/ffmpeg.js';
+import { env } from '../config/env.js';
 import {
   ensureProject,
   readProjectConfig,
@@ -229,6 +233,15 @@ export async function regenerateProjectAsset(projectName, target, options = {}) 
   const projectConfig = await deps.readProjectConfig(project);
   const modelSelections = resolveProjectModelSelections(projectConfig.models);
   const modelOptions = resolveProjectModelOptions(projectConfig.modelOptions, modelSelections);
+  const rawT2IModel = modelSelections[MODEL_CATEGORIES.textToImage];
+  const limnFamily = resolveFamilyFromReplicateModelId(rawT2IModel) ?? rawT2IModel;
+  const limnImageDryRun = !env.replicateApiToken;
+  const limn = limnImageDryRun ? null : new Limn({
+    openrouterApiKey: env.openRouterApiKey || undefined,
+    replicateApiKey: env.replicateApiToken,
+    openrouterModel: modelSelections[MODEL_CATEGORIES.textToText]
+  });
+  const t2iReplicateModel = modelSelections.textToImageReplicateModel || undefined;
   const projectDir = deps.getProjectDir(project);
   const runState = await deps.readProjectRunState(project);
 
@@ -452,21 +465,21 @@ export async function regenerateProjectAsset(projectName, target, options = {}) 
   }
 
   if (targetType === 'keyframe') {
-    const keyframeSize = resolveKeyframeSize(projectConfig);
-    const keyframeUrl = await deps.generateKeyframe(
+    const keyframeResult = await deps.generateKeyframe(
       artifacts.shots[index],
       artifacts.tone || 'neutral',
       projectConfig.aspectRatio,
       index,
       traceBase,
-      keyframeSize,
       {
-        modelId: modelSelections[MODEL_CATEGORIES.textToImage],
+        limn,
+        family: limnFamily,
+        replicateModel: t2iReplicateModel,
         modelOptions: modelOptions[MODEL_CATEGORIES.textToImage]
       }
     );
-    artifacts.keyframeUrls[index] = keyframeUrl;
-    artifacts.keyframePaths[index] = await deps.persistKeyframe(projectDir, keyframeUrl, index);
+    artifacts.keyframeUrls[index] = keyframeResult.outputUrl || keyframeResult.modelSlug;
+    artifacts.keyframePaths[index] = await deps.persistKeyframe(projectDir, keyframeResult, index);
 
     const affectedSegmentIndexes = collectAffectedSegmentIndexes([index], artifacts.shots.length);
     const maxSegmentIndex = Math.max(0, artifacts.shots.length - 1);
@@ -627,6 +640,15 @@ export async function runPipeline(jobId, options = {}) {
     const projectConfig = await deps.readProjectConfig(project);
     const modelSelections = resolveProjectModelSelections(projectConfig.models);
     const modelOptions = resolveProjectModelOptions(projectConfig.modelOptions, modelSelections);
+    const rawT2IModel = modelSelections[MODEL_CATEGORIES.textToImage];
+    const limnFamily = resolveFamilyFromReplicateModelId(rawT2IModel) ?? rawT2IModel;
+    const limnImageDryRun = !env.replicateApiToken;
+    const limn = limnImageDryRun ? null : new Limn({
+      openrouterApiKey: env.openRouterApiKey || undefined,
+      replicateApiKey: env.replicateApiToken,
+      openrouterModel: modelSelections[MODEL_CATEGORIES.textToText]
+    });
+    const t2iReplicateModel = modelSelections.textToImageReplicateModel || undefined;
     const projectDir = deps.getProjectDir(project);
     const targetDurationSec = resolveTargetDurationSec(projectConfig);
     const plannedShots = resolveShotCount(projectConfig);
@@ -899,6 +921,10 @@ export async function runPipeline(jobId, options = {}) {
       (category) => JSON.stringify(previousModelOptions[category]) !== JSON.stringify(modelOptions[category])
     );
 
+    const modelSelectionsChanged = MODEL_SELECTION_KEYS.some(
+      (key) => modelSelections[key] !== previousModelSelections[key]
+    );
+
     const resetFromScript = () => {
       seedSteps[JobStep.SCRIPT] = false;
       seedSteps[JobStep.VOICE] = false;
@@ -975,7 +1001,7 @@ export async function runPipeline(jobId, options = {}) {
       resetFromScript();
     }
 
-    if (JSON.stringify(previousModelSelections) !== JSON.stringify(modelSelections)) {
+    if (modelSelectionsChanged) {
       resetFromScript();
     }
 
@@ -1214,20 +1240,21 @@ export async function runPipeline(jobId, options = {}) {
         if (shotIndex < 0 || shotIndex >= currentJob.artifacts.shots.length) {
           continue;
         }
-        const keyframeUrl = await deps.generateKeyframe(
+        const keyframeResult = await deps.generateKeyframe(
           currentJob.artifacts.shots[shotIndex],
           currentJob.artifacts.tone || 'neutral',
           projectConfig.aspectRatio,
           shotIndex,
           traceBase,
-          keyframeSize,
           {
-            modelId: modelSelections[MODEL_CATEGORIES.textToImage],
+            limn,
+            family: limnFamily,
+            replicateModel: t2iReplicateModel,
             modelOptions: modelOptions[MODEL_CATEGORIES.textToImage]
           }
         );
-        keyframeUrls[shotIndex] = keyframeUrl;
-        keyframePaths[shotIndex] = await deps.persistKeyframe(projectDir, keyframeUrl, shotIndex);
+        keyframeUrls[shotIndex] = keyframeResult.outputUrl || keyframeResult.modelSlug;
+        keyframePaths[shotIndex] = await deps.persistKeyframe(projectDir, keyframeResult, shotIndex);
       }
 
       const totalShots = currentJob.artifacts.shots.length;
@@ -1356,18 +1383,20 @@ export async function runPipeline(jobId, options = {}) {
         }
 
         if (!hasUrl) {
-          keyframeUrls[shotIndex] = await deps.generateKeyframe(
+          const keyframeResult = await deps.generateKeyframe(
             currentJob.artifacts.shots[shotIndex],
             currentJob.artifacts.tone || 'neutral',
             projectConfig.aspectRatio,
             shotIndex,
             traceBase,
-            keyframeSize,
             {
-              modelId: modelSelections[MODEL_CATEGORIES.textToImage],
+              limn,
+              family: limnFamily,
+              replicateModel: t2iReplicateModel,
               modelOptions: modelOptions[MODEL_CATEGORIES.textToImage]
             }
           );
+          keyframeUrls[shotIndex] = keyframeResult.outputUrl || keyframeResult.modelSlug;
         }
 
         keyframePaths[shotIndex] = await deps.persistKeyframe(projectDir, keyframeUrls[shotIndex], shotIndex);

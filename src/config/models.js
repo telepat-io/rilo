@@ -1,17 +1,17 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+  getLimnGenerationModels,
+  isKnownLimnFamily,
+  resolveFamilyFromReplicateModelId
+} from '../images/limnModelCatalog.js';
 
 const CONFIG_DIR = path.dirname(fileURLToPath(import.meta.url));
 const MODELS_DIR = path.resolve(CONFIG_DIR, '../../models');
 
 export const MODELS = {
   deepseek: 'deepseek-ai/deepseek-v3',
-  keyframe: 'prunaai/z-image-turbo',
-  flux: 'black-forest-labs/flux-2-pro',
-  fluxSchnell: 'black-forest-labs/flux-schnell',
-  nanoBananaPro: 'google/nano-banana-pro',
-  seedream4: 'bytedance/seedream-4',
   video: 'wan-video/wan-2.2-i2v-fast',
   klingVideo3: 'kwaivgi/kling-v3-video',
   pixverseV56: 'pixverse/pixverse-v5.6',
@@ -32,7 +32,7 @@ export const MODEL_CATEGORIES = {
 export const DEFAULT_MODEL_SELECTIONS = {
   [MODEL_CATEGORIES.textToText]: MODELS.deepseek,
   [MODEL_CATEGORIES.textToSpeech]: MODELS.tts,
-  [MODEL_CATEGORIES.textToImage]: MODELS.keyframe,
+  [MODEL_CATEGORIES.textToImage]: 'z-image-turbo',
   [MODEL_CATEGORIES.imageTextToVideo]: MODELS.video
 };
 
@@ -41,11 +41,6 @@ export const MODEL_OPTION_KEYS = [...MODEL_SELECTION_KEYS];
 
 const MODEL_METADATA_FILES = {
   [MODELS.deepseek]: 'deepseek-ai__deepseek-v3.json',
-  [MODELS.keyframe]: 'prunaai__z-image-turbo.json',
-  [MODELS.flux]: 'black-forest-labs__flux-2-pro.json',
-  [MODELS.fluxSchnell]: 'black-forest-labs__flux-schnell.json',
-  [MODELS.nanoBananaPro]: 'google__nano-banana-pro.json',
-  [MODELS.seedream4]: 'bytedance__seedream-4.json',
   [MODELS.video]: 'wan-video__wan-2.2-i2v-fast.json',
   [MODELS.klingVideo3]: 'kwaivgi__kling-v3-video.json',
   [MODELS.pixverseV56]: 'pixverse__pixverse-v5.6.json',
@@ -59,9 +54,12 @@ const MODEL_METADATA_FILES = {
 export const MODEL_IDS_BY_CATEGORY = {
   [MODEL_CATEGORIES.textToText]: [MODELS.deepseek],
   [MODEL_CATEGORIES.textToSpeech]: [MODELS.tts, MODELS.chatterboxTurbo, MODELS.kokoro82m],
-  [MODEL_CATEGORIES.textToImage]: [MODELS.keyframe, MODELS.flux, MODELS.fluxSchnell, MODELS.nanoBananaPro, MODELS.seedream4],
   [MODEL_CATEGORIES.imageTextToVideo]: [MODELS.video, MODELS.klingVideo3, MODELS.pixverseV56, MODELS.veo31, MODELS.veo31Fast]
 };
+
+export function getTextToImageModelIds() {
+  return getLimnGenerationModels().map((model) => model.family);
+}
 
 export function toNullableNumber(value) {
   if (value === null || value === undefined || value === '') {
@@ -109,7 +107,14 @@ export const MODEL_METADATA = Object.fromEntries(
   Object.values(MODELS).map((modelId) => [modelId, readModelMetadata(modelId)])
 );
 
-export const SUPPORTED_MODEL_IDS = Object.keys(MODEL_METADATA);
+export const SUPPORTED_MODEL_IDS = [
+  ...Object.keys(MODEL_METADATA),
+  ...getTextToImageModelIds(),
+  ...getTextToImageModelIds().flatMap((family) => {
+    const match = getLimnGenerationModels().find((m) => m.family === family);
+    return match ? match.replicateModelIds : [];
+  })
+];
 
 export const MODEL_PRICING = Object.fromEntries(
   Object.entries(MODEL_METADATA).map(([modelId, metadata]) => [modelId, normalizePricing(metadata.pricing || {})])
@@ -181,6 +186,9 @@ export function resolveProjectModelOptions(modelOptions = {}, modelSelections = 
 }
 
 export function isKnownModelId(modelId) {
+  if (typeof modelId === 'string' && isKnownLimnFamily(modelId)) {
+    return true;
+  }
   return typeof modelId === 'string' && SUPPORTED_MODEL_IDS.includes(modelId);
 }
 
@@ -198,8 +206,20 @@ export function resolveProjectModelSelections(modelSelections = {}) {
   for (const key of MODEL_SELECTION_KEYS) {
     const candidate = modelSelections[key];
     if (typeof candidate === 'string' && candidate.trim()) {
-      resolved[key] = candidate.trim();
+      const trimmed = candidate.trim();
+      // Normalize old Replicate T2I IDs to Limn family names
+      if (key === MODEL_CATEGORIES.textToImage) {
+        const family = resolveFamilyFromReplicateModelId(trimmed);
+        resolved[key] = family ?? trimmed;
+      } else {
+        resolved[key] = trimmed;
+      }
     }
+  }
+
+  // Preserve textToImageReplicateModel if present
+  if (typeof modelSelections.textToImageReplicateModel === 'string' && modelSelections.textToImageReplicateModel.trim()) {
+    resolved.textToImageReplicateModel = modelSelections.textToImageReplicateModel.trim();
   }
 
   return resolved;
@@ -215,6 +235,10 @@ export function resolveModelForCategory(category, modelSelections = {}) {
 export function getSupportedModelIdsForCategory(category) {
   if (!MODEL_SELECTION_KEYS.includes(category)) {
     throw new Error(`Unknown model category: ${category}`);
+  }
+
+  if (category === MODEL_CATEGORIES.textToImage) {
+    return getTextToImageModelIds();
   }
 
   return [...(MODEL_IDS_BY_CATEGORY[category] || [])];

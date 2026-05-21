@@ -5,11 +5,13 @@ import { ensureDir, writeJson } from '../media/files.js';
 import {
   DEFAULT_MODEL_SELECTIONS,
   DEFAULT_VIDEO_CONFIG,
+  MODEL_CATEGORIES,
   MODEL_OPTION_KEYS,
   MODEL_SELECTION_KEYS,
   SUPPORTED_MODEL_IDS,
   resolveModelInputOptionsForCategory,
-  resolveProjectModelOptions
+  resolveProjectModelOptions,
+  resolveProjectModelSelections
 } from '../config/models.js';
 
 export const SUPPORTED_ASPECT_RATIOS = ['1:1', '16:9', '9:16'];
@@ -358,6 +360,11 @@ function validateProjectModelOptions(modelOptions, modelSelections) {
       throw new Error(`Invalid project config: modelOptions.${category} must be an object`);
     }
 
+    // T2I model options are validated by Limn at generation time
+    if (category === MODEL_CATEGORIES.textToImage) {
+      continue;
+    }
+
     const inputOptions = resolveModelInputOptionsForCategory(category, modelSelections);
     const allowedOptions = new Set(inputOptions.userConfigurable);
     const fields = inputOptions.fields || {};
@@ -400,12 +407,18 @@ export function normalizeProjectConfig(config) {
     }
   }
 
+  // Reject unknown model selection keys before normalization
+  if (nextConfig.models && typeof nextConfig.models === 'object' && !Array.isArray(nextConfig.models)) {
+    for (const key of Object.keys(nextConfig.models)) {
+      if (!MODEL_SELECTION_KEYS.includes(key) && key !== 'textToImageReplicateModel') {
+        throw new Error(`Invalid project config: models.${key} is not a supported model category`);
+      }
+    }
+  }
+
   const mergedModels = nextConfig.models === undefined
     ? { ...DEFAULT_MODEL_SELECTIONS }
-    : {
-        ...DEFAULT_MODEL_SELECTIONS,
-        ...(nextConfig.models || {})
-      };
+    : resolveProjectModelSelections(nextConfig.models);
   const mergedModelOptions = mergeProjectModelOptions(nextConfig.modelOptions, mergedModels);
 
   return {

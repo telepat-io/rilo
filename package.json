@@ -53,6 +53,7 @@
     "express": "^4.21.2",
     "firebase-admin": "^13.4.0",
     "firebase-functions": "^6.4.0",
+    "@telepat/limn": "^0.1.5",
     "replicate": "^1.0.1",
     "uuid": "^11.1.0"
   },
