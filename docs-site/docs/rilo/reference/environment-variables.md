@@ -13,7 +13,7 @@ Rilo is configured via environment variables (from `.env` or system env). You ca
 Required:
 
 ```bash
-RILO_REPLICATE_API_TOKEN=
+TELEPAT_REPLICATE_TOKEN=
 RILO_API_BEARER_TOKEN=
 ```
 

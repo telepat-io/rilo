@@ -152,7 +152,7 @@ App-level settings are managed via `rilo settings` or environment variables. Sec
 
 | Key | Settings Label | Env Vars | Type | Notes |
 |-----|---|---|------|-------|
-| `replicateApiToken` | Replicate API Token | `RILO_REPLICATE_API_TOKEN`, `REPLICATE_API_TOKEN` | string | API key from replicate.com/account/api-tokens. Required for model predictions. |
+| `replicateApiToken` | Replicate API Token | `TELEPAT_REPLICATE_TOKEN`, `TELEPAT_REPLICATE_TOKEN` | string | API key from replicate.com/account/api-tokens. Required for model predictions. |
 | `apiBearerToken` | API Bearer Token | `RILO_API_BEARER_TOKEN`, `API_BEARER_TOKEN` | string | Bearer token for authenticating requests to rilo HTTP API endpoints. Required if running HTTP API with authentication. |
 
 **Storage:** OS keystore (macOS Keychain, Windows Credential Manager, Linux Secret Service) or AES-256 encrypted file at `~/.rilo/.secrets` if no native keystore is available.
@@ -235,8 +235,8 @@ Secure settings (`replicateApiToken`, `apiBearerToken`) are **not** present in t
 For any setting, rilo resolves the value in this order (first match wins):
 
 1. **Environment variable** (highest priority)
-   - Examples: `RILO_MAX_RETRIES=5`, `REPLICATE_API_TOKEN=r8_xxx`
-   - Specific env + generic env checked in order (e.g., `RILO_REPLICATE_API_TOKEN` before `REPLICATE_API_TOKEN`)
+   - Examples: `RILO_MAX_RETRIES=5`, `TELEPAT_REPLICATE_TOKEN=r8_xxx`
+   - Specific env + generic env checked in order (e.g., `TELEPAT_REPLICATE_TOKEN` before `TELEPAT_REPLICATE_TOKEN`)
    - When set, the `rilo settings` menu shows the value as "read-only (via environment variable)"
 
 2. **~/.rilo/config.json** (if present and key is written)

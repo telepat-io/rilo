@@ -77,7 +77,7 @@ Rilo 为智能体和自动化工作流提供多种接口：
 
 - API token 和 Replicate 凭证在 OS 密钥库可用时保存（macOS Keychain、Windows Credential Manager、Linux Secret Service）。
 - 如果无原生密钥库可用，则回退到 `~/.rilo/.secrets` 的 AES-256 加密文件。
-- 环境变量（`RILO_REPLICATE_API_TOKEN`、`RILO_API_BEARER_TOKEN`）优先级最高，会覆盖已存储的值。
+- 环境变量（`TELEPAT_REPLICATE_TOKEN`、`RILO_API_BEARER_TOKEN`）优先级最高，会覆盖已存储的值。
 - Preview `--expose` 模式应仅在可信网络或隔离环境中使用。
 
 ## 文档与支持

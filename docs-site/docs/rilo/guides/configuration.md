@@ -215,7 +215,7 @@ rilo settings
 
 **Environment variables:**
 ```bash
-export RILO_REPLICATE_API_TOKEN=r8_xxxxx
+export TELEPAT_REPLICATE_TOKEN=r8_xxxxx
 export RILO_MAX_RETRIES=5
 export PREDICTION_MAX_WAIT_MS=900000
 rilo --project demo --story-file ./story.txt

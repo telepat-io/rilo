@@ -26,7 +26,7 @@ test('env parses booleans/numbers/hosts and assertRequiredEnv behavior', async (
   const originalEnv = { ...process.env };
 
   try {
-    process.env.REPLICATE_API_TOKEN = '';
+    process.env.TELEPAT_REPLICATE_TOKEN = '';
     process.env.API_PORT = '';
     process.env.PORT = '';
     process.env.WEBHOOK_SECRET = '';
@@ -73,10 +73,10 @@ test('env parses booleans/numbers/hosts and assertRequiredEnv behavior', async (
     assert.equal(modA.env.ffprobeBin, '/tmp/custom-ffprobe');
     assert.equal(modA.env.ffsubsyncBin, '/tmp/custom-ffsubsync');
     assert.deepEqual(modA.env.downloadAllowedHosts, ['example.com', 'replicate.delivery']);
-    assert.throws(() => modA.assertRequiredEnv(), /Missing REPLICATE_API_TOKEN/);
+    assert.throws(() => modA.assertRequiredEnv(), /Missing TELEPAT_REPLICATE_TOKEN/);
     assert.throws(() => modA.assertRequiredApiEnv(), /Missing API_BEARER_TOKEN/);
 
-    process.env.REPLICATE_API_TOKEN = 'token-present';
+    process.env.TELEPAT_REPLICATE_TOKEN = 'token-present';
     process.env.API_BEARER_TOKEN = 'api-token-present';
     process.env.API_PORT = '4567';
     process.env.PORT = '4999';
@@ -150,96 +150,16 @@ test('env parser helpers cover fallback and coercion branches', () => {
   assert.deepEqual(parseAllowedHosts('', 'x.com'), ['x.com']);
 });
 
-test('env prefers SECRET_* variables over public and legacy env vars', async () => {
+test('env reads TELEPAT_REPLICATE_TOKEN', async () => {
   const originalEnv = { ...process.env };
 
   try {
-    process.env.SECRET_REPLICATE_API_TOKEN = 'secret-replicate-token';
-    process.env.RILO_REPLICATE_API_TOKEN = 'rilo-replicate-token';
-    process.env.REPLICATE_API_TOKEN = 'legacy-replicate-token';
+    process.env.TELEPAT_REPLICATE_TOKEN = 'telepat-replicate-token';
+    process.env.TELEPAT_OPENROUTER_KEY = 'telepat-openrouter-key';
 
-    process.env.SECRET_API_BEARER_TOKEN = 'secret-api-token';
-    process.env.RILO_API_BEARER_TOKEN = 'rilo-api-token';
-    process.env.API_BEARER_TOKEN = 'legacy-api-token';
-
-    process.env.SECRET_OUTPUT_BACKEND = 'firebase';
-    process.env.RILO_OUTPUT_BACKEND = 'local';
-    process.env.OUTPUT_BACKEND = 'local';
-
-    process.env.SECRET_FIREBASE_PROJECT_ID = 'secret-project';
-    process.env.RILO_FIREBASE_PROJECT_ID = 'rilo-project';
-    process.env.FIREBASE_PROJECT_ID = 'legacy-project';
-
-    process.env.SECRET_FIREBASE_STORAGE_BUCKET = 'secret-bucket';
-    process.env.RILO_FIREBASE_STORAGE_BUCKET = 'rilo-bucket';
-    process.env.FIREBASE_STORAGE_BUCKET = 'legacy-bucket';
-
-    const mod = await importEnvFresh('secret-precedence');
-    assert.equal(mod.env.replicateApiToken, 'secret-replicate-token');
-    assert.equal(mod.env.apiBearerToken, 'secret-api-token');
-    assert.equal(mod.env.outputBackend, 'firebase');
-    assert.equal(mod.env.firebaseProjectId, 'secret-project');
-    assert.equal(mod.env.firebaseStorageBucket, 'secret-bucket');
-  } finally {
-    process.env = originalEnv;
-  }
-});
-
-test('env falls back to RILO_* then legacy variables when SECRET_* is absent', async () => {
-  const originalEnv = { ...process.env };
-
-  try {
-    // RILO_* should win over legacy names.
-    delete process.env.SECRET_REPLICATE_API_TOKEN;
-    process.env.RILO_REPLICATE_API_TOKEN = 'rilo-replicate-token';
-    process.env.REPLICATE_API_TOKEN = 'legacy-replicate-token';
-
-    delete process.env.SECRET_API_BEARER_TOKEN;
-    process.env.RILO_API_BEARER_TOKEN = 'rilo-api-token';
-    process.env.API_BEARER_TOKEN = 'legacy-api-token';
-
-    delete process.env.SECRET_OUTPUT_BACKEND;
-    process.env.RILO_OUTPUT_BACKEND = 'firebase';
-    process.env.OUTPUT_BACKEND = 'local';
-
-    delete process.env.SECRET_FIREBASE_PROJECT_ID;
-    process.env.RILO_FIREBASE_PROJECT_ID = 'rilo-project';
-    process.env.FIREBASE_PROJECT_ID = 'legacy-project';
-
-    delete process.env.SECRET_FIREBASE_STORAGE_BUCKET;
-    process.env.RILO_FIREBASE_STORAGE_BUCKET = 'rilo-bucket';
-    process.env.FIREBASE_STORAGE_BUCKET = 'legacy-bucket';
-
-    process.env.RILO_FIREBASE_CLIENT_EMAIL = 'rilo-client@example.com';
-    process.env.FIREBASE_CLIENT_EMAIL = 'legacy-client@example.com';
-
-    process.env.RILO_FIREBASE_PRIVATE_KEY = 'rilo-private-key';
-    process.env.FIREBASE_PRIVATE_KEY = 'legacy-private-key';
-
-    const modRilo = await importEnvFresh('rilo-primary');
-    assert.equal(modRilo.env.replicateApiToken, 'rilo-replicate-token');
-    assert.equal(modRilo.env.apiBearerToken, 'rilo-api-token');
-    assert.equal(modRilo.env.outputBackend, 'firebase');
-    assert.equal(modRilo.env.firebaseProjectId, 'rilo-project');
-    assert.equal(modRilo.env.firebaseStorageBucket, 'rilo-bucket');
-    assert.equal(modRilo.env.firebaseClientEmail, 'rilo-client@example.com');
-    assert.equal(modRilo.env.firebasePrivateKey, 'rilo-private-key');
-
-    // Legacy names should work when RILO_* is absent.
-    process.env.RILO_REPLICATE_API_TOKEN = '';
-    process.env.RILO_API_BEARER_TOKEN = '';
-    process.env.RILO_OUTPUT_BACKEND = '';
-    process.env.RILO_FIREBASE_PROJECT_ID = '';
-    process.env.RILO_FIREBASE_STORAGE_BUCKET = '';
-    process.env.RILO_FIREBASE_CLIENT_EMAIL = '';
-    process.env.RILO_FIREBASE_PRIVATE_KEY = '';
-
-    const modLegacy = await importEnvFresh('legacy-only-fallback');
-    assert.equal(modLegacy.env.replicateApiToken, 'legacy-replicate-token');
-    assert.equal(modLegacy.env.apiBearerToken, 'legacy-api-token');
-    assert.equal(modLegacy.env.outputBackend, 'local');
-    assert.equal(modLegacy.env.firebaseProjectId, 'legacy-project');
-    assert.equal(modLegacy.env.firebaseStorageBucket, 'legacy-bucket');
+    const mod = await importEnvFresh('telepat-env');
+    assert.equal(mod.env.replicateApiToken, 'telepat-replicate-token');
+    assert.equal(mod.env.openRouterApiKey, 'telepat-openrouter-key');
   } finally {
     process.env = originalEnv;
   }

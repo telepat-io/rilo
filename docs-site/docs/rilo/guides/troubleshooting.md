@@ -7,7 +7,7 @@ title: Troubleshooting
 ## Quick Triage
 
 **Most common issues:**
-1. Missing or incorrect API tokens `RILO_REPLICATE_API_TOKEN`
+1. Missing or incorrect API tokens `TELEPAT_REPLICATE_TOKEN`
 2. ffmpeg/ffprobe not in PATH or misconfigured
 3. Model IDs or modelOptions invalid or incompatible with selected adapters
 4. Predictions timing out (increase `PREDICTION_MAX_WAIT_MS`)
@@ -128,7 +128,7 @@ Error: Replicate API returned: unauthorized
 **Solutions:**
 1. Check token is set:
    ```bash
-   echo $RILO_REPLICATE_API_TOKEN  # or $REPLICATE_API_TOKEN
+   echo $TELEPAT_REPLICATE_TOKEN  # or $TELEPAT_REPLICATE_TOKEN
    ```
 
 2. Verify via `rilo settings`:
@@ -139,11 +139,11 @@ Error: Replicate API returned: unauthorized
 
 3. If setting via env var, ensure it's exported:
    ```bash
-   export RILO_REPLICATE_API_TOKEN=r8_xxxxx
+   export TELEPAT_REPLICATE_TOKEN=r8_xxxxx
    rilo --project demo --story-file ./story.txt
 
    # Not:
-   RILO_REPLICATE_API_TOKEN=r8_xxxxx rilo ...  # May not work in all shells
+   TELEPAT_REPLICATE_TOKEN=r8_xxxxx rilo ...  # May not work in all shells
    ```
 
 4. Verify token on [replicate.com](https://replicate.com/account/api-tokens).

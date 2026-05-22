@@ -22,7 +22,7 @@ export const SETTINGS = [
     description: 'Your Replicate API key (replicate.com/account/api-tokens).',
     type: 'secure',
     keystoreKey: 'replicateApiToken',
-    envNames: ['RILO_REPLICATE_API_TOKEN', 'REPLICATE_API_TOKEN'],
+    envNames: ['TELEPAT_REPLICATE_TOKEN'],
     default: ''
   },
   {
@@ -31,7 +31,7 @@ export const SETTINGS = [
     description: 'Your OpenRouter API key for LLM-driven prompt transformation (openrouter.ai/keys).',
     type: 'secure',
     keystoreKey: 'openRouterApiKey',
-    envNames: ['RILO_OPENROUTER_API_KEY', 'OPENROUTER_API_KEY'],
+    envNames: ['TELEPAT_OPENROUTER_KEY'],
     default: ''
   },
   {

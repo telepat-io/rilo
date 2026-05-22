@@ -38,7 +38,7 @@ This opens a menu where you can securely enter your Replicate API token and conf
 
 **Option B: Environment variable**
 ```bash
-export RILO_REPLICATE_API_TOKEN=r8_xxxxxxxxxxxxx
+export TELEPAT_REPLICATE_TOKEN=r8_xxxxxxxxxxxxx
 ```
 
 ### Step 2: Create a new project with a story

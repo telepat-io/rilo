@@ -41,15 +41,11 @@ export function parseAllowedHosts(value, fallback = 'replicate.delivery,replicat
 
 export const env = {
   replicateApiToken: parseEnvString(
-    process.env.SECRET_REPLICATE_API_TOKEN
-      || process.env.RILO_REPLICATE_API_TOKEN
-      || process.env.REPLICATE_API_TOKEN,
+    process.env.TELEPAT_REPLICATE_TOKEN,
     ''
   ),
   openRouterApiKey: parseEnvString(
-    process.env.SECRET_OPENROUTER_API_KEY
-      || process.env.RILO_OPENROUTER_API_KEY
-      || process.env.OPENROUTER_API_KEY,
+    process.env.TELEPAT_OPENROUTER_KEY,
     ''
   ),
   apiBearerToken: parseEnvString(
@@ -153,7 +149,7 @@ export async function applyStoredSettings() {
 
 export function assertRequiredEnv() {
   if (!env.replicateApiToken) {
-    throw new Error('Missing REPLICATE_API_TOKEN in environment');
+    throw new Error('Missing TELEPAT_REPLICATE_TOKEN in environment');
   }
 }
 

@@ -44,8 +44,7 @@ test('getSettingById returns null for unknown id', () => {
 test('replicateApiToken is in SECURE_SETTINGS', () => {
   const s = SECURE_SETTINGS.find((x) => x.id === 'replicateApiToken');
   assert.ok(s);
-  assert.ok(s.envNames.includes('RILO_REPLICATE_API_TOKEN'));
-  assert.ok(s.envNames.includes('REPLICATE_API_TOKEN'));
+  assert.ok(s.envNames.includes('TELEPAT_REPLICATE_TOKEN'));
 });
 
 test('apiBearerToken is in SECURE_SETTINGS', () => {

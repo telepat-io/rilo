@@ -21,7 +21,7 @@ const runtimeOptions = {
   invoker: 'public',
   secrets: [
     'SECRET_API_BEARER_TOKEN',
-    'SECRET_REPLICATE_API_TOKEN',
+    'TELEPAT_REPLICATE_TOKEN',
     'SECRET_OUTPUT_BACKEND',
     'SECRET_FIREBASE_PROJECT_ID',
     'SECRET_FIREBASE_STORAGE_BUCKET'

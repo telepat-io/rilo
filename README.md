@@ -77,7 +77,7 @@ Rilo provides multiple surfaces for agentic and automated workflows:
 
 - API tokens and Replicate credentials are stored in the OS keystore (macOS Keychain, Windows Credential Manager, Linux Secret Service) when available.
 - Falls back to an AES-256 encrypted file at `~/.rilo/.secrets` if no native keystore is available.
-- Environment variables (`RILO_REPLICATE_API_TOKEN`, `RILO_API_BEARER_TOKEN`) take highest precedence and override stored values.
+- Environment variables (`TELEPAT_REPLICATE_TOKEN`, `RILO_API_BEARER_TOKEN`) take highest precedence and override stored values.
 - Preview `--expose` mode should only be used on trusted networks or isolated environments.
 
 ## Documentation And Support
