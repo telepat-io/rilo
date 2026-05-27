@@ -32,7 +32,7 @@ export const MODEL_CATEGORIES = {
 export const DEFAULT_MODEL_SELECTIONS = {
   [MODEL_CATEGORIES.textToText]: MODELS.deepseek,
   [MODEL_CATEGORIES.textToSpeech]: MODELS.tts,
-  [MODEL_CATEGORIES.textToImage]: 'z-image-turbo',
+  [MODEL_CATEGORIES.textToImage]: 'z-image',
   [MODEL_CATEGORIES.imageTextToVideo]: MODELS.video
 };
 

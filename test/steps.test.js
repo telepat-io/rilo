@@ -358,7 +358,7 @@ test('step generators merge modelOptions and preserve runtime-managed fields', a
   let keyframeOptions;
   let keyframeFamily;
   await generateKeyframe('prompt body', 'neutral', '9:16', 0, null, {
-    family: 'z-image-turbo',
+    family: 'z-image',
     replicateModel: 'prunaai/z-image-turbo',
     modelOptions: {
       num_inference_steps: 12,
@@ -374,7 +374,7 @@ test('step generators merge modelOptions and preserve runtime-managed fields', a
       }
     }
   });
-  assert.equal(keyframeFamily, 'z-image-turbo');
+  assert.equal(keyframeFamily, 'z-image');
   assert.equal(keyframeOptions.aspectRatio, '9:16');
   assert.equal(keyframeOptions.replicateModel, 'prunaai/z-image-turbo');
   assert.deepStrictEqual(keyframeOptions.options, { num_inference_steps: 12, resolution: '2K' });

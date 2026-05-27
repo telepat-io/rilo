@@ -50,7 +50,7 @@ test('buildOpenApiSpec includes auth, public endpoints, and core paths', () => {
   );
   assert.ok(
     configPatchSchema.properties.config.properties.models.properties.textToImage.enum.includes(
-      'z-image-turbo'
+      'z-image'
     )
   );
   assert.ok(
@@ -60,12 +60,12 @@ test('buildOpenApiSpec includes auth, public endpoints, and core paths', () => {
   );
   assert.ok(
     configPatchSchema.properties.config.properties.models.properties.textToImage.enum.includes(
-      'nano-banana-pro'
+      'nano-banana'
     )
   );
   assert.ok(
     configPatchSchema.properties.config.properties.models.properties.textToImage.enum.includes(
-      'seedream-4'
+      'seedream'
     )
   );
   assert.ok(

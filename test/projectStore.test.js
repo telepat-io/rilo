@@ -285,7 +285,7 @@ test('normalizeAndValidateProjectConfig validates modelOptions per selected mode
     }
   });
 
-  assert.equal(nanoConfig.models.textToImage, 'nano-banana-pro');
+  assert.equal(nanoConfig.models.textToImage, 'nano-banana');
   assert.equal(nanoConfig.modelOptions.textToImage.resolution, '4K');
   assert.equal(nanoConfig.modelOptions.textToImage.output_format, 'png');
 
@@ -303,7 +303,7 @@ test('normalizeAndValidateProjectConfig validates modelOptions per selected mode
     }
   });
 
-  assert.equal(seedreamConfig.models.textToImage, 'seedream-4');
+  assert.equal(seedreamConfig.models.textToImage, 'seedream');
   assert.equal(seedreamConfig.modelOptions.textToImage.size, '4K');
   assert.equal(seedreamConfig.modelOptions.textToImage.max_images, 3);
 
@@ -516,7 +516,7 @@ test('writeProjectConfig and readProjectConfig enforce canonical validated confi
   assert.equal(written.aspectRatio, '1:1');
   assert.equal(written.targetDurationSec, 45);
   assert.equal(written.finalDurationMode, 'match_visual');
-  assert.equal(written.models.textToImage, 'z-image-turbo');
+  assert.equal(written.models.textToImage, 'z-image');
 
   const readBack = await readProjectConfig(project);
   assert.deepEqual(readBack, written);

@@ -4,7 +4,7 @@ export function getLimnGenerationModels() {
   return getSupportedModelCatalog().filter((entry) => entry.generationEnabled);
 }
 
-export const DEFAULT_LIMN_MODEL_ID = 'z-image-turbo';
+export const DEFAULT_LIMN_MODEL_ID = 'z-image';
 
 export function resolveFamilyFromReplicateModelId(replicateModelId) {
   const match = getLimnGenerationModels().find((model) =>

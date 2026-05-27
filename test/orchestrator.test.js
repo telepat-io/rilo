@@ -364,7 +364,7 @@ test('runPipeline executes all stages with injected deps and completes offline',
   assert.equal(modelIds.script, 'deepseek-ai/deepseek-v3');
   assert.equal(modelIds.shots, 'deepseek-ai/deepseek-v3');
   assert.equal(modelIds.voice, 'minimax/speech-02-turbo');
-  assert.equal(modelIds.keyframe, 'z-image-turbo');
+  assert.equal(modelIds.keyframe, 'z-image');
   assert.equal(modelIds.segment, 'wan-video/wan-2.2-i2v-fast');
   assert.ok(stepsCalled.checkpointSync >= 1);
   assert.equal(getProjectRunLockOwner(project), null);

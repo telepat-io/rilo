@@ -71,12 +71,12 @@ test('model selection helpers normalize defaults and validate category resolutio
 
   assert.equal(
     resolveModelForCategory(MODEL_CATEGORIES.textToImage, { textToImage: 'prunaai/z-image-turbo' }),
-    'z-image-turbo'
+    'z-image'
   );
 
   assert.equal(
-    resolveModelForCategory(MODEL_CATEGORIES.textToImage, { textToImage: 'z-image-turbo' }),
-    'z-image-turbo'
+    resolveModelForCategory(MODEL_CATEGORIES.textToImage, { textToImage: 'z-image' }),
+    'z-image'
   );
 
   assert.throws(
@@ -93,10 +93,10 @@ test('isKnownModelId accepts supported ids and rejects invalid inputs', () => {
   assert.equal(isKnownModelId('google/veo-3.1-fast'), true);
   assert.equal(isKnownModelId('resemble-ai/chatterbox-turbo'), true);
   assert.equal(isKnownModelId('jaaari/kokoro-82m'), true);
-  assert.equal(isKnownModelId('z-image-turbo'), true);
+  assert.equal(isKnownModelId('z-image'), true);
   assert.equal(isKnownModelId('flux'), true);
-  assert.equal(isKnownModelId('nano-banana-pro'), true);
-  assert.equal(isKnownModelId('seedream-4'), true);
+  assert.equal(isKnownModelId('nano-banana'), true);
+  assert.equal(isKnownModelId('seedream'), true);
   assert.equal(isKnownModelId('unknown/model'), false);
   assert.equal(isKnownModelId(''), false);
   assert.equal(isKnownModelId(null), false);
