@@ -1,0 +1,26 @@
+{
+  "version.label": {
+    "message": "Next",
+    "description": "The label for version current"
+  },
+  "sidebar.userSidebar.category.Getting Started": {
+    "message": "入门指南",
+    "description": "The label for category 'Getting Started' in sidebar 'userSidebar'"
+  },
+  "sidebar.userSidebar.category.Guides": {
+    "message": "指南",
+    "description": "The label for category 'Guides' in sidebar 'userSidebar'"
+  },
+  "sidebar.userSidebar.category.Reference": {
+    "message": "参考",
+    "description": "The label for category 'Reference' in sidebar 'userSidebar'"
+  },
+  "sidebar.userSidebar.category.Technical": {
+    "message": "技术",
+    "description": "The label for category 'Technical' in sidebar 'userSidebar'"
+  },
+  "sidebar.userSidebar.category.Contributing": {
+    "message": "贡献",
+    "description": "The label for category 'Contributing' in sidebar 'userSidebar'"
+  }
+}

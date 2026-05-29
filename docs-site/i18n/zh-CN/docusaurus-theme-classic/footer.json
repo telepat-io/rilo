@@ -1,0 +1,38 @@
+{
+  "link.title.Docs": {
+    "message": "文档",
+    "description": "The title of the footer links column with title=Docs"
+  },
+  "link.title.Project": {
+    "message": "项目",
+    "description": "The title of the footer links column with title=Project"
+  },
+  "link.title.More": {
+    "message": "更多",
+    "description": "The title of the footer links column with title=More"
+  },
+  "link.item.label.Getting Started": {
+    "message": "入门指南",
+    "description": "The label of footer link with label=Getting Started"
+  },
+  "link.item.label.CLI Reference": {
+    "message": "CLI 参考",
+    "description": "The label of footer link with label=CLI Reference"
+  },
+  "link.item.label.Repository": {
+    "message": "代码仓库",
+    "description": "The label of footer link with label=Repository"
+  },
+  "link.item.label.Contributing": {
+    "message": "贡献指南",
+    "description": "The label of footer link with label=Contributing"
+  },
+  "link.item.label.GitHub": {
+    "message": "GitHub",
+    "description": "The label of footer link with label=GitHub"
+  },
+  "copyright": {
+    "message": "Copyright © 2026 Rilo contributors. 由 Docusaurus 构建。",
+    "description": "The footer copyright"
+  }
+}

@@ -1,0 +1,221 @@
+{
+  "theme.ErrorPageContent.title": {
+    "message": "页面已崩溃。",
+    "description": "The title of the fallback page when the page crashed"
+  },
+  "theme.ErrorPageContent.tryAgain": {
+    "message": "重试",
+    "description": "The label of the button to try again rendering when the React error boundary captures an error"
+  },
+  "theme.BackToTopButton.buttonAriaLabel": {
+    "message": "回到顶部",
+    "description": "The ARIA label for the back to top button"
+  },
+  "theme.docs.breadcrumbs.navAriaLabel": {
+    "message": "页面路径",
+    "description": "The ARIA label for the breadcrumbs"
+  },
+  "theme.docs.breadcrumbs.home": {
+    "message": "主页面",
+    "description": "The ARIA label for the home page in the breadcrumbs"
+  },
+  "theme.docs.DocCard.categoryDescription.plurals": {
+    "message": "{count} 个项目",
+    "description": "The default description for a category card"
+  },
+  "theme.docs.paginator.navAriaLabel": {
+    "message": "文件选项卡",
+    "description": "The ARIA label for the docs pagination"
+  },
+  "theme.docs.paginator.previous": {
+    "message": "上一页",
+    "description": "The label used to navigate to the previous doc"
+  },
+  "theme.docs.paginator.next": {
+    "message": "下一页",
+    "description": "The label used to navigate to the next doc"
+  },
+  "theme.docs.sidebar.navAriaLabel": {
+    "message": "文档侧边栏",
+    "description": "The ARIA label for the sidebar navigation"
+  },
+  "theme.docs.sidebar.collapseButtonTitle": {
+    "message": "收起侧边栏",
+    "description": "The title attribute for collapse button of doc sidebar"
+  },
+  "theme.docs.sidebar.collapseButtonAriaLabel": {
+    "message": "收起侧边栏",
+    "description": "The title attribute for collapse button of doc sidebar"
+  },
+  "theme.docs.sidebar.expandButtonTitle": {
+    "message": "展开侧边栏",
+    "description": "The ARIA label for expand button of doc sidebar"
+  },
+  "theme.docs.sidebar.expandButtonAriaLabel": {
+    "message": "展开侧边栏",
+    "description": "The ARIA label for expand button of doc sidebar"
+  },
+  "theme.docs.sidebar.closeSidebarButtonAriaLabel": {
+    "message": "关闭导航栏",
+    "description": "The ARIA label for close button of mobile sidebar"
+  },
+  "theme.docs.sidebar.toggleSidebarButtonAriaLabel": {
+    "message": "切换导航栏",
+    "description": "The ARIA label for hamburger menu button of mobile navigation"
+  },
+  "theme.docs.versionBadge.label": {
+    "message": "版本：{versionLabel}"
+  },
+  "theme.docs.versions.unreleasedVersionLabel": {
+    "message": "此为 {siteTitle} {versionLabel} 版尚未发行的文档。",
+    "description": "The label for unreleased doc version"
+  },
+  "theme.docs.versions.unmaintainedVersionLabel": {
+    "message": "此为 {siteTitle} {versionLabel} 版的文档，现已不再积极维护。",
+    "description": "The label for unmaintained doc version"
+  },
+  "theme.docs.versions.latestVersionSuggestionLabel": {
+    "message": "最新的文档请参阅 {latestVersionLink} ({versionLabel})。",
+    "description": "The label to check the latest version"
+  },
+  "theme.docs.versions.latestVersionLinkLabel": {
+    "message": "最新版本",
+    "description": "The label for the latest version suggestion link"
+  },
+  "theme.common.editThisPage": {
+    "message": "编辑此页",
+    "description": "The link label to edit the current page"
+  },
+  "theme.common.skipToMainContent": {
+    "message": "跳到主要内容",
+    "description": "The skip to content label"
+  },
+  "theme.common.headingLinkTitle": {
+    "message": "{heading}的直接链接",
+    "description": "Title for link to heading"
+  },
+  "theme.lastUpdated.atDate": {
+    "message": "于 {date} ",
+    "description": "The words for date of last update"
+  },
+  "theme.lastUpdated.byUser": {
+    "message": "由 {user} ",
+    "description": "The words for who updated"
+  },
+  "theme.lastUpdated.lastUpdatedAtBy": {
+    "message": "最后{byUser}{atDate}更新",
+    "description": "The sentence for last updated display"
+  },
+  "theme.NotFound.title": {
+    "message": "找不到页面",
+    "description": "The title of the 404 page"
+  },
+  "theme.NotFound.p1": {
+    "message": "我们找不到您要找的页面。",
+    "description": "The first paragraph of the 404 page"
+  },
+  "theme.NotFound.p2": {
+    "message": "请联系原始链接来源网站的所有者，并告知他们链接已损坏。",
+    "description": "The 2nd paragraph of the 404 page"
+  },
+  "theme.NavBar.navAriaLabel": {
+    "message": "主导航",
+    "description": "The ARIA label for the main navigation"
+  },
+  "theme.navbar.mobileVersionsDropdown.label": {
+    "message": "选择版本",
+    "description": "The label for the navbar versions dropdown on mobile"
+  },
+  "theme.navbar.mobileLanguageDropdown.label": {
+    "message": "选择语言",
+    "description": "The label for the mobile language switcher dropdown"
+  },
+  "theme.navbar.mobileSidebarSecondaryMenu.backButtonLabel": {
+    "message": "← 回到主菜单",
+    "description": "The label of the back button in mobile sidebar"
+  },
+  "theme.navbar.mobileDropdown.collapseButton.expandAriaLabel": {
+    "message": "展开下拉菜单",
+    "description": "The ARIA label to expand mobile dropdown"
+  },
+  "theme.navbar.mobileDropdown.collapseButton.collapseAriaLabel": {
+    "message": "收起下拉菜单",
+    "description": "The ARIA label to collapse mobile dropdown"
+  },
+  "theme.TOCCollapsible.toggleButtonLabel": {
+    "message": "本页总览",
+    "description": "The label for the TOC collapsible button"
+  },
+  "theme.tags.tagsListLabel": {
+    "message": "标签：",
+    "description": "The label alongside a tag list"
+  },
+  "theme.tags.tagsPageLink": {
+    "message": "查看所有标签",
+    "description": "The label of the link to the tag list page"
+  },
+  "theme.tags.tagsPageTitle": {
+    "message": "标签",
+    "description": "The title of the tag list page"
+  },
+  "theme.colorToggle.ariaLabel.mode.system": {
+    "message": "系统模式",
+    "description": "The name for system color mode"
+  },
+  "theme.colorToggle.ariaLabel.mode.light": {
+    "message": "浅色模式",
+    "description": "The name for light color mode"
+  },
+  "theme.colorToggle.ariaLabel.mode.dark": {
+    "message": "暗黑模式",
+    "description": "The name for dark color mode"
+  },
+  "theme.colorToggle.ariaLabel": {
+    "message": "切换浅色/暗黑模式（当前为{mode}）",
+    "description": "The ARIA label for color mode toggle"
+  },
+  "theme.admonition.note": {
+    "message": "备注",
+    "description": "The default label for Note admonition"
+  },
+  "theme.admonition.tip": {
+    "message": "提示",
+    "description": "The default label for Tip admonition"
+  },
+  "theme.admonition.danger": {
+    "message": "危险",
+    "description": "The default label for Danger admonition"
+  },
+  "theme.admonition.info": {
+    "message": "信息",
+    "description": "The default label for Info admonition"
+  },
+  "theme.admonition.caution": {
+    "message": "警告",
+    "description": "The default label for Caution admonition"
+  },
+  "theme.admonition.warning": {
+    "message": "注意",
+    "description": "The default label for Warning admonition"
+  },
+  "theme.CodeBlock.copy": {
+    "message": "复制",
+    "description": "The copy button label on code blocks"
+  },
+  "theme.CodeBlock.copied": {
+    "message": "复制成功",
+    "description": "The copied button label on code blocks"
+  },
+  "theme.CodeBlock.copyButtonAriaLabel": {
+    "message": "复制代码到剪贴板",
+    "description": "The ARIA label for copy code button"
+  },
+  "theme.CodeBlock.wordWrapToggle": {
+    "message": "切换自动换行",
+    "description": "The title for word wrap toggle button"
+  },
+  "theme.IconExternalLink.ariaLabel": {
+    "message": "（在新标签页中打开）",
+    "description": "The ARIA label for external link icon"
+  }
+}
