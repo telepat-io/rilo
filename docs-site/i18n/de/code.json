@@ -1,0 +1,221 @@
+{
+  "theme.ErrorPageContent.title": {
+    "message": "Seite abgestürzt.",
+    "description": "The title of the fallback page when the page crashed"
+  },
+  "theme.ErrorPageContent.tryAgain": {
+    "message": "Erneut versuchen",
+    "description": "The label of the button to try again"
+  },
+  "theme.BackToTopButton.buttonAriaLabel": {
+    "message": "Nach oben",
+    "description": "The ARIA label for the back to top button"
+  },
+  "theme.docs.breadcrumbs.navAriaLabel": {
+    "message": "Seitenpfad",
+    "description": "The ARIA label for the breadcrumbs"
+  },
+  "theme.docs.breadcrumbs.home": {
+    "message": "Startseite",
+    "description": "The ARIA label for the home page in the breadcrumbs"
+  },
+  "theme.docs.DocCard.categoryDescription.plurals": {
+    "message": "{count} Elemente",
+    "description": "The default description for a category card"
+  },
+  "theme.docs.paginator.navAriaLabel": {
+    "message": "Dokumente-Navigation",
+    "description": "The ARIA label for the docs pagination"
+  },
+  "theme.docs.paginator.previous": {
+    "message": "Vorherige",
+    "description": "The label used to navigate to the previous doc"
+  },
+  "theme.docs.paginator.next": {
+    "message": "Nächste",
+    "description": "The label used to navigate to the next doc"
+  },
+  "theme.docs.sidebar.navAriaLabel": {
+    "message": "Dokumente-Seitenleiste",
+    "description": "The ARIA label for the sidebar navigation"
+  },
+  "theme.docs.sidebar.collapseButtonTitle": {
+    "message": "Seitenleiste einklappen",
+    "description": "The title attribute for collapse button"
+  },
+  "theme.docs.sidebar.collapseButtonAriaLabel": {
+    "message": "Seitenleiste einklappen",
+    "description": "The ARIA label for collapse button"
+  },
+  "theme.docs.sidebar.expandButtonTitle": {
+    "message": "Seitenleiste ausklappen",
+    "description": "The ARIA label for expand button"
+  },
+  "theme.docs.sidebar.expandButtonAriaLabel": {
+    "message": "Seitenleiste ausklappen",
+    "description": "The ARIA label for expand button"
+  },
+  "theme.docs.sidebar.closeSidebarButtonAriaLabel": {
+    "message": "Seitenleiste schließen",
+    "description": "The ARIA label for close button"
+  },
+  "theme.docs.sidebar.toggleSidebarButtonAriaLabel": {
+    "message": "Seitenleiste umschalten",
+    "description": "The ARIA label for hamburger menu button"
+  },
+  "theme.docs.versionBadge.label": {
+    "message": "Version: {versionLabel}"
+  },
+  "theme.docs.versions.unreleasedVersionLabel": {
+    "message": "Dies sind die Dokumente für {siteTitle} {versionLabel}, die noch nicht veröffentlicht wurden.",
+    "description": "The label for unreleased doc version"
+  },
+  "theme.docs.versions.unmaintainedVersionLabel": {
+    "message": "Dies sind die Dokumente für {siteTitle} {versionLabel}, die nicht mehr aktiv gepflegt werden.",
+    "description": "The label for unmaintained doc version"
+  },
+  "theme.docs.versions.latestVersionSuggestionLabel": {
+    "message": "Die aktuellsten Dokumente finden Sie unter {latestVersionLink} ({versionLabel}).",
+    "description": "The label to check the latest version"
+  },
+  "theme.docs.versions.latestVersionLinkLabel": {
+    "message": "Neueste Version",
+    "description": "The label for the latest version suggestion link"
+  },
+  "theme.common.editThisPage": {
+    "message": "Diese Seite bearbeiten",
+    "description": "The link label to edit the current page"
+  },
+  "theme.common.skipToMainContent": {
+    "message": "Zum Hauptinhalt springen",
+    "description": "The skip to content label"
+  },
+  "theme.common.headingLinkTitle": {
+    "message": "Direktlink zu {heading}",
+    "description": "Title for link to heading"
+  },
+  "theme.lastUpdated.atDate": {
+    "message": "am {date} ",
+    "description": "The words for date of last update"
+  },
+  "theme.lastUpdated.byUser": {
+    "message": "von {user} ",
+    "description": "The words for who updated"
+  },
+  "theme.lastUpdated.lastUpdatedAtBy": {
+    "message": "Zuletzt aktualisiert von {user} am {date}",
+    "description": "The sentence for last updated display"
+  },
+  "theme.NotFound.title": {
+    "message": "Seite nicht gefunden",
+    "description": "The title of the 404 page"
+  },
+  "theme.NotFound.p1": {
+    "message": "Die gesuchte Seite konnte nicht gefunden werden.",
+    "description": "The first paragraph of the 404 page"
+  },
+  "theme.NotFound.p2": {
+    "message": "Bitte kontaktieren Sie den Eigentümer der ursprünglichen URL und teilen Sie ihm mit, dass der Link defekt ist.",
+    "description": "The 2nd paragraph of the 404 page"
+  },
+  "theme.NavBar.navAriaLabel": {
+    "message": "Hauptnavigation",
+    "description": "The ARIA label for the main navigation"
+  },
+  "theme.navbar.mobileVersionsDropdown.label": {
+    "message": "Version auswählen",
+    "description": "The label for the navbar versions dropdown on mobile"
+  },
+  "theme.navbar.mobileLanguageDropdown.label": {
+    "message": "Sprache auswählen",
+    "description": "The label for the mobile language switcher dropdown"
+  },
+  "theme.navbar.mobileSidebarSecondaryMenu.backButtonLabel": {
+    "message": "← Zurück zum Hauptmenü",
+    "description": "The label of the back button in mobile sidebar"
+  },
+  "theme.navbar.mobileDropdown.collapseButton.expandAriaLabel": {
+    "message": "Dropdown erweitern",
+    "description": "The ARIA label to expand mobile dropdown"
+  },
+  "theme.navbar.mobileDropdown.collapseButton.collapseAriaLabel": {
+    "message": "Dropdown einklappen",
+    "description": "The ARIA label to collapse mobile dropdown"
+  },
+  "theme.TOCCollapsible.toggleButtonLabel": {
+    "message": "Seitenübersicht",
+    "description": "The label for the TOC collapsible button"
+  },
+  "theme.tags.tagsListLabel": {
+    "message": "Schlagwörter:",
+    "description": "The label alongside a tag list"
+  },
+  "theme.tags.tagsPageLink": {
+    "message": "Alle Schlagwörter anzeigen",
+    "description": "The label of the link to the tag list page"
+  },
+  "theme.tags.tagsPageTitle": {
+    "message": "Schlagwörter",
+    "description": "The title of the tag list page"
+  },
+  "theme.colorToggle.ariaLabel.mode.system": {
+    "message": "Systemmodus",
+    "description": "The name for system color mode"
+  },
+  "theme.colorToggle.ariaLabel.mode.light": {
+    "message": "Heller Modus",
+    "description": "The name for light color mode"
+  },
+  "theme.colorToggle.ariaLabel.mode.dark": {
+    "message": "Dunkler Modus",
+    "description": "The name for dark color mode"
+  },
+  "theme.colorToggle.ariaLabel": {
+    "message": "Hellen/dunklen Modus umschalten (aktuell: {mode})",
+    "description": "The ARIA label for color mode toggle"
+  },
+  "theme.admonition.note": {
+    "message": "Hinweis",
+    "description": "The default label for Note admonition"
+  },
+  "theme.admonition.tip": {
+    "message": "Tipp",
+    "description": "The default label for Tip admonition"
+  },
+  "theme.admonition.danger": {
+    "message": "Gefahr",
+    "description": "The default label for Danger admonition"
+  },
+  "theme.admonition.info": {
+    "message": "Info",
+    "description": "The default label for Info admonition"
+  },
+  "theme.admonition.caution": {
+    "message": "Vorsicht",
+    "description": "The default label for Caution admonition"
+  },
+  "theme.admonition.warning": {
+    "message": "Warnung",
+    "description": "The default label for Warning admonition"
+  },
+  "theme.CodeBlock.copy": {
+    "message": "Kopieren",
+    "description": "The copy button label on code blocks"
+  },
+  "theme.CodeBlock.copied": {
+    "message": "Kopiert",
+    "description": "The copied button label on code blocks"
+  },
+  "theme.CodeBlock.copyButtonAriaLabel": {
+    "message": "Code in die Zwischenablage kopieren",
+    "description": "The ARIA label for copy code button"
+  },
+  "theme.CodeBlock.wordWrapToggle": {
+    "message": "Zeilenumbruch umschalten",
+    "description": "The title for word wrap toggle button"
+  },
+  "theme.IconExternalLink.ariaLabel": {
+    "message": "(öffnet in neuem Tab)",
+    "description": "The ARIA label for external link icon"
+  }
+}

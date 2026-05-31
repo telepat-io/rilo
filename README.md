@@ -6,6 +6,7 @@
   <a href="https://docs.telepat.io/rilo">📖 Docs</a>
   · <a href="./README.md">🇺🇸 English</a>
   · <a href="./README.zh-CN.md">🇨🇳 简体中文</a>
+  · <a href="./README.de.md">🇩🇪 Deutsch</a>
 </p>
 
 <p align="center">

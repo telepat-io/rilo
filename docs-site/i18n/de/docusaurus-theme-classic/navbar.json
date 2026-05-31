@@ -1,0 +1,26 @@
+{
+  "title": {
+    "message": "Rilo",
+    "description": "The title in the navbar"
+  },
+  "logo.alt": {
+    "message": "Rilo-Logo",
+    "description": "The alt text of navbar logo"
+  },
+  "item.label.Docs": {
+    "message": "Dokumentation",
+    "description": "Navbar item with label Docs"
+  },
+  "item.label.CLI Reference": {
+    "message": "CLI-Referenz",
+    "description": "Navbar item with label CLI Reference"
+  },
+  "item.label.Technical": {
+    "message": "Technik",
+    "description": "Navbar item with label Technical"
+  },
+  "item.label.GitHub": {
+    "message": "GitHub",
+    "description": "Navbar item with label GitHub"
+  }
+}
