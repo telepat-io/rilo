@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.8](https://github.com/telepat-io/rilo/compare/rilo-v0.1.7...rilo-v0.1.8) (2026-05-31)
+
+
+### Features
+
+* refactor keyframe generation to use Limn ([8ea8339](https://github.com/telepat-io/rilo/commit/8ea83394e97ab1b418a0ab0b8dfeece3e112dc0b))
+* standardize env vars to TELEPAT_OPENROUTER_KEY, TELEPAT_REPLICATE_TOKEN ([cdeb29b](https://github.com/telepat-io/rilo/commit/cdeb29b66906817d5d783d3d88e710bb8426669e))
+
+
+### Bug Fixes
+
+* update @telepat/limn to 0.1.7 for z-image family rename ([3dff4df](https://github.com/telepat-io/rilo/commit/3dff4df60da6ac292e6c3c0dbba7d82e2b986420))
+* update model references from 'z-image-turbo' to 'z-image' across configuration and tests ([e975e65](https://github.com/telepat-io/rilo/commit/e975e65b4462139869bf7b3362fbe49b8e999191))
+
 ## [0.1.7](https://github.com/telepat-io/rilo/compare/rilo-v0.1.6...rilo-v0.1.7) (2026-05-01)
 
 
